@@ -1,10 +1,13 @@
 // Application which greets you.
 package main
 
-import "fmt"
-import "github.com/asdine/storm/v3"
+import (
+	"fmt"
 
-// Contains relevant information for LEX listings.
+	"github.com/asdine/storm/v3"
+)
+
+// A Listing contains relevant information for LEX listings.
 type Listing struct {
 	ID                  int `storm:"id,increment"`
 	IssueNumber         int
@@ -22,13 +25,18 @@ func main() {
 		fmt.Println("Failed to open db: ", err)
 	}
 
-	defer db.Close()
+	defer func() {
+		err = db.Close()
+	}() // use function closure to allow checking error from deferred db.Close
+	if err != nil {
+		fmt.Println("Failed to close db: ", err)
+	}
 
 	listing := Listing{
 		ID:                  1,
-		IssueNumber:         56,
+		IssueNumber:         56, //nolint:gomnd // preliminary dev magic number use
 		PageNumber:          1,
-		IndexedMemberNumber: 2989,
+		IndexedMemberNumber: 2989, //nolint:gomnd // preliminary dev magic number use
 		IndexedCategory:     "Art & Photography",
 		ListingText:         "Fingerpainting exchange.",
 	}
@@ -37,7 +45,6 @@ func main() {
 	if err != nil {
 		fmt.Println("Failed to save to db: ", err)
 	}
-
 }
 
 func greet() string {
