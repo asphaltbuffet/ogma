@@ -12,32 +12,36 @@ import (
 )
 
 func TestManagerNew(t *testing.T) {
-	manager, dbFilePath := initDatastoreManager()
-	defer os.Remove(dbFilePath)
+	manager, dbFilePath, err := initDatastoreManager()
+	defer func() {
+		err = os.Remove(dbFilePath)
+		assert.Nil(t, err)
+	}()
 	defer manager.Stop()
 
-	assert.NotNil(t, manager)
+	assert.Nil(t, err)
 
-	_, err := os.Stat(dbFilePath)
+	_, err = os.Stat(dbFilePath)
 
 	assert.False(t, os.IsNotExist(err))
 }
 
-func TestManagerStop(t *testing.T) {
-	manager, dbFilePath := initDatastoreManager()
-	defer os.Remove(dbFilePath)
+func TestManagerNewFail(t *testing.T) {
+	manager, dbFilePath, err := initDatastoreManager()
+	defer func() {
+		err = os.Remove(dbFilePath)
+		assert.Nil(t, err)
+	}()
+	defer manager.Stop()
 
-	assert.NotNil(t, manager)
-
-	manager.Stop()
-
-	assert.Nil(t, manager.Store)
+	_, err = datastore.New(dbFilePath)
+	assert.NotNil(t, err)
 }
 
-func initDatastoreManager() (*datastore.Manager, string) {
+func initDatastoreManager() (*datastore.Manager, string, error) {
 	currentTime := time.Now()
 	filename := fmt.Sprintf("test_%d.db", currentTime.Unix())
-	manager := datastore.New(filename)
+	manager, err := datastore.New(filename)
 
-	return manager, filename
+	return manager, filename, err
 }

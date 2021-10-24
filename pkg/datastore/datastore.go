@@ -14,16 +14,18 @@ type Manager struct {
 }
 
 // New returns a new datastore Manager.
-func New(filePath string) *Manager {
+func New(filePath string) (*Manager, error) {
 	storm, err := storm.Open(filePath)
 	if err != nil {
 		fmt.Println("Failed to open db: ", err)
+
+		return nil, err
 	}
 
 	return &Manager{
 		Store:    storm,
 		filePath: filePath,
-	}
+	}, nil
 }
 
 // GetPath returns the filepath to db file.
