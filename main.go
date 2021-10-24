@@ -18,8 +18,6 @@ type Listing struct {
 }
 
 func main() {
-	fmt.Println(greet())
-
 	db, err := storm.Open("ogma.db")
 	if err != nil {
 		fmt.Println("Failed to open db: ", err)
@@ -47,6 +45,3 @@ func main() {
 	}
 }
 
-func greet() string {
-	return "Hi!"
-}
