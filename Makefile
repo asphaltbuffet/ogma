@@ -17,7 +17,8 @@ clean: ## remove files created during build pipeline
 .PHONY: install
 install: ## go install tools
 	$(call print-target)
-	cd tools && go install $(shell cd tools && go list -f '{{ join .Imports " " }}' -tags=tools)
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.1 
+	go install github.com/goreleaser/goreleaser@v0.183.0
 
 .PHONY: generate
 generate: ## go generate
@@ -40,7 +41,7 @@ lint: ## golangci-lint
 	golangci-lint run
 
 .PHONY: test
-test: ## go test with race detector and code covarage
+test: ## go test with race detector and code coverage
 	$(call print-target)
 	go test -race -covermode=atomic -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out -o coverage.html
@@ -49,7 +50,6 @@ test: ## go test with race detector and code covarage
 mod-tidy: ## go mod tidy
 	$(call print-target)
 	go mod tidy
-	cd tools && go mod tidy
 
 .PHONY: diff
 diff: ## git diff

@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/asdine/storm/v3"
+
+	"github.com/asphaltbuffet/ogma/cmd"
 )
 
 // A Listing contains relevant information for LEX listings.
@@ -18,6 +20,8 @@ type Listing struct {
 }
 
 func main() {
+	cmd.Execute()
+
 	db, err := storm.Open("ogma.db")
 	if err != nil {
 		fmt.Println("Failed to open db: ", err)
@@ -44,4 +48,3 @@ func main() {
 		fmt.Println("Failed to save to db: ", err)
 	}
 }
-
