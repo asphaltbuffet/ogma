@@ -11,6 +11,9 @@
 # Application db
 ogma.db
 
+# Application
+ogma
+
 # Test binary, built with `go test -c`
 *.test
 
