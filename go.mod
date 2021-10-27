@@ -7,6 +7,7 @@ require (
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
 	github.com/kr/text v0.2.0 // indirect
+	github.com/sirupsen/logrus v1.8.1
 	github.com/smartystreets/assertions v1.0.0 // indirect
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1

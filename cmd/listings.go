@@ -26,15 +26,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-)
-
-const (
-	// MinYear - miniumum publication year.
-	MinYear = 1986
-	// MinIssue - miniumum publication issue.
-	MinIssue = 1
-	// MinMember - miniumum member number.
-	MinMember = 1
+	"github.com/spf13/viper"
 )
 
 var (
@@ -56,19 +48,19 @@ var listingsCmd = &cobra.Command{
 	  Category - NOT IMPLEMENTED
 	  `,
 	Run: func(cmd *cobra.Command, args []string) {
-		if searchYear >= MinYear {
+		if searchYear >= viper.GetInt("search.min_year") {
 			fmt.Println("Searching listings by year: ", searchYear)
 		} else {
 			fmt.Println("Searching listings by year: ANY")
 		}
 
-		if searchIssue >= MinIssue {
+		if searchIssue >= viper.GetInt("search.min_issue") {
 			fmt.Println("Searching listings by issue: ", searchIssue)
 		} else {
 			fmt.Println("Searching listings by issue: ANY")
 		}
 
-		if searchMember >= MinMember {
+		if searchMember >= viper.GetInt("search.min_member") {
 			fmt.Println("Searching listings by member: ", searchMember)
 		} else {
 			fmt.Println("Searching listings by member: ANY")
@@ -88,7 +80,7 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// listingsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	listingsCmd.Flags().IntVarP(&searchYear, "year", "y", -1, "Search listings by LEX Issue year.")
-	listingsCmd.Flags().IntVarP(&searchIssue, "issue", "i", -1, "Search listings by LEX Issue Number.")
-	listingsCmd.Flags().IntVarP(&searchMember, "member", "m", -1, "Search listings by member number.")
+	listingsCmd.Flags().IntVarP(&searchYear, "year", "y", viper.GetInt("search.default_year"), "Search listings by LEX Issue year. Use '0' to search 'ANY'")
+	listingsCmd.Flags().IntVarP(&searchIssue, "issue", "i", viper.GetInt("search.default_issue"), "Search listings by LEX Issue Number. Use '0' to search 'ANY'")
+	listingsCmd.Flags().IntVarP(&searchMember, "member", "m", viper.GetInt("search.default_member"), "Search listings by member number. Use '0' to search 'ANY'")
 }

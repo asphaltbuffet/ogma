@@ -8,11 +8,10 @@
 *.so
 *.dylib
 
-# Application db
+# Application runtime cruft
 ogma.db
-
-# Application
 ogma
+*.log
 
 # Test binary, built with `go test -c`
 *.test
