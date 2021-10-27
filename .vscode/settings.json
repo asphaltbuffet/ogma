@@ -21,5 +21,10 @@
     "go.lintTool": "golangci-lint",
     "go.lintFlags": [
         "--fast"
-    ]
+    ],
+    // workaround for go installed via snap (https://github.com/golang/vscode-go/issues/166)
+    "go.alternateTools": {
+        
+        "go": "/snap/go/current/bin/go"
+    }
 }
