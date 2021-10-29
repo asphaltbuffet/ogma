@@ -24,11 +24,10 @@ THE SOFTWARE.
 package cmd
 
 import (
-	log "github.com/sirupsen/logrus"
+	"errors"
+
 	"github.com/spf13/cobra"
 )
-
-var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
@@ -40,7 +39,22 @@ from LEX magazine. It provides member-focused metrics, basic stats,
 and tracking of letters sent and received.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	RunE: RootCmdRunE,
+}
+
+// RootCmdRunE performs action associated with bare application command.
+func RootCmdRunE(cmd *cobra.Command, args []string) error {
+	info, err := cmd.Flags().GetBool("info")
+	if err != nil {
+		return err
+	}
+
+	if info {
+		cmd.Println("ok")
+		return nil
+	}
+
+	return errors.New("not ok")
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -50,20 +64,16 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
+	RootCmdFlags(rootCmd)
+}
 
-	// Here you will define your flags and configuration settings.
+// RootCmdFlags defines root command flags.
+func RootCmdFlags(cmd *cobra.Command) {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ogma.yaml)")
+	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ogma.yaml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-}
-
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	log.Info("Root.go initConfig")
+	cmd.Flags().BoolP("info", "i", false, "Application data information")
 }
