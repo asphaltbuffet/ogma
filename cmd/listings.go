@@ -35,15 +35,13 @@ var listingsCmd = &cobra.Command{
 	Use:   "listings",
 	Short: "Access listings functionality.",
 	Long:  ``,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return nil
-	},
 }
 
 var searchListingsCmd = &cobra.Command{
 	Use:   "search",
 	Short: "Returns all listing information based on search criteria.",
 	Long:  ``,
+	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return RunSearchListings(cmd)
 	},
