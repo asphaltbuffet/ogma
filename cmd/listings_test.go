@@ -5,11 +5,23 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestListingsSearchCmd(t *testing.T) { //nolint:funlen // ignore this for now 2021/10/29 BL
 	var buf bytes.Buffer
+
+	// Search config in application directory with name ".ogma" (without extension).
+	viper.AddConfigPath("../")
+	viper.SetConfigType("yaml")
+	viper.SetConfigName(".ogma")
+
+	viper.AutomaticEnv() // read in environment variables that match
+
+	// If a config file is found, read it in.
+	err := viper.ReadInConfig()
+	assert.NoError(t, err)
 
 	tests := []struct {
 		args     []string
