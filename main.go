@@ -57,7 +57,7 @@ func main() {
 // PrepConfigAndLogging sets up configuration and logging for application.
 func PrepConfigAndLogging() {
 	// Search config in application directory with name ".ogma" (without extension).
-	viper.AddConfigPath(".")
+	viper.AddConfigPath("./")
 	viper.SetConfigType("yaml")
 	viper.SetConfigName(".ogma")
 
