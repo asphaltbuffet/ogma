@@ -1,5 +1,4 @@
 logging:
     level: warn
-    filename: ogma.log
 search:
     max_results: 10
