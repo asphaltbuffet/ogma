@@ -73,12 +73,12 @@ func RunSearchListings(cmd *cobra.Command) error {
 		return err
 	}
 
-	// log.WithFields(log.Fields{
-	// 	"cmd":    "listings.search",
-	// 	"year":   year,
-	// 	"issue":  issue,
-	// 	"member": member,
-	// }).Info("Searching listings.")
+	log.WithFields(log.Fields{
+		"cmd":    "listings.search",
+		"year":   year,
+		"issue":  issue,
+		"member": member,
+	}).Info("Searching listings.")
 
 	// TODO: SearchListings should return an error too.
 	resultsCount := SearchListings(year, issue, member)
@@ -99,6 +99,7 @@ func RunSearchListings(cmd *cobra.Command) error {
 // SearchListings queries listing db for matching listings.
 // TODO: Actually interact with db so it's functional.
 func SearchListings(y int, i int, m int) (count int) {
+	count = 0
 	if y == 2021 { //nolint:gomnd // placeholder before db query is implemented
 		count += 3
 	} else {
@@ -106,7 +107,7 @@ func SearchListings(y int, i int, m int) (count int) {
 	}
 
 	if i == 56 { //nolint:gomnd // placeholder before db query is implemented
-		count += 17
+		count += 7
 	} else {
 		count += 0
 	}

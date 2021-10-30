@@ -1,4 +1,4 @@
-package cmd
+package cmd_test
 
 import (
 	"bytes"
@@ -7,6 +7,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/asphaltbuffet/ogma/cmd"
 )
 
 func TestListingsSearchCmd(t *testing.T) { //nolint:funlen // ignore this for now 2021/10/29 BL
@@ -28,55 +30,108 @@ func TestListingsSearchCmd(t *testing.T) { //nolint:funlen // ignore this for no
 		function func() func(cmd *cobra.Command, args []string) error
 		output   string
 	}{
+		// // invalid argument
+		// {
+		// 	args: []string{"listings", "search", "unknown"},
+		// 	function: func() func(c *cobra.Command, args []string) error {
+		// 		return func(c *cobra.Command, args []string) error {
+		// 			c.SetOut(&buf)
+		// 			err := cmd.RunSearchListings(c)
+		// 			assert.NoError(t, err)
+		// 			return nil
+		// 		}
+		// 	},
+		// 	output: "Error: unknown command \"unknown\" for \"ogma listings search\"",
+		// },
 		// no flags returns all results (will be an error if db has more than MAX_RESULTS listings)
 		{
-			args: []string{"listings", "search", "unknown"},
-			function: func() func(cmd *cobra.Command, args []string) error {
-				return func(cmd *cobra.Command, args []string) error {
-					cmd.SetOut(&buf)
-					err := RunSearchListings(cmd)
+			args: []string{"listings", "search"},
+			function: func() func(c *cobra.Command, args []string) error {
+				return func(c *cobra.Command, args []string) error {
+					c.SetOut(&buf)
+					err := cmd.RunSearchListings(c)
 					assert.NoError(t, err)
 					return nil
 				}
 			},
 			output: "Found 0 listings.\n",
 		},
-		// // search for year less than min
-		// {
-		// 	args: []string{"-y1"},
-		// 	err:  nil,
-		// 	out:  "Found 0 listings.",
-		// },
-		// {
-		// 	args: []string{"--year=1"},
-		// 	err:  nil,
-		// 	out:  "Found 0 listings.",
-		// },
-		// // search for year greater than max
-		// {
-		// 	args: []string{"-y9999"},
-		// 	err:  nil,
-		// 	out:  "Found 0 listings.",
-		// },
-		// {
-		// 	args: []string{"--year=9999"},
-		// 	err:  nil,
-		// 	out:  "Found 0 listings.",
-		// },
+		// search for year less than min
+		{
+			args: []string{"listings", "search", "-y1"},
+			function: func() func(c *cobra.Command, args []string) error {
+				return func(c *cobra.Command, args []string) error {
+					c.SetOut(&buf)
+					err := cmd.RunSearchListings(c)
+					assert.NoError(t, err)
+					return nil
+				}
+			},
+			output: "Found 0 listings.\n",
+		},
+		{
+			args: []string{"listings", "search", "--year=1"},
+			function: func() func(c *cobra.Command, args []string) error {
+				return func(c *cobra.Command, args []string) error {
+					c.SetOut(&buf)
+					err := cmd.RunSearchListings(c)
+					assert.NoError(t, err)
+					return nil
+				}
+			},
+			output: "Found 0 listings.\n",
+		},
+		{
+			args: []string{"listings", "search", "-y2021"},
+			function: func() func(c *cobra.Command, args []string) error {
+				return func(c *cobra.Command, args []string) error {
+					c.SetOut(&buf)
+					err := cmd.RunSearchListings(c)
+					assert.NoError(t, err)
+					return nil
+				}
+			},
+			output: "Found 3 listings.\n",
+		},
+		{
+			args: []string{"listings", "search", "-y2021", "-i56"},
+			function: func() func(c *cobra.Command, args []string) error {
+				return func(c *cobra.Command, args []string) error {
+					c.SetOut(&buf)
+					err := cmd.RunSearchListings(c)
+					assert.NoError(t, err)
+					return nil
+				}
+			},
+			output: "Found 10 listings.\n",
+		},
+		{
+			args: []string{"listings", "search", "-y2021", "-i56", "-m1000"},
+			function: func() func(c *cobra.Command, args []string) error {
+				return func(c *cobra.Command, args []string) error {
+					c.SetOut(&buf)
+					err := cmd.RunSearchListings(c)
+					assert.Error(t, err)
+					return nil
+				}
+			},
+			output: "Found 12 listings.\n",
+		},
 	}
 
 	for _, testcase := range tests {
 		ogmaCmd := &cobra.Command{Use: "ogma"}
 
-		listingsCmd = &cobra.Command{
+		listingsCmd := &cobra.Command{
 			Use: "listings",
-			RunE: func(cmd *cobra.Command, args []string) error {
+			RunE: func(c *cobra.Command, args []string) error {
 				return nil
 			},
 		}
 
 		searchListingsCmd := &cobra.Command{
 			Use:  "search",
+			Args: cobra.NoArgs,
 			RunE: testcase.function(),
 		}
 
