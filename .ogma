@@ -1,10 +1,5 @@
 logging:
-    level: trace
+    level: warn
     filename: ogma.log
 search:
-    min_year: 1986
-    min_issue: 1
-    min_member: 1
-    default_year: -1
-    default_issue: -1
-    default_member: -1
+    max_results: 10

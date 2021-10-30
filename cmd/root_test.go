@@ -1,4 +1,4 @@
-package cmd_test
+package cmd
 
 import (
 	"bytes"
@@ -8,8 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/asphaltbuffet/ogma/cmd"
 )
 
 func TestRootCmd(t *testing.T) {
@@ -34,8 +32,8 @@ func TestRootCmd(t *testing.T) {
 		},
 	}
 
-	root := &cobra.Command{Use: "root", RunE: cmd.RootCmdRunE}
-	cmd.RootCmdFlags(root)
+	root := &cobra.Command{Use: "root", RunE: RootCmdRunE}
+	RootCmdFlags(root)
 
 	for _, tc := range tt {
 		out, err := execute(t, root, tc.args...)
