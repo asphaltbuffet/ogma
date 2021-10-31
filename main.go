@@ -5,52 +5,28 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/asdine/storm/v3"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
 	"github.com/asphaltbuffet/ogma/cmd"
+	"github.com/asphaltbuffet/ogma/pkg/datastore"
 )
-
-// A Listing contains relevant information for LEX listings.
-type Listing struct {
-	ID                  int `storm:"id,increment"`
-	IssueNumber         int
-	PageNumber          int
-	IndexedMemberNumber int    `storm:"index"`
-	IndexedCategory     string `storm:"index"`
-	ListingText         string
-}
 
 func main() {
 	PrepConfigAndLogging()
 	log.Info("Starting ogma...")
 	cmd.Execute()
 
-	db, err := storm.Open("ogma.db")
+	dsManager, err := datastore.New("ogma.db")
 	if err != nil {
-		fmt.Println("Failed to open db: ", err)
+		log.Fatal("Datastore manager failure.")
 	}
 
-	defer func() {
-		err = db.Close()
-	}() // use function closure to allow checking error from deferred db.Close
-	if err != nil {
-		fmt.Println("Failed to close db: ", err)
-	}
+	defer dsManager.Stop()
 
-	listing := Listing{
-		ID:                  1,
-		IssueNumber:         56, //nolint:gomnd // preliminary dev magic number use
-		PageNumber:          1,
-		IndexedMemberNumber: 2989, //nolint:gomnd // preliminary dev magic number use
-		IndexedCategory:     "Art & Photography",
-		ListingText:         "Fingerpainting exchange.",
-	}
-
-	err = db.Save(&listing)
+	// err = dsManager.Store.Save(&listing)
 	if err != nil {
-		fmt.Println("Failed to save to db: ", err)
+		log.Error("Failed to save to db: ")
 	}
 }
 

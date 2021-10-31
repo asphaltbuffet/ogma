@@ -30,6 +30,23 @@ import (
 	"github.com/spf13/viper"
 )
 
+// A Listing contains relevant information for LEX listings.
+type Listing struct {
+	ID                  int `storm:"id,increment"`
+	Volume              int
+	IssueNumber         int
+	Year                int
+	PageNumber          int
+	IndexedCategory     string `storm:"index"`
+	IndexedMemberNumber int    `storm:"index"`
+	MemberExtension     string
+	IsInternational     bool
+	IsReview            bool
+	ListingText         string
+	IsArt               bool
+	IsFlagged           bool
+}
+
 // listingsCmd represents the listings command.
 var listingsCmd = &cobra.Command{
 	Use:   "listings",
