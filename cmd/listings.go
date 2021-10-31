@@ -24,6 +24,7 @@ package cmd
 
 import (
 	"errors"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -61,6 +62,16 @@ var searchListingsCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return RunSearchListings(cmd)
+	},
+}
+
+var addListingCmd = &cobra.Command{
+	Use:   "add",
+	Short: "Add a single listing.",
+	Long:  ``,
+	Args:  cobra.NoArgs,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return RunAddListing(cmd)
 	},
 }
 
@@ -113,6 +124,48 @@ func RunSearchListings(cmd *cobra.Command) error {
 	return nil
 }
 
+// RunAddListing adds a single listing to the datastore.
+func RunAddListing(cmd *cobra.Command) error {
+	year, err := cmd.Flags().GetInt("year")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"flag": "year",
+		}).Error("Invalid flag.")
+		return err
+	}
+
+	issue, err := cmd.Flags().GetInt("issue")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"flag": "issue",
+		}).Error("Invalid flag.")
+		return err
+	}
+
+	member, err := cmd.Flags().GetInt("member")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"flag": "member",
+		}).Error("Invalid flag.")
+		return err
+	}
+
+	log.WithFields(log.Fields{
+		"cmd":    "listings.add",
+		"year":   year,
+		"issue":  issue,
+		"member": member,
+	}).Info("Adding a listing.")
+
+	// TODO: add listing to db & save.
+
+	// TODO: add formatted listing as output.
+	cmd.Println("Added a listing.")
+
+	// Actually return error if add was successful.
+	return nil
+}
+
 // SearchListings queries listing db for matching listings.
 // TODO: Actually interact with db so it's functional.
 func SearchListings(y int, i int, m int) (count int) {
@@ -139,6 +192,20 @@ func SearchListings(y int, i int, m int) (count int) {
 }
 
 func init() {
+	addListingCmd.Flags().IntP("volume", "v", -1, "Volume containing listing entry.")
+	addListingCmd.Flags().IntP("lex", "l", viper.GetInt("defaults.issue"), "LEX issue containing listing entry.")
+	addListingCmd.Flags().IntP("year", "y", time.Now().Year(), "Year of listing entry..")
+	// addListingCmd.MarkFlagRequired("year") //nolint:errcheck,gosec // handled by cobra
+	addListingCmd.Flags().IntP("page", "p", -1, "Page number of listing entry.")
+	addListingCmd.Flags().StringP("category", "c", "", "Category of listing entry.")
+	addListingCmd.Flags().IntP("member", "m", -1, "Member number of listing entry.")
+	addListingCmd.Flags().BoolP("international", "i", false, "Is international postage required?")
+	addListingCmd.Flags().BoolP("review", "r", false, "Is this a book review listing entry?")
+	addListingCmd.Flags().StringP("text", "t", "", "Text of listing entry.")
+	addListingCmd.Flags().BoolP("sketch", "s", false, "Is this a sketch listing entry?")
+	addListingCmd.Flags().BoolP("flag", "f", false, "Has this listing entry been flagged?")
+	listingsCmd.AddCommand(addListingCmd)
+
 	searchListingsCmd.Flags().IntP("year", "y", -1, "Search listings by LEX Issue year.")
 	searchListingsCmd.Flags().IntP("issue", "i", -1, "Search listings by LEX Issue Number.")
 	searchListingsCmd.Flags().IntP("member", "m", -1, "Search listings by member number.")
