@@ -25,26 +25,12 @@ func TestListingsSearchCmd(t *testing.T) { //nolint:funlen // ignore this for no
 	err := viper.ReadInConfig()
 	assert.NoError(t, err)
 
-	tests := []struct {
+	tt := map[string]struct {
 		args     []string
 		function func() func(cmd *cobra.Command, args []string) error
 		output   string
 	}{
-		// // invalid argument
-		// {
-		// 	args: []string{"listings", "search", "unknown"},
-		// 	function: func() func(c *cobra.Command, args []string) error {
-		// 		return func(c *cobra.Command, args []string) error {
-		// 			c.SetOut(&buf)
-		// 			err := cmd.RunSearchListings(c)
-		// 			assert.NoError(t, err)
-		// 			return nil
-		// 		}
-		// 	},
-		// 	output: "Error: unknown command \"unknown\" for \"ogma listings search\"",
-		// },
-		// no flags returns all results (will be an error if db has more than MAX_RESULTS listings)
-		{
+		"all default flags": {
 			args: []string{"listings", "search"},
 			function: func() func(c *cobra.Command, args []string) error {
 				return func(c *cobra.Command, args []string) error {
@@ -57,7 +43,7 @@ func TestListingsSearchCmd(t *testing.T) { //nolint:funlen // ignore this for no
 			output: "Found 0 listings.\n",
 		},
 		// search for year less than min
-		{
+		"no results by year (short)": {
 			args: []string{"listings", "search", "-y1"},
 			function: func() func(c *cobra.Command, args []string) error {
 				return func(c *cobra.Command, args []string) error {
@@ -69,7 +55,7 @@ func TestListingsSearchCmd(t *testing.T) { //nolint:funlen // ignore this for no
 			},
 			output: "Found 0 listings.\n",
 		},
-		{
+		"no results by year (long)": {
 			args: []string{"listings", "search", "--year=1"},
 			function: func() func(c *cobra.Command, args []string) error {
 				return func(c *cobra.Command, args []string) error {
@@ -81,7 +67,7 @@ func TestListingsSearchCmd(t *testing.T) { //nolint:funlen // ignore this for no
 			},
 			output: "Found 0 listings.\n",
 		},
-		{
+		"valid search by year": {
 			args: []string{"listings", "search", "-y2021"},
 			function: func() func(c *cobra.Command, args []string) error {
 				return func(c *cobra.Command, args []string) error {
@@ -93,7 +79,7 @@ func TestListingsSearchCmd(t *testing.T) { //nolint:funlen // ignore this for no
 			},
 			output: "Found 3 listings.\n",
 		},
-		{
+		"multi-flag search": {
 			args: []string{"listings", "search", "-y2021", "-i56"},
 			function: func() func(c *cobra.Command, args []string) error {
 				return func(c *cobra.Command, args []string) error {
@@ -105,7 +91,7 @@ func TestListingsSearchCmd(t *testing.T) { //nolint:funlen // ignore this for no
 			},
 			output: "Found 10 listings.\n",
 		},
-		{
+		"search results excede max limitation": {
 			args: []string{"listings", "search", "-y2021", "-i56", "-m1000"},
 			function: func() func(c *cobra.Command, args []string) error {
 				return func(c *cobra.Command, args []string) error {
@@ -119,38 +105,40 @@ func TestListingsSearchCmd(t *testing.T) { //nolint:funlen // ignore this for no
 		},
 	}
 
-	for _, testcase := range tests {
-		ogmaCmd := &cobra.Command{Use: "ogma"}
+	for name, tc := range tt {
+		t.Run(name, func(t *testing.T) {
+			ogmaCmd := &cobra.Command{Use: "ogma"}
 
-		listingsCmd := &cobra.Command{
-			Use: "listings",
-			RunE: func(c *cobra.Command, args []string) error {
-				return nil
-			},
-		}
+			listingsCmd := &cobra.Command{
+				Use: "listings",
+				RunE: func(c *cobra.Command, args []string) error {
+					return nil
+				},
+			}
 
-		searchListingsCmd := &cobra.Command{
-			Use:  "search",
-			Args: cobra.NoArgs,
-			RunE: testcase.function(),
-		}
+			searchListingsCmd := &cobra.Command{
+				Use:  "search",
+				Args: cobra.NoArgs,
+				RunE: tc.function(),
+			}
 
-		searchListingsCmd.Flags().IntP("year", "y", -1, "Search listings by LEX Issue year.")
-		searchListingsCmd.Flags().IntP("issue", "i", -1, "Search listings by LEX Issue Number.")
-		searchListingsCmd.Flags().IntP("member", "m", -1, "Search listings by member number.")
-		listingsCmd.AddCommand(searchListingsCmd)
-		ogmaCmd.AddCommand(listingsCmd)
+			searchListingsCmd.Flags().IntP("year", "y", -1, "Search listings by LEX Issue year.")
+			searchListingsCmd.Flags().IntP("issue", "i", -1, "Search listings by LEX Issue Number.")
+			searchListingsCmd.Flags().IntP("member", "m", -1, "Search listings by member number.")
+			listingsCmd.AddCommand(searchListingsCmd)
+			ogmaCmd.AddCommand(listingsCmd)
 
-		c, out, err := ExecuteCommandC(t, ogmaCmd, testcase.args...)
-		if out != "" {
-			t.Errorf("Unexpected output: %v", out)
-		}
-		assert.NoError(t, err)
-		assert.Equal(t, testcase.output, buf.String())
-		if c.Name() != "search" {
-			t.Errorf(`invalid command returned from ExecuteC: expected "search"', got: %q`, c.Name())
-		}
-		buf.Reset()
+			c, out, err := ExecuteCommandC(t, ogmaCmd, tc.args...)
+			if out != "" {
+				t.Errorf("Unexpected output: %v", out)
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tc.output, buf.String())
+			if c.Name() != "search" {
+				t.Errorf(`invalid command returned from ExecuteC: expected "search"', got: %q`, c.Name())
+			}
+			buf.Reset()
+		})
 	}
 }
 
