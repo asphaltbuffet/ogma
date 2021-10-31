@@ -35,7 +35,17 @@ func TestManagerNewFail(t *testing.T) {
 	defer manager.Stop()
 
 	_, err = datastore.New(dbFilePath)
-	assert.NotNil(t, err)
+}
+
+func TestManagerGetPath(t *testing.T) {
+	manager, dbFilePath, err := initDatastoreManager()
+	defer func() {
+		err = os.Remove(dbFilePath)
+		assert.NoError(t, err)
+	}()
+	defer manager.Stop()
+
+	assert.Equal(t, dbFilePath, manager.GetPath())
 }
 
 func initDatastoreManager() (*datastore.Manager, string, error) {
