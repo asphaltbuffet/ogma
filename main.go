@@ -9,25 +9,13 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/asphaltbuffet/ogma/cmd"
-	"github.com/asphaltbuffet/ogma/pkg/datastore"
 )
 
 func main() {
 	PrepConfigAndLogging()
 	log.Info("Starting ogma...")
+
 	cmd.Execute()
-
-	dsManager, err := datastore.New("ogma.db")
-	if err != nil {
-		log.Fatal("Datastore manager failure.")
-	}
-
-	defer dsManager.Stop()
-
-	// err = dsManager.Store.Save(&listing)
-	if err != nil {
-		log.Error("Failed to save to db: ")
-	}
 }
 
 // PrepConfigAndLogging sets up configuration and logging for application.

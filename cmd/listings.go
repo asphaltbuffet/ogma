@@ -29,6 +29,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/asphaltbuffet/ogma/pkg/datastore"
 )
 
 // A Listing contains relevant information for LEX listings.
@@ -125,7 +127,33 @@ func RunSearchListings(cmd *cobra.Command) error {
 }
 
 // RunAddListing adds a single listing to the datastore.
-func RunAddListing(cmd *cobra.Command) error {
+func RunAddListing(cmd *cobra.Command) error { //nolint:funlen // TODO: refactor later 2021-10-31 BL
+	dsManager, err := datastore.New("ogma.db")
+	if err != nil {
+		log.Fatal("Datastore manager failure.")
+	}
+
+	defer dsManager.Stop()
+	if err != nil {
+		log.Error("Failed to save to db: ")
+	}
+
+	volume, err := cmd.Flags().GetInt("volume")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"flag": "volume",
+		}).Error("Invalid flag.")
+		return err
+	}
+
+	lex, err := cmd.Flags().GetInt("lex")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"flag": "lex",
+		}).Error("Invalid flag.")
+		return err
+	}
+
 	year, err := cmd.Flags().GetInt("year")
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -134,10 +162,17 @@ func RunAddListing(cmd *cobra.Command) error {
 		return err
 	}
 
-	issue, err := cmd.Flags().GetInt("issue")
+	page, err := cmd.Flags().GetInt("page")
 	if err != nil {
 		log.WithFields(log.Fields{
-			"flag": "issue",
+			"flag": "page",
+		}).Error("Invalid flag.")
+		return err
+	}
+	category, err := cmd.Flags().GetString("category")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"flag": "category",
 		}).Error("Invalid flag.")
 		return err
 	}
@@ -150,15 +185,72 @@ func RunAddListing(cmd *cobra.Command) error {
 		return err
 	}
 
+	international, err := cmd.Flags().GetBool("international")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"flag": "international",
+		}).Error("Invalid flag.")
+		return err
+	}
+
+	review, err := cmd.Flags().GetBool("review")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"flag": "review",
+		}).Error("Invalid flag.")
+		return err
+	}
+
+	text, err := cmd.Flags().GetString("text")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"flag": "year",
+		}).Error("Invalid flag.")
+		return err
+	}
+
+	sketch, err := cmd.Flags().GetBool("sketch")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"flag": "sketch",
+		}).Error("Invalid flag.")
+		return err
+	}
+
+	flag, err := cmd.Flags().GetBool("flag")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"flag": "flag",
+		}).Error("Invalid flag.")
+		return err
+	}
+
 	log.WithFields(log.Fields{
 		"cmd":    "listings.add",
 		"year":   year,
-		"issue":  issue,
+		"issue":  lex,
 		"member": member,
 	}).Info("Adding a listing.")
 
-	// TODO: add listing to db & save.
+	newListing := Listing{
+		Volume:              volume,
+		IssueNumber:         lex,
+		Year:                year,
+		PageNumber:          page,
+		IndexedCategory:     category,
+		IndexedMemberNumber: member,
+		MemberExtension:     "", // TODO: add support for member extensions
+		IsInternational:     international,
+		IsReview:            review,
+		ListingText:         text,
+		IsArt:               sketch,
+		IsFlagged:           flag,
+	}
 
+	err = dsManager.Store.Save(&newListing)
+	if err != nil {
+		log.Error("Failed to save new listing.")
+	}
 	// TODO: add formatted listing as output.
 	cmd.Println("Added a listing.")
 
