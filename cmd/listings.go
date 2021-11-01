@@ -26,6 +26,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/jedib0t/go-pretty/v6/table"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -128,7 +129,7 @@ func RunSearchListings(cmd *cobra.Command) error {
 
 // RunAddListing adds a single listing to the datastore.
 func RunAddListing(cmd *cobra.Command) error { //nolint:funlen // TODO: refactor later 2021-10-31 BL
-	dsManager, err := datastore.New("ogma.db")
+	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
 	if err != nil {
 		log.Fatal("Datastore manager failure.")
 	}
@@ -253,6 +254,44 @@ func RunAddListing(cmd *cobra.Command) error { //nolint:funlen // TODO: refactor
 	}
 	// TODO: add formatted listing as output.
 	cmd.Println("Added a listing.")
+
+	lt := table.NewWriter()
+	lt.AppendHeader(table.Row{
+		"Volume",
+		"Issue",
+		"Year",
+		"Page",
+		"Category",
+		"Member",
+		"International",
+		"Review",
+		"Text",
+		"Sketch",
+		"Flagged",
+	})
+	lt.AppendRow([]interface{}{
+		newListing.Volume,
+		newListing.IssueNumber,
+		newListing.Year,
+		newListing.PageNumber,
+		newListing.IndexedCategory,
+		newListing.IndexedMemberNumber,
+		newListing.IsInternational,
+		newListing.IsReview,
+		newListing.ListingText,
+		newListing.IsArt,
+		newListing.IsFlagged,
+	})
+	lt.SetColumnConfigs([]table.ColumnConfig{
+		{
+			Name:     "Text",
+			WidthMax: viper.GetInt("defaults.max_column"),
+		},
+	})
+
+	// TODO: wrap output styles in a new flag
+	// lt.SetStyle(table.StyleColoredBright)
+	cmd.Println(lt.Render())
 
 	// Actually return error if add was successful.
 	return nil

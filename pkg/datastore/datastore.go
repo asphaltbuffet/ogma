@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/asdine/storm/v3"
+	log "github.com/sirupsen/logrus"
 )
 
 // Manager main object for data store.
@@ -18,6 +19,9 @@ func New(filePath string) (*Manager, error) {
 	storm, err := storm.Open(filePath)
 	if err != nil {
 		fmt.Println("Failed to open db: ", err)
+		log.WithFields(log.Fields{
+			"filePath": filePath,
+		}).Error("Failed to open db.")
 
 		return nil, err
 	}

@@ -2,3 +2,8 @@ logging:
     level: warn
 search:
     max_results: 10
+datastore:
+    filename: "ogma.db"
+defaults:
+    issue: 56
+    max_column: 40
