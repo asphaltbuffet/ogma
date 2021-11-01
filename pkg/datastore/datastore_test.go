@@ -15,27 +15,38 @@ func TestManagerNew(t *testing.T) {
 	manager, dbFilePath, err := initDatastoreManager()
 	defer func() {
 		err = os.Remove(dbFilePath)
-		assert.Nil(t, err)
+		assert.NoError(t, err)
 	}()
 	defer manager.Stop()
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	_, err = os.Stat(dbFilePath)
 
-	assert.False(t, os.IsNotExist(err))
+	assert.NotErrorIs(t, err, os.ErrNotExist)
 }
 
 func TestManagerNewFail(t *testing.T) {
 	manager, dbFilePath, err := initDatastoreManager()
 	defer func() {
 		err = os.Remove(dbFilePath)
-		assert.Nil(t, err)
+		assert.NoError(t, err)
 	}()
 	defer manager.Stop()
 
 	_, err = datastore.New(dbFilePath)
-	assert.NotNil(t, err)
+	assert.Error(t, err, "datastore manager should fail to open duplicate db file")
+}
+
+func TestManagerGetPath(t *testing.T) {
+	manager, dbFilePath, err := initDatastoreManager()
+	defer func() {
+		err = os.Remove(dbFilePath)
+		assert.NoError(t, err)
+	}()
+	defer manager.Stop()
+
+	assert.Equal(t, dbFilePath, manager.GetPath())
 }
 
 func initDatastoreManager() (*datastore.Manager, string, error) {

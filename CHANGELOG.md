@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Application configuration file (.ogma)
-- Logging (ogma.log)
+- Logging
 - New commands
-    - _Add_
-    - _Import_
     - _Issues_
     - _Listings_
+        - _add_
+        - _search_
 - New _info_ flag for base command
 ### Changed
 - More unit testing

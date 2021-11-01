@@ -1,10 +1,9 @@
 logging:
-    level: trace
-    filename: ogma.log
+    level: warn
 search:
-    min_year: 1986
-    min_issue: 1
-    min_member: 1
-    default_year: -1
-    default_issue: -1
-    default_member: -1
+    max_results: 10
+datastore:
+    filename: "ogma.db"
+defaults:
+    issue: 56
+    max_column: 40

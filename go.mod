@@ -6,6 +6,7 @@ require (
 	github.com/asdine/storm/v3 v3.2.1
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
+	github.com/jedib0t/go-pretty/v6 v6.2.4
 	github.com/kr/text v0.2.0 // indirect
 	github.com/sirupsen/logrus v1.8.1
 	github.com/smartystreets/assertions v1.0.0 // indirect
