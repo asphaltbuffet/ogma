@@ -138,24 +138,14 @@ func RunSearchListings(cmd *cobra.Command) error {
 	return nil
 }
 
-// RunAddListing adds a single listing to the datastore.
-func RunAddListing(cmd *cobra.Command) error { //nolint:funlen // TODO: refactor later 2021-10-31 BL
-	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
-	if err != nil {
-		log.Fatal("Datastore manager failure.")
-	}
-
-	defer dsManager.Stop()
-	if err != nil {
-		log.Error("Failed to save to db: ")
-	}
-
+// ParseInputForListing creates a new listing from command flags.
+func ParseInputForListing(cmd *cobra.Command) (l Listing, err error) { //nolint:funlen // TODO: refactor later 2021-11-02 BL
 	volume, err := cmd.Flags().GetInt("volume")
 	if err != nil {
 		log.WithFields(log.Fields{
 			"flag": "volume",
 		}).Error("Invalid flag.")
-		return err
+		return Listing{}, err
 	}
 
 	lex, err := cmd.Flags().GetInt("lex")
@@ -163,7 +153,7 @@ func RunAddListing(cmd *cobra.Command) error { //nolint:funlen // TODO: refactor
 		log.WithFields(log.Fields{
 			"flag": "lex",
 		}).Error("Invalid flag.")
-		return err
+		return Listing{}, err
 	}
 
 	year, err := cmd.Flags().GetInt("year")
@@ -171,7 +161,7 @@ func RunAddListing(cmd *cobra.Command) error { //nolint:funlen // TODO: refactor
 		log.WithFields(log.Fields{
 			"flag": "year",
 		}).Error("Invalid flag.")
-		return err
+		return Listing{}, err
 	}
 
 	season, err := cmd.Flags().GetString("season")
@@ -187,14 +177,14 @@ func RunAddListing(cmd *cobra.Command) error { //nolint:funlen // TODO: refactor
 		log.WithFields(log.Fields{
 			"flag": "page",
 		}).Error("Invalid flag.")
-		return err
+		return Listing{}, err
 	}
 	category, err := cmd.Flags().GetString("category")
 	if err != nil {
 		log.WithFields(log.Fields{
 			"flag": "category",
 		}).Error("Invalid flag.")
-		return err
+		return Listing{}, err
 	}
 
 	member, err := cmd.Flags().GetInt("member")
@@ -202,7 +192,7 @@ func RunAddListing(cmd *cobra.Command) error { //nolint:funlen // TODO: refactor
 		log.WithFields(log.Fields{
 			"flag": "member",
 		}).Error("Invalid flag.")
-		return err
+		return Listing{}, err
 	}
 
 	international, err := cmd.Flags().GetBool("international")
@@ -210,7 +200,7 @@ func RunAddListing(cmd *cobra.Command) error { //nolint:funlen // TODO: refactor
 		log.WithFields(log.Fields{
 			"flag": "international",
 		}).Error("Invalid flag.")
-		return err
+		return Listing{}, err
 	}
 
 	review, err := cmd.Flags().GetBool("review")
@@ -218,7 +208,7 @@ func RunAddListing(cmd *cobra.Command) error { //nolint:funlen // TODO: refactor
 		log.WithFields(log.Fields{
 			"flag": "review",
 		}).Error("Invalid flag.")
-		return err
+		return Listing{}, err
 	}
 
 	text, err := cmd.Flags().GetString("text")
@@ -226,7 +216,7 @@ func RunAddListing(cmd *cobra.Command) error { //nolint:funlen // TODO: refactor
 		log.WithFields(log.Fields{
 			"flag": "year",
 		}).Error("Invalid flag.")
-		return err
+		return Listing{}, err
 	}
 
 	art, err := cmd.Flags().GetBool("art")
@@ -234,7 +224,7 @@ func RunAddListing(cmd *cobra.Command) error { //nolint:funlen // TODO: refactor
 		log.WithFields(log.Fields{
 			"flag": "art",
 		}).Error("Invalid flag.")
-		return err
+		return Listing{}, err
 	}
 
 	flag, err := cmd.Flags().GetBool("flag")
@@ -242,17 +232,10 @@ func RunAddListing(cmd *cobra.Command) error { //nolint:funlen // TODO: refactor
 		log.WithFields(log.Fields{
 			"flag": "flag",
 		}).Error("Invalid flag.")
-		return err
+		return Listing{}, err
 	}
 
-	log.WithFields(log.Fields{
-		"cmd":    "listings.add",
-		"year":   year,
-		"issue":  lex,
-		"member": member,
-	}).Info("Adding a listing.")
-
-	newListing := Listing{
+	return Listing{
 		Volume:              volume,
 		IssueNumber:         lex,
 		Year:                year,
@@ -266,7 +249,33 @@ func RunAddListing(cmd *cobra.Command) error { //nolint:funlen // TODO: refactor
 		ListingText:         text,
 		IsArt:               art,
 		IsFlagged:           flag,
+	}, nil
+}
+
+// RunAddListing adds a single listing to the datastore.
+func RunAddListing(cmd *cobra.Command) error { //nolint:funlen // TODO: refactor later 2021-10-31 BL
+	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
+	if err != nil {
+		log.Fatal("Datastore manager failure.")
 	}
+
+	defer dsManager.Stop()
+	if err != nil {
+		log.Error("Failed to save to db: ")
+	}
+
+	newListing, err := ParseInputForListing(cmd)
+	if err != nil {
+		log.Error("Failed to save to db: ")
+		return err
+	}
+
+	// log.WithFields(log.Fields{
+	// 	"cmd":    "listings.add",
+	// 	"year":   year,
+	// 	"issue":  lex,
+	// 	"member": member,
+	// }).Info("Adding a listing.")
 
 	err = dsManager.Store.Save(&newListing)
 	if err != nil {
@@ -350,6 +359,8 @@ func SearchListings(y int, i int, m int) (count int) {
 }
 
 func init() {
+	importListingsCmd.Flags().Bool("verbose", false, "Print imported listings to stdout.")
+
 	addListingCmd.Flags().IntP("volume", "v", -1, "Volume containing listing entry.")
 	addListingCmd.Flags().IntP("lex", "l", viper.GetInt("defaults.issue"), "LEX issue containing listing entry.")
 	addListingCmd.Flags().IntP("year", "y", time.Now().Year(), "Year of listing entry..")
