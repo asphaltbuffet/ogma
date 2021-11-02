@@ -44,7 +44,6 @@ func TestListingsSearchCmd(t *testing.T) { //nolint:funlen // ignore this for no
 			},
 			output: "Found 0 listings.\n",
 		},
-		// search for year less than min
 		"no results by year (short)": {
 			args: []string{"listings", "search", "-y1"},
 			function: func() func(c *cobra.Command, args []string) error {
@@ -171,7 +170,9 @@ func TestListingsAddCmd(t *testing.T) { //nolint:funlen // ignore this for now 2
 		output   string
 	}{
 		"no flags": {
-			args: []string{"listings", "add"},
+			args: []string{
+				"listings", "add",
+			},
 			function: func() func(c *cobra.Command, args []string) error {
 				return func(c *cobra.Command, args []string) error {
 					c.SetOut(&buf)
@@ -180,10 +181,17 @@ func TestListingsAddCmd(t *testing.T) { //nolint:funlen // ignore this for now 2
 					return nil
 				}
 			},
-			output: "Added a listing.\n+--------+-------+------+------+----------+--------+---------------+--------+------+--------+---------+\n| VOLUME | ISSUE | YEAR | PAGE | CATEGORY | MEMBER | INTERNATIONAL | REVIEW | TEXT | SKETCH | FLAGGED |\n+--------+-------+------+------+----------+--------+---------------+--------+------+--------+---------+\n|     -1 |    56 | 2021 |   -1 |          |     -1 | false         | false  |      | false  | false   |\n+--------+-------+------+------+----------+--------+---------------+--------+------+--------+---------+\n",
+			output: "Added a listing.\n" +
+				"+--------+-------+------+--------+------+----------+--------+---------------+--------+------+--------+---------+\n" +
+				"| VOLUME | ISSUE | YEAR | SEASON | PAGE | CATEGORY | MEMBER | INTERNATIONAL | REVIEW | TEXT | SKETCH | FLAGGED |\n" +
+				"+--------+-------+------+--------+------+----------+--------+---------------+--------+------+--------+---------+\n" +
+				"|     -1 |    56 | 2021 |        |   -1 |          |     -1 | false         | false  |      | false  | false   |\n" +
+				"+--------+-------+------+--------+------+----------+--------+---------------+--------+------+--------+---------+\n",
 		},
 		"required flags": {
-			args: []string{"listings", "add", "-v2", "-l40", "-y2021", "-p2", "-cCrafts", "-m12345", "-t\"Some text goes here.\""},
+			args: []string{
+				"listings", "add", "-v2", "-l40", "-y2021", "-sAutumn", "-p2", "-cCrafts", "-m12345", "-t\"Some text goes here.\"",
+			},
 			function: func() func(c *cobra.Command, args []string) error {
 				return func(c *cobra.Command, args []string) error {
 					c.SetOut(&buf)
@@ -192,10 +200,17 @@ func TestListingsAddCmd(t *testing.T) { //nolint:funlen // ignore this for now 2
 					return nil
 				}
 			},
-			output: "Added a listing.\n+--------+-------+------+------+----------+--------+---------------+--------+------------------------+--------+---------+\n| VOLUME | ISSUE | YEAR | PAGE | CATEGORY | MEMBER | INTERNATIONAL | REVIEW | TEXT                   | SKETCH | FLAGGED |\n+--------+-------+------+------+----------+--------+---------------+--------+------------------------+--------+---------+\n|      2 |    40 | 2021 |    2 | Crafts   |  12345 | false         | false  | \"Some text goes here.\" | false  | false   |\n+--------+-------+------+------+----------+--------+---------------+--------+------------------------+--------+---------+\n",
+			output: "Added a listing.\n" +
+				"+--------+-------+------+--------+------+----------+--------+---------------+--------+------------------------+--------+---------+\n" +
+				"| VOLUME | ISSUE | YEAR | SEASON | PAGE | CATEGORY | MEMBER | INTERNATIONAL | REVIEW | TEXT                   | SKETCH | FLAGGED |\n" +
+				"+--------+-------+------+--------+------+----------+--------+---------------+--------+------------------------+--------+---------+\n" +
+				"|      2 |    40 | 2021 | Autumn |    2 | Crafts   |  12345 | false         | false  | \"Some text goes here.\" | false  | false   |\n" +
+				"+--------+-------+------+--------+------+----------+--------+---------------+--------+------------------------+--------+---------+\n",
 		},
 		"all flags": {
-			args: []string{"listings", "add", "-v9", "-l999", "-y9999", "-p9", "-c\"some category\"", "-m9876", "-t\"Some kind of text goes here.\"", "-i", "-r", "-s", "-f"},
+			args: []string{
+				"listings", "add", "-v9", "-l999", "-y9999", "-sasdfb", "-p9", "-c\"some category\"", "-m9876", "-t\"Some kind of text goes here.\"", "-i", "-r", "-a", "-f",
+			},
 			function: func() func(c *cobra.Command, args []string) error {
 				return func(c *cobra.Command, args []string) error {
 					c.SetOut(&buf)
@@ -204,7 +219,12 @@ func TestListingsAddCmd(t *testing.T) { //nolint:funlen // ignore this for now 2
 					return nil
 				}
 			},
-			output: "Added a listing.\n+--------+-------+------+------+-----------------+--------+---------------+--------+--------------------------------+--------+---------+\n| VOLUME | ISSUE | YEAR | PAGE | CATEGORY        | MEMBER | INTERNATIONAL | REVIEW | TEXT                           | SKETCH | FLAGGED |\n+--------+-------+------+------+-----------------+--------+---------------+--------+--------------------------------+--------+---------+\n|      9 |   999 | 9999 |    9 | \"some category\" |   9876 | true          | true   | \"Some kind of text goes here.\" | true   | true    |\n+--------+-------+------+------+-----------------+--------+---------------+--------+--------------------------------+--------+---------+\n",
+			output: "Added a listing.\n" +
+				"+--------+-------+------+--------+------+-----------------+--------+---------------+--------+--------------------------------+--------+---------+\n" +
+				"| VOLUME | ISSUE | YEAR | SEASON | PAGE | CATEGORY        | MEMBER | INTERNATIONAL | REVIEW | TEXT                           | SKETCH | FLAGGED |\n" +
+				"+--------+-------+------+--------+------+-----------------+--------+---------------+--------+--------------------------------+--------+---------+\n" +
+				"|      9 |   999 | 9999 | asdfb  |    9 | \"some category\" |   9876 | true          | true   | \"Some kind of text goes here.\" | true   | true    |\n" +
+				"+--------+-------+------+--------+------+-----------------+--------+---------------+--------+--------------------------------+--------+---------+\n",
 		},
 	}
 
@@ -227,14 +247,15 @@ func TestListingsAddCmd(t *testing.T) { //nolint:funlen // ignore this for now 2
 
 			addListingCmd.Flags().IntP("volume", "v", -1, "Volume containing listing entry.")
 			addListingCmd.Flags().IntP("lex", "l", viper.GetInt("defaults.issue"), "LEX issue containing listing entry.")
-			addListingCmd.Flags().IntP("year", "y", time.Now().Year(), "Year of listing entry..")
+			addListingCmd.Flags().IntP("year", "y", time.Now().Year(), "Year of listing entry.")
+			addListingCmd.Flags().StringP("season", "s", "", "Season of listing entry.")
 			addListingCmd.Flags().IntP("page", "p", -1, "Page number of listing entry.")
 			addListingCmd.Flags().StringP("category", "c", "", "Category of listing entry.")
 			addListingCmd.Flags().IntP("member", "m", -1, "Member number of listing entry.")
 			addListingCmd.Flags().BoolP("international", "i", false, "Is international postage required?")
 			addListingCmd.Flags().BoolP("review", "r", false, "Is this a book review listing entry?")
 			addListingCmd.Flags().StringP("text", "t", "", "Text of listing entry.")
-			addListingCmd.Flags().BoolP("sketch", "s", false, "Is this a sketch listing entry?")
+			addListingCmd.Flags().BoolP("art", "a", false, "Is this a sketch listing entry?")
 			addListingCmd.Flags().BoolP("flag", "f", false, "Has this listing entry been flagged?")
 			listingsCmd.AddCommand(addListingCmd)
 			ogmaCmd.AddCommand(listingsCmd)

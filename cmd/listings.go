@@ -40,6 +40,7 @@ type Listing struct {
 	Volume              int
 	IssueNumber         int
 	Year                int
+	Season              string
 	PageNumber          int
 	IndexedCategory     string `storm:"index"`
 	IndexedMemberNumber int    `storm:"index"`
@@ -163,6 +164,14 @@ func RunAddListing(cmd *cobra.Command) error { //nolint:funlen // TODO: refactor
 		return err
 	}
 
+	season, err := cmd.Flags().GetString("season")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"flag": "season",
+		}).Error("Invalid flag.")
+		return Listing{}, err
+	}
+
 	page, err := cmd.Flags().GetInt("page")
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -210,10 +219,10 @@ func RunAddListing(cmd *cobra.Command) error { //nolint:funlen // TODO: refactor
 		return err
 	}
 
-	sketch, err := cmd.Flags().GetBool("sketch")
+	art, err := cmd.Flags().GetBool("art")
 	if err != nil {
 		log.WithFields(log.Fields{
-			"flag": "sketch",
+			"flag": "art",
 		}).Error("Invalid flag.")
 		return err
 	}
@@ -237,6 +246,7 @@ func RunAddListing(cmd *cobra.Command) error { //nolint:funlen // TODO: refactor
 		Volume:              volume,
 		IssueNumber:         lex,
 		Year:                year,
+		Season:              season,
 		PageNumber:          page,
 		IndexedCategory:     category,
 		IndexedMemberNumber: member,
@@ -244,7 +254,7 @@ func RunAddListing(cmd *cobra.Command) error { //nolint:funlen // TODO: refactor
 		IsInternational:     international,
 		IsReview:            review,
 		ListingText:         text,
-		IsArt:               sketch,
+		IsArt:               art,
 		IsFlagged:           flag,
 	}
 
@@ -260,6 +270,7 @@ func RunAddListing(cmd *cobra.Command) error { //nolint:funlen // TODO: refactor
 		"Volume",
 		"Issue",
 		"Year",
+		"Season",
 		"Page",
 		"Category",
 		"Member",
@@ -273,6 +284,7 @@ func RunAddListing(cmd *cobra.Command) error { //nolint:funlen // TODO: refactor
 		newListing.Volume,
 		newListing.IssueNumber,
 		newListing.Year,
+		newListing.Season,
 		newListing.PageNumber,
 		newListing.IndexedCategory,
 		newListing.IndexedMemberNumber,
@@ -326,14 +338,14 @@ func init() {
 	addListingCmd.Flags().IntP("volume", "v", -1, "Volume containing listing entry.")
 	addListingCmd.Flags().IntP("lex", "l", viper.GetInt("defaults.issue"), "LEX issue containing listing entry.")
 	addListingCmd.Flags().IntP("year", "y", time.Now().Year(), "Year of listing entry..")
-	// addListingCmd.MarkFlagRequired("year") //nolint:errcheck,gosec // handled by cobra
+	addListingCmd.Flags().StringP("season", "s", "", "Season of listing entry.")
 	addListingCmd.Flags().IntP("page", "p", -1, "Page number of listing entry.")
 	addListingCmd.Flags().StringP("category", "c", "", "Category of listing entry.")
 	addListingCmd.Flags().IntP("member", "m", -1, "Member number of listing entry.")
 	addListingCmd.Flags().BoolP("international", "i", false, "Is international postage required?")
 	addListingCmd.Flags().BoolP("review", "r", false, "Is this a book review listing entry?")
 	addListingCmd.Flags().StringP("text", "t", "", "Text of listing entry.")
-	addListingCmd.Flags().BoolP("sketch", "s", false, "Is this a sketch listing entry?")
+	addListingCmd.Flags().BoolP("art", "a", false, "Is this a sketch listing entry?")
 	addListingCmd.Flags().BoolP("flag", "f", false, "Has this listing entry been flagged?")
 	listingsCmd.AddCommand(addListingCmd)
 
