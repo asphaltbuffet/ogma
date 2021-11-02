@@ -79,6 +79,16 @@ var addListingCmd = &cobra.Command{
 	},
 }
 
+var importListingsCmd = &cobra.Command{
+	Use:   "import",
+	Short: "Import listings from a file.",
+	Long:  ``,
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return RunImportListings(cmd)
+	},
+}
+
 // RunSearchListings performs action associated with listings application command.
 func RunSearchListings(cmd *cobra.Command) error {
 	year, err := cmd.Flags().GetInt("year")
@@ -306,6 +316,11 @@ func RunAddListing(cmd *cobra.Command) error { //nolint:funlen // TODO: refactor
 	cmd.Println(lt.Render())
 
 	// Actually return error if add was successful.
+	return nil
+}
+
+// RunImportListings adds one to many listings to the datastore from a file.
+func RunImportListings(cmd *cobra.Command) error {
 	return nil
 }
 
