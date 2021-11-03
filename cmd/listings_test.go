@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/asphaltbuffet/ogma/cmd"
+	cmd2 "github.com/asphaltbuffet/ogma/pkg/cmd"
 )
 
 func TestListingsSearchCmd(t *testing.T) { //nolint:funlen // ignore this for now 2021/10/29 BL
@@ -37,7 +37,7 @@ func TestListingsSearchCmd(t *testing.T) { //nolint:funlen // ignore this for no
 			function: func() func(c *cobra.Command, args []string) error {
 				return func(c *cobra.Command, args []string) error {
 					c.SetOut(&buf)
-					err := cmd.RunSearchListings(c)
+					err := cmd2.RunSearchListings(c)
 					assert.NoError(t, err)
 					return nil
 				}
@@ -49,7 +49,7 @@ func TestListingsSearchCmd(t *testing.T) { //nolint:funlen // ignore this for no
 			function: func() func(c *cobra.Command, args []string) error {
 				return func(c *cobra.Command, args []string) error {
 					c.SetOut(&buf)
-					err := cmd.RunSearchListings(c)
+					err := cmd2.RunSearchListings(c)
 					assert.NoError(t, err)
 					return nil
 				}
@@ -61,7 +61,7 @@ func TestListingsSearchCmd(t *testing.T) { //nolint:funlen // ignore this for no
 			function: func() func(c *cobra.Command, args []string) error {
 				return func(c *cobra.Command, args []string) error {
 					c.SetOut(&buf)
-					err := cmd.RunSearchListings(c)
+					err := cmd2.RunSearchListings(c)
 					assert.NoError(t, err)
 					return nil
 				}
@@ -73,7 +73,7 @@ func TestListingsSearchCmd(t *testing.T) { //nolint:funlen // ignore this for no
 			function: func() func(c *cobra.Command, args []string) error {
 				return func(c *cobra.Command, args []string) error {
 					c.SetOut(&buf)
-					err := cmd.RunSearchListings(c)
+					err := cmd2.RunSearchListings(c)
 					assert.NoError(t, err)
 					return nil
 				}
@@ -85,7 +85,7 @@ func TestListingsSearchCmd(t *testing.T) { //nolint:funlen // ignore this for no
 			function: func() func(c *cobra.Command, args []string) error {
 				return func(c *cobra.Command, args []string) error {
 					c.SetOut(&buf)
-					err := cmd.RunSearchListings(c)
+					err := cmd2.RunSearchListings(c)
 					assert.NoError(t, err)
 					return nil
 				}
@@ -97,7 +97,7 @@ func TestListingsSearchCmd(t *testing.T) { //nolint:funlen // ignore this for no
 			function: func() func(c *cobra.Command, args []string) error {
 				return func(c *cobra.Command, args []string) error {
 					c.SetOut(&buf)
-					err := cmd.RunSearchListings(c)
+					err := cmd2.RunSearchListings(c)
 					assert.Error(t, err)
 					return nil
 				}
@@ -176,7 +176,7 @@ func TestListingsAddCmd(t *testing.T) { //nolint:funlen // ignore this for now 2
 			function: func() func(c *cobra.Command, args []string) error {
 				return func(c *cobra.Command, args []string) error {
 					c.SetOut(&buf)
-					err := cmd.RunAddListing(c)
+					err := cmd2.RunAddListing(c)
 					assert.NoError(t, err)
 					return nil
 				}
@@ -195,7 +195,7 @@ func TestListingsAddCmd(t *testing.T) { //nolint:funlen // ignore this for now 2
 			function: func() func(c *cobra.Command, args []string) error {
 				return func(c *cobra.Command, args []string) error {
 					c.SetOut(&buf)
-					err := cmd.RunAddListing(c)
+					err := cmd2.RunAddListing(c)
 					assert.NoError(t, err)
 					return nil
 				}
@@ -214,7 +214,7 @@ func TestListingsAddCmd(t *testing.T) { //nolint:funlen // ignore this for now 2
 			function: func() func(c *cobra.Command, args []string) error {
 				return func(c *cobra.Command, args []string) error {
 					c.SetOut(&buf)
-					err := cmd.RunAddListing(c)
+					err := cmd2.RunAddListing(c)
 					assert.NoError(t, err)
 					return nil
 				}
