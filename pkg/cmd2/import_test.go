@@ -22,46 +22,30 @@ THE SOFTWARE.
 
 package cmd
 
-import (
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+import "testing"
 
-	"github.com/asphaltbuffet/ogma/pkg/datastore"
-)
-
-// RunImportListings adds one to many listings to the datastore from a file.
-func RunImportListings(c *cobra.Command) error {
-	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
-	if err != nil {
-		log.Error("Datastore manager failure.")
-		return err
+func TestRunImportListings(t *testing.T) {
+	type args struct {
+		fp string
 	}
-
-	defer dsManager.Stop()
-	if err != nil {
-		log.Error("Failed to save to db: ")
-		return err
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		// TODO: Add test cases.
 	}
-
-	newListing, err := ParseInputForListing(c)
-	if err != nil {
-		log.Error("Failed to save to db: ")
-		return err
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := RunImportListings(tt.args.fp)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("RunImportListings() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("RunImportListings() = %v, want %v", got, tt.want)
+			}
+		})
 	}
-
-	log.WithFields(log.Fields{
-		"cmd": "listings.import",
-	}).Info("Adding a listing.")
-
-	err = dsManager.Store.Save(&newListing)
-	if err != nil {
-		log.Error("Failed to save new listings.")
-		return err
-	}
-
-	c.Println("Added a listing.")
-	c.Println(newListing.Render())
-
-	return nil
 }

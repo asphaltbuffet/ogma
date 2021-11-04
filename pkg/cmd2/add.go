@@ -24,44 +24,43 @@ package cmd
 
 import (
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/asphaltbuffet/ogma/pkg/datastore"
 )
 
 // RunAddListing adds a single listing to the datastore.
-func RunAddListing(c *cobra.Command) error {
+func RunAddListing(ll []Listing) (string, error) {
 	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
 	if err != nil {
 		log.Error("Datastore manager failure.")
-		return err
+		return "", err
 	}
 
 	defer dsManager.Stop()
 	if err != nil {
 		log.Error("Failed to save to db: ")
-		return err
+		return "", err
 	}
 
-	newListing, err := ParseInputForListing(c)
 	if err != nil {
 		log.Error("Failed to save to db: ")
-		return err
+		return "", err
 	}
 
 	log.WithFields(log.Fields{
 		"cmd": "listings.add",
 	}).Info("Adding a listing.")
 
-	err = dsManager.Store.Save(&newListing)
-	if err != nil {
-		log.Error("Failed to save new listing.")
-		return err
+	for _, l := range ll {
+		// copy loop variable so i can accurately reference it for saving
+		listing := l
+		err = dsManager.Store.Save(&listing)
+		if err != nil {
+			log.Error("Failed to save new listing.")
+			return "", err
+		}
 	}
 
-	c.Println("Added a listing.")
-	c.Println(newListing.Render())
-
-	return nil
+	return RenderListings(ll), nil
 }

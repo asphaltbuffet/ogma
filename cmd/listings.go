@@ -28,7 +28,24 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/asphaltbuffet/ogma/pkg/cmd"
+	cmd2 "github.com/asphaltbuffet/ogma/pkg/cmd2"
+)
+
+var (
+	volume        int
+	lex           int
+	year          int
+	season        string
+	page          int
+	category      string
+	member        int
+	international bool
+	review        bool
+	text          string
+	art           bool
+	flag          bool
+	importPath    string
+	verbose       bool
 )
 
 // listingsCmd represents the listings command.
@@ -44,7 +61,7 @@ var searchListingsCmd = &cobra.Command{
 	Long:  ``,
 	Args:  cobra.NoArgs,
 	RunE: func(c *cobra.Command, args []string) error {
-		return cmd.RunSearchListings(c)
+		return cmd2.RunSearchListings(c)
 	},
 }
 
@@ -54,7 +71,28 @@ var addListingCmd = &cobra.Command{
 	Long:  ``,
 	Args:  cobra.NoArgs,
 	RunE: func(c *cobra.Command, args []string) error {
-		return cmd.RunAddListing(c)
+		out, err := cmd2.RunAddListing([]cmd2.Listing{
+			{
+				Volume:              volume,
+				IssueNumber:         lex,
+				Year:                year,
+				Season:              season,
+				PageNumber:          page,
+				IndexedCategory:     category,
+				IndexedMemberNumber: member,
+				MemberExtension:     "",
+				IsInternational:     international,
+				IsReview:            review,
+				ListingText:         text,
+				IsArt:               art,
+				IsFlagged:           flag,
+			},
+		})
+		if err == nil {
+			c.Println(out)
+		}
+
+		return err
 	},
 }
 
@@ -62,34 +100,45 @@ var importListingsCmd = &cobra.Command{
 	Use:   "import",
 	Short: "Import listings from a file.",
 	Long:  ``,
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.MaximumNArgs(2), //nolint:gomnd // this should be fine for now 2021-11-03 BL
 	RunE: func(c *cobra.Command, args []string) error {
-		return cmd.RunImportListings(c)
+		out, err := cmd2.RunImportListings(importPath)
+
+		if err == nil {
+			if verbose {
+				c.Println(out)
+			}
+		}
+
+		return err
 	},
 }
 
 func init() {
-	importListingsCmd.Flags().Bool("verbose", false, "Print imported listings to stdout.")
+	importListingsCmd.Flags().StringVarP(&importPath, "file", "f", "", "JSON file to be imported.")
+	importListingsCmd.MarkFlagRequired("file") //nolint:errcheck,gosec // TODO: put in error check later 2021-11-03 BL
+	importListingsCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Print imported listings to stdout.")
+	listingsCmd.AddCommand(importListingsCmd)
 
-	addListingCmd.Flags().IntP("volume", "v", -1, "Volume containing listing entry.")
-	addListingCmd.Flags().IntP("lex", "l", viper.GetInt("defaults.issue"), "LEX issue containing listing entry.")
-	addListingCmd.Flags().IntP("year", "y", time.Now().Year(), "Year of listing entry..")
-	addListingCmd.Flags().StringP("season", "s", "", "Season of listing entry.")
-	addListingCmd.Flags().IntP("page", "p", -1, "Page number of listing entry.")
-	addListingCmd.Flags().StringP("category", "c", "", "Category of listing entry.")
-	addListingCmd.Flags().IntP("member", "m", -1, "Member number of listing entry.")
-	addListingCmd.Flags().BoolP("international", "i", false, "Is international postage required?")
-	addListingCmd.Flags().BoolP("review", "r", false, "Is this a book review listing entry?")
-	addListingCmd.Flags().StringP("text", "t", "", "Text of listing entry.")
-	addListingCmd.Flags().BoolP("art", "a", false, "Is this a sketch listing entry?")
-	addListingCmd.Flags().BoolP("flag", "f", false, "Has this listing entry been flagged?")
+	addListingCmd.Flags().IntVarP(&volume, "volume", "v", -1, "Volume containing listing entry.")
+	addListingCmd.Flags().IntVarP(&lex, "lex", "l", viper.GetInt("defaults.issue"), "LEX issue containing listing entry.")
+	addListingCmd.Flags().IntVarP(&year, "year", "y", time.Now().Year(), "Year of listing entry..")
+	addListingCmd.Flags().StringVarP(&season, "season", "s", "", "Season of listing entry.")
+	addListingCmd.Flags().IntVarP(&page, "page", "p", -1, "Page number of listing entry.")
+	addListingCmd.Flags().StringVarP(&category, "category", "c", "", "Category of listing entry.")
+	addListingCmd.Flags().IntVarP(&member, "member", "m", -1, "Member number of listing entry.")
+	addListingCmd.Flags().BoolVarP(&international, "international", "i", false, "Is international postage required?")
+	addListingCmd.Flags().BoolVarP(&review, "review", "r", false, "Is this a book review listing entry?")
+	addListingCmd.Flags().StringVarP(&text, "text", "t", "", "Text of listing entry.")
+	addListingCmd.Flags().BoolVarP(&art, "art", "a", false, "Is this a sketch listing entry?")
+	addListingCmd.Flags().BoolVarP(&flag, "flag", "f", false, "Has this listing entry been flagged?")
 	listingsCmd.AddCommand(addListingCmd)
 
 	searchListingsCmd.Flags().IntP("year", "y", -1, "Search listings by LEX Issue year.")
 	searchListingsCmd.Flags().IntP("issue", "i", -1, "Search listings by LEX Issue Number.")
 	searchListingsCmd.Flags().IntP("member", "m", -1, "Search listings by member number.")
-
 	listingsCmd.AddCommand(searchListingsCmd)
+
 	rootCmd.AddCommand(listingsCmd)
 
 	// Here you will define your flags and configuration settings.

@@ -10,7 +10,24 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
-	cmd2 "github.com/asphaltbuffet/ogma/pkg/cmd"
+	cmd2 "github.com/asphaltbuffet/ogma/pkg/cmd2"
+)
+
+var (
+	volume        int
+	lex           int
+	year          int
+	season        string
+	page          int
+	category      string
+	member        int
+	international bool
+	review        bool
+	text          string
+	art           bool
+	flag          bool
+	importPath    string
+	verbose       bool
 )
 
 func TestListingsSearchCmd(t *testing.T) { //nolint:funlen // ignore this for now 2021/10/29 BL
@@ -176,13 +193,33 @@ func TestListingsAddCmd(t *testing.T) { //nolint:funlen // ignore this for now 2
 			function: func() func(c *cobra.Command, args []string) error {
 				return func(c *cobra.Command, args []string) error {
 					c.SetOut(&buf)
-					err := cmd2.RunAddListing(c)
 					assert.NoError(t, err)
-					return nil
+
+					out, err := cmd2.RunAddListing([]cmd2.Listing{ //nolint:govet // fine for testing right now?
+						{
+							Volume:              volume,
+							IssueNumber:         lex,
+							Year:                year,
+							Season:              season,
+							PageNumber:          page,
+							IndexedCategory:     category,
+							IndexedMemberNumber: member,
+							MemberExtension:     "",
+							IsInternational:     international,
+							IsReview:            review,
+							ListingText:         text,
+							IsArt:               art,
+							IsFlagged:           flag,
+						},
+					})
+					if err == nil {
+						c.Println(out)
+					}
+
+					return err
 				}
 			},
-			output: "Added a listing.\n" +
-				"+--------+-------+------+--------+------+----------+--------+---------------+--------+------+--------+---------+\n" +
+			output: "+--------+-------+------+--------+------+----------+--------+---------------+--------+------+--------+---------+\n" +
 				"| VOLUME | ISSUE | YEAR | SEASON | PAGE | CATEGORY | MEMBER | INTERNATIONAL | REVIEW | TEXT | SKETCH | FLAGGED |\n" +
 				"+--------+-------+------+--------+------+----------+--------+---------------+--------+------+--------+---------+\n" +
 				"|     -1 |    56 | 2021 |        |   -1 |          |     -1 | false         | false  |      | false  | false   |\n" +
@@ -195,13 +232,33 @@ func TestListingsAddCmd(t *testing.T) { //nolint:funlen // ignore this for now 2
 			function: func() func(c *cobra.Command, args []string) error {
 				return func(c *cobra.Command, args []string) error {
 					c.SetOut(&buf)
-					err := cmd2.RunAddListing(c)
 					assert.NoError(t, err)
-					return nil
+
+					out, err := cmd2.RunAddListing([]cmd2.Listing{ //nolint:govet // fine for testing right now?
+						{
+							Volume:              volume,
+							IssueNumber:         lex,
+							Year:                year,
+							Season:              season,
+							PageNumber:          page,
+							IndexedCategory:     category,
+							IndexedMemberNumber: member,
+							MemberExtension:     "",
+							IsInternational:     international,
+							IsReview:            review,
+							ListingText:         text,
+							IsArt:               art,
+							IsFlagged:           flag,
+						},
+					})
+					if err == nil {
+						c.Println(out)
+					}
+
+					return err
 				}
 			},
-			output: "Added a listing.\n" +
-				"+--------+-------+------+--------+------+----------+--------+---------------+--------+------------------------+--------+---------+\n" +
+			output: "+--------+-------+------+--------+------+----------+--------+---------------+--------+------------------------+--------+---------+\n" +
 				"| VOLUME | ISSUE | YEAR | SEASON | PAGE | CATEGORY | MEMBER | INTERNATIONAL | REVIEW | TEXT                   | SKETCH | FLAGGED |\n" +
 				"+--------+-------+------+--------+------+----------+--------+---------------+--------+------------------------+--------+---------+\n" +
 				"|      2 |    40 | 2021 | Autumn |    2 | Crafts   |  12345 | false         | false  | \"Some text goes here.\" | false  | false   |\n" +
@@ -214,13 +271,34 @@ func TestListingsAddCmd(t *testing.T) { //nolint:funlen // ignore this for now 2
 			function: func() func(c *cobra.Command, args []string) error {
 				return func(c *cobra.Command, args []string) error {
 					c.SetOut(&buf)
-					err := cmd2.RunAddListing(c)
 					assert.NoError(t, err)
-					return nil
+
+					ll := []cmd2.Listing{
+						{
+							Volume:              volume,
+							IssueNumber:         lex,
+							Year:                year,
+							Season:              season,
+							PageNumber:          page,
+							IndexedCategory:     category,
+							IndexedMemberNumber: member,
+							MemberExtension:     "",
+							IsInternational:     international,
+							IsReview:            review,
+							ListingText:         text,
+							IsArt:               art,
+							IsFlagged:           flag,
+						},
+					}
+					out, err := cmd2.RunAddListing(ll)
+					if err == nil {
+						c.Println(out)
+					}
+
+					return err
 				}
 			},
-			output: "Added a listing.\n" +
-				"+--------+-------+------+--------+------+-----------------+--------+---------------+--------+--------------------------------+--------+---------+\n" +
+			output: "+--------+-------+------+--------+------+-----------------+--------+---------------+--------+--------------------------------+--------+---------+\n" +
 				"| VOLUME | ISSUE | YEAR | SEASON | PAGE | CATEGORY        | MEMBER | INTERNATIONAL | REVIEW | TEXT                           | SKETCH | FLAGGED |\n" +
 				"+--------+-------+------+--------+------+-----------------+--------+---------------+--------+--------------------------------+--------+---------+\n" +
 				"|      9 |   999 | 9999 | asdfb  |    9 | \"some category\" |   9876 | true          | true   | \"Some kind of text goes here.\" | true   | true    |\n" +
@@ -245,18 +323,18 @@ func TestListingsAddCmd(t *testing.T) { //nolint:funlen // ignore this for now 2
 				RunE: tc.function(),
 			}
 
-			addListingCmd.Flags().IntP("volume", "v", -1, "Volume containing listing entry.")
-			addListingCmd.Flags().IntP("lex", "l", viper.GetInt("defaults.issue"), "LEX issue containing listing entry.")
-			addListingCmd.Flags().IntP("year", "y", time.Now().Year(), "Year of listing entry.")
-			addListingCmd.Flags().StringP("season", "s", "", "Season of listing entry.")
-			addListingCmd.Flags().IntP("page", "p", -1, "Page number of listing entry.")
-			addListingCmd.Flags().StringP("category", "c", "", "Category of listing entry.")
-			addListingCmd.Flags().IntP("member", "m", -1, "Member number of listing entry.")
-			addListingCmd.Flags().BoolP("international", "i", false, "Is international postage required?")
-			addListingCmd.Flags().BoolP("review", "r", false, "Is this a book review listing entry?")
-			addListingCmd.Flags().StringP("text", "t", "", "Text of listing entry.")
-			addListingCmd.Flags().BoolP("art", "a", false, "Is this a sketch listing entry?")
-			addListingCmd.Flags().BoolP("flag", "f", false, "Has this listing entry been flagged?")
+			addListingCmd.Flags().IntVarP(&volume, "volume", "v", -1, "Volume containing listing entry.")
+			addListingCmd.Flags().IntVarP(&lex, "lex", "l", viper.GetInt("defaults.issue"), "LEX issue containing listing entry.")
+			addListingCmd.Flags().IntVarP(&year, "year", "y", time.Now().Year(), "Year of listing entry..")
+			addListingCmd.Flags().StringVarP(&season, "season", "s", "", "Season of listing entry.")
+			addListingCmd.Flags().IntVarP(&page, "page", "p", -1, "Page number of listing entry.")
+			addListingCmd.Flags().StringVarP(&category, "category", "c", "", "Category of listing entry.")
+			addListingCmd.Flags().IntVarP(&member, "member", "m", -1, "Member number of listing entry.")
+			addListingCmd.Flags().BoolVarP(&international, "international", "i", false, "Is international postage required?")
+			addListingCmd.Flags().BoolVarP(&review, "review", "r", false, "Is this a book review listing entry?")
+			addListingCmd.Flags().StringVarP(&text, "text", "t", "", "Text of listing entry.")
+			addListingCmd.Flags().BoolVarP(&art, "art", "a", false, "Is this a sketch listing entry?")
+			addListingCmd.Flags().BoolVarP(&flag, "flag", "f", false, "Has this listing entry been flagged?")
 			listingsCmd.AddCommand(addListingCmd)
 			ogmaCmd.AddCommand(listingsCmd)
 
@@ -268,6 +346,125 @@ func TestListingsAddCmd(t *testing.T) { //nolint:funlen // ignore this for now 2
 			assert.Equal(t, tc.output, buf.String())
 			if c.Name() != "add" {
 				t.Errorf(`invalid command returned from ExecuteC: expected "search"', got: %q`, c.Name())
+			}
+			buf.Reset()
+		})
+	}
+}
+
+func TestListingsImportCmd(t *testing.T) { //nolint:funlen // ignore this for now 2021/10/29 BL
+	var buf bytes.Buffer
+
+	// Search config in application directory with name ".ogma" (without extension).
+	viper.AddConfigPath("../")
+	viper.SetConfigType("yaml")
+	viper.SetConfigName(".ogma")
+
+	viper.AutomaticEnv() // read in environment variables that match
+
+	// If a config file is found, read it in.
+	err := viper.ReadInConfig()
+	assert.NoError(t, err)
+
+	// Change datastore for testing
+	viper.Set("datastore.filename", "test_db.db")
+	defer func() {
+		err = os.Remove("test_db.db")
+		assert.NoError(t, err)
+	}()
+
+	tt := map[string]struct {
+		args     []string
+		function func() func(cmd *cobra.Command, args []string) error
+		output   string
+	}{
+		"silent": {
+			args: []string{
+				"listings", "import", "-f\"export.json\"",
+			},
+			function: func() func(c *cobra.Command, args []string) error {
+				return func(c *cobra.Command, args []string) error {
+					c.SetOut(&buf)
+					assert.NoError(t, err)
+
+					out, err := cmd2.RunImportListings(importPath) //nolint:govet // fine for testing right now?
+					if err == nil {
+						c.Println(out)
+					}
+
+					return err
+				}
+			},
+			output: "",
+		},
+		"verbose": {
+			args: []string{
+				"listings", "import", "-f\"export.json\"", "-v",
+			},
+			function: func() func(c *cobra.Command, args []string) error {
+				return func(c *cobra.Command, args []string) error {
+					c.SetOut(&buf)
+					assert.NoError(t, err)
+
+					out, err := cmd2.RunImportListings(importPath)
+					if err == nil {
+						c.Println(out)
+					}
+
+					return err
+				}
+			},
+			output: "+--------+-------+------+--------+------+-------------------+--------+---------------+--------+------------------------------------------+--------+---------+\n" +
+				"| VOLUME | ISSUE | YEAR | SEASON | PAGE | CATEGORY          | MEMBER | INTERNATIONAL | REVIEW | TEXT                                     | SKETCH | FLAGGED |\n" +
+				"+--------+-------+------+--------+------+-------------------+--------+---------------+--------+------------------------------------------+--------+---------+\n" +
+				"|      2 |    55 | 2021 | Spring |    1 | Art & Photography |   2989 | false         | false  | Fingerpainting exchange.                 | false  | false   |\n" +
+				"|      2 |    56 | 2021 |        |    2 | Crafts            |  12784 | true          | false  |                                          | true   | false   |\n" +
+				"|      2 |    56 | 2021 |        |    2 | Creative Writing  |  11062 | false         | false  | Writer's workshop zine.                  | false  | true    |\n" +
+				"|      2 |    56 | 2021 |        |    2 | Creative Writing  |   7214 | false         | true   | _Crimson Letters: Voices from Death Row_ | false  | true    |\n" +
+				"|        |       |      |        |      |                   |        |               |        |  consists of 30 compelling essays writte |        |         |\n" +
+				"|        |       |      |        |      |                   |        |               |        | n in the prisoners' own words, offering  |        |         |\n" +
+				"|        |       |      |        |      |                   |        |               |        | stories of brutal beatings inside Juveni |        |         |\n" +
+				"|        |       |      |        |      |                   |        |               |        | le Hall, botched suicide attempts, the t |        |         |\n" +
+				"|        |       |      |        |      |                   |        |               |        | error of the first night on Death Row, t |        |         |\n" +
+				"|        |       |      |        |      |                   |        |               |        | he pain of goodbye as a friend is led to |        |         |\n" +
+				"|        |       |      |        |      |                   |        |               |        |  execution, and the small acts of humani |        |         |\n" +
+				"|        |       |      |        |      |                   |        |               |        | ty that keep hope alive for men living i |        |         |\n" +
+				"|        |       |      |        |      |                   |        |               |        | n the shadow of death.                   |        |         |\n" +
+				"+--------+-------+------+--------+------+-------------------+--------+---------------+--------+------------------------------------------+--------+---------+\n",
+		},
+	}
+
+	for name, tc := range tt {
+		t.Run(name, func(t *testing.T) {
+			ogmaCmd := &cobra.Command{Use: "ogma"}
+
+			listingsCmd := &cobra.Command{
+				Use: "listings",
+				RunE: func(c *cobra.Command, args []string) error {
+					return nil
+				},
+			}
+
+			importListingsCmd := &cobra.Command{
+				Use:  "import",
+				Args: cobra.MaximumNArgs(2),
+				RunE: tc.function(),
+			}
+
+			importListingsCmd.Flags().StringVarP(&importPath, "file", "f", "", "Print imported listings to stdout.")
+			importListingsCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Print imported listings to stdout.")
+			listingsCmd.AddCommand(importListingsCmd)
+
+			ogmaCmd.AddCommand(listingsCmd)
+
+			c, out, err := ExecuteCommandC(t, ogmaCmd, tc.args...)
+			if out != "" {
+				t.Errorf("Unexpected output: %v", out)
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tc.output, buf.String())
+			if c.Name() != "import" {
+				t.Errorf(`invalid command returned from ExecuteC: expected "import"', got: %q`, c.Name())
 			}
 			buf.Reset()
 		})
