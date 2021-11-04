@@ -12,14 +12,12 @@ import (
 )
 
 func main() {
-	PrepConfigAndLogging()
 	log.Info("Starting ogma...")
 
 	cmd.Execute()
 }
 
-// PrepConfigAndLogging sets up configuration and logging for application.
-func PrepConfigAndLogging() {
+func init() {
 	// Search config in application directory with name ".ogma" (without extension).
 	viper.AddConfigPath("./")
 	viper.SetConfigType("yaml")

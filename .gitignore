@@ -12,6 +12,7 @@
 ogma.db
 ogma
 *.log
+export.json
 
 # Test binary, built with `go test -c`
 *.test
