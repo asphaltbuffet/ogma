@@ -25,7 +25,7 @@ package cmd
 
 import (
 	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/spf13/viper"
+	"github.com/jedib0t/go-pretty/v6/text"
 )
 
 // A Listing contains relevant information for LEX listings.
@@ -83,8 +83,9 @@ func RenderListings(ll []Listing) string {
 
 	lt.SetColumnConfigs([]table.ColumnConfig{
 		{
-			Name:     "Text",
-			WidthMax: viper.GetInt("defaults.max_column"),
+			Name:             "Text",
+			WidthMax:         80, //nolint:gomnd // using viper fails unit tests. Fix this 2021-11-04 BL
+			WidthMaxEnforcer: text.WrapSoft,
 		},
 	})
 
