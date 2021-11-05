@@ -80,7 +80,7 @@ func RunImportListings(fp string) (string, error) {
 		}
 	}
 
-	return RenderListings(listings.Listings), nil
+	return Render(listings.Listings), nil
 }
 
 // ImportListings unmarshalls a json file into a Listings struct.

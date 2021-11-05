@@ -62,5 +62,5 @@ func RunAddListing(ll []Listing) (string, error) {
 		}
 	}
 
-	return RenderListings(ll), nil
+	return Render(ll), nil
 }

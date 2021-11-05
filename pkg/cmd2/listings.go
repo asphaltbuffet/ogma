@@ -46,8 +46,8 @@ type Listing struct {
 	IsFlagged           bool   `json:"flag"`
 }
 
-// RenderListings returns a pretty formatted listing as table.
-func RenderListings(ll []Listing) string {
+// Render returns a pretty formatted listing as table.
+func Render(ll []Listing) string {
 	lt := table.NewWriter()
 	lt.AppendHeader(table.Row{
 		"Volume",
