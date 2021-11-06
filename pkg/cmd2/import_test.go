@@ -30,9 +30,12 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+
+	dsmocks "github.com/asphaltbuffet/ogma/pkg/datastore/mocks"
 )
 
-func TestRunImportListings(t *testing.T) {
+func TestRunImportListings(t *testing.T) { //nolint:funlen // do this later 2021-11-06 BL
 	type args struct {
 		fp string
 	}
@@ -42,13 +45,61 @@ func TestRunImportListings(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "no file",
+			args: args{
+				fp: "",
+			},
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name: "single entry",
+			args: args{
+				fp: "test/s.json",
+			},
+			want:    "+--------+-------+------+--------+------+-------------------+--------+---------------+--------+--------------------------+--------+---------+\n| VOLUME | ISSUE | YEAR | SEASON | PAGE | CATEGORY          | MEMBER | INTERNATIONAL | REVIEW | TEXT                     | SKETCH | FLAGGED |\n+--------+-------+------+--------+------+-------------------+--------+---------------+--------+--------------------------+--------+---------+\n|      2 |    55 | 2021 | Spring |    1 | Art & Photography |   2989 | false         | false  | Fingerpainting exchange. | false  | false   |\n+--------+-------+------+--------+------+-------------------+--------+---------------+--------+--------------------------+--------+---------+",
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := RunImportListings(tt.args.fp)
+			appFS := afero.NewMemMapFs()
+
+			// create test files and directories
+			err := appFS.MkdirAll("test", 0o755)
+			assert.NoError(t, err)
+			if tt.args.fp != "" {
+				err = afero.WriteFile(appFS, tt.args.fp, []byte("{\n"+
+					"\"listings\": [\n"+
+					"{\n"+
+					"\"volume\": 2,\n"+
+					"\"issue\": 55,\n"+
+					"\"year\": 2021,\n"+
+					"\"season\": \"Spring\",\n"+
+					"\"page\": 1,\n"+
+					"\"category\": \"Art & Photography\",\n"+
+					"\"member\": 2989,\n"+
+					"\"alt\": \"\",\n"+
+					"\"international\": false,\n"+
+					"\"review\": false,\n"+
+					"\"text\": \"Fingerpainting exchange.\",\n"+
+					"\"art\": false,\n"+
+					"\"flag\": false\n"+
+					"}\n"+
+					"]\n"+
+					"}"), 0o644)
+				assert.NoError(t, err)
+			}
+
+			testFile, _ := appFS.Open(tt.args.fp)
+
+			mockDatastore := &dsmocks.Writer{}
+			mockDatastore.On("Save", mock.Anything).Return(nil)
+
+			got, err := RunImportListings(testFile, mockDatastore)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("RunImportListings() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("RunImportListings(%s) error = %v, wantErr %v", tt.args.fp, err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
