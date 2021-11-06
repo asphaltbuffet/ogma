@@ -43,3 +43,17 @@ func (m *Manager) Stop() {
 		fmt.Println("Failed to close store: ", err)
 	}
 }
+
+// Save saves data into the datastore.
+func (m *Manager) Save(data interface{}) error {
+	if err := m.Store.Save(data); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// A Writer can write to a datastore.
+type Writer interface {
+	Save(data interface{}) error
+}
