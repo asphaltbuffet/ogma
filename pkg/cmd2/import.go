@@ -24,11 +24,13 @@ package cmd
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"errors"
+	"io"
 	"os"
 	"path/filepath"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 
 	"github.com/asphaltbuffet/ogma/pkg/datastore"
@@ -40,7 +42,7 @@ type Listings struct {
 }
 
 // RunImportListings adds one to many listings to the datastore from a file.
-func RunImportListings(fp string) (string, error) {
+func RunImportListings(fp string) (string, error) { //nolint:funlen // ignore this for now 2021-11-05 BL
 	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
 	if err != nil {
 		log.Error("Datastore manager failure.")
@@ -56,7 +58,31 @@ func RunImportListings(fp string) (string, error) {
 	// we initialize our listings array
 	var listings Listings
 
-	listings, err = ImportListings(fp)
+	jsonFile, err := os.Open(filepath.Clean(fp))
+	if err != nil {
+		log.WithFields(log.Fields{
+			"cmd":        "listings.import",
+			"importFile": fp,
+		}).Error("Failed to open import file.")
+		return "", err
+	}
+
+	log.WithFields(log.Fields{
+		"cmd":        "listings.import",
+		"importFile": fp,
+	}).Info("Successfully opened import file.")
+
+	defer func() {
+		err = jsonFile.Close()
+		if err != nil {
+			log.WithFields(log.Fields{
+				"cmd":        "listings.import",
+				"importFile": fp,
+			}).Error("Failed to close import file.")
+		}
+	}()
+
+	listings, err = ImportListings(jsonFile)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"cmd":        "listings.import",
@@ -84,36 +110,17 @@ func RunImportListings(fp string) (string, error) {
 }
 
 // ImportListings unmarshalls a json file into a Listings struct.
-func ImportListings(fp string) (Listings, error) {
-	jsonFile, err := os.Open(filepath.Clean(fp))
-	if err != nil {
-		log.WithFields(log.Fields{
-			"cmd":        "listings.import",
-			"importFile": fp,
-		}).Error("Failed to open import file.")
+func ImportListings(j io.Reader) (Listings, error) {
+	// verify that the parameter is valid
+	if j == nil {
+		return Listings{}, errors.New("import : parameter cannot be nil")
 	}
 
-	log.WithFields(log.Fields{
-		"cmd":        "listings.import",
-		"importFile": fp,
-	}).Info("Successfully opened import file.")
-
-	defer func() {
-		err = jsonFile.Close()
-		if err != nil {
-			log.WithFields(log.Fields{
-				"cmd":        "listings.import",
-				"importFile": fp,
-			}).Error("Failed to close import file.")
-		}
-	}()
-
 	// read our opened jsonFile as a byte array.
-	byteValue, err := ioutil.ReadAll(jsonFile)
+	byteValue, err := afero.ReadAll(j)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"cmd":        "listings.import",
-			"importFile": fp,
+			"cmd": "listings.import",
 		}).Error("Failed to unmarshall import file.")
 		return Listings{}, err
 	}
@@ -125,8 +132,7 @@ func ImportListings(fp string) (Listings, error) {
 	err = json.Unmarshal(byteValue, &ll)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"cmd":        "listings.import",
-			"importFile": fp,
+			"cmd": "listings.import",
 		}).Error("Failed to unmarshall import file.")
 		return Listings{}, err
 	}
