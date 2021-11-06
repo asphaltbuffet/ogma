@@ -26,12 +26,9 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"os"
-	"path/filepath"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/spf13/viper"
 
 	"github.com/asphaltbuffet/ogma/pkg/datastore"
 )
@@ -42,69 +39,34 @@ type Listings struct {
 }
 
 // RunImportListings adds one to many listings to the datastore from a file.
-func RunImportListings(fp string) (string, error) { //nolint:funlen // ignore this for now 2021-11-05 BL
-	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
-	if err != nil {
-		log.Error("Datastore manager failure.")
-		return "", err
-	}
-
-	defer dsManager.Stop()
-	if err != nil {
-		log.Error("Failed to save to db: ")
-		return "", err
+func RunImportListings(f io.Reader, d datastore.Writer) (string, error) {
+	// verify that the import reader is valid
+	if f == nil {
+		return "", errors.New("import : import reader cannot be nil")
 	}
 
 	// we initialize our listings array
 	var listings Listings
 
-	jsonFile, err := os.Open(filepath.Clean(fp))
+	// convert import file into a listings struct
+	listings, err := ImportListings(f)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"cmd":        "listings.import",
-			"importFile": fp,
-		}).Error("Failed to open import file.")
+		log.WithFields(log.Fields{"cmd": "listings.import"}).Error("Failed to import listings.")
 		return "", err
 	}
 
-	log.WithFields(log.Fields{
-		"cmd":        "listings.import",
-		"importFile": fp,
-	}).Info("Successfully opened import file.")
-
-	defer func() {
-		err = jsonFile.Close()
-		if err != nil {
-			log.WithFields(log.Fields{
-				"cmd":        "listings.import",
-				"importFile": fp,
-			}).Error("Failed to close import file.")
-		}
-	}()
-
-	listings, err = ImportListings(jsonFile)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"cmd":        "listings.import",
-			"importFile": fp,
-		}).Error("Failed to import listings.")
-		return "", err
-	}
-
-	log.WithFields(log.Fields{
-		"cmd":   "listings.import",
-		"count": len(listings.Listings),
-	}).Info("Imported listings.")
-
+	// datastore needs to add one listing at a time, walk through imported listings and save one by one
 	for _, l := range listings.Listings {
 		listing := l
 
-		err = dsManager.Store.Save(&listing)
+		err = d.Save(&listing)
 		if err != nil {
-			log.Error("Failed to save new listings.")
+			log.WithFields(log.Fields{"cmd": "listings.import", "count": len(listings.Listings)}).Error("Failed datastore save.")
 			return "", err
 		}
+		log.WithFields(log.Fields{"cmd": "listings.import", "listing": listing}).Debug("Imported listing.")
 	}
+	log.WithFields(log.Fields{"cmd": "listings.import", "count": len(listings.Listings)}).Info("Imported listings.")
 
 	return Render(listings.Listings), nil
 }
