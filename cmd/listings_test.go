@@ -2,10 +2,12 @@ package cmd_test
 
 import (
 	"bytes"
+	"io/ioutil"
 	"os"
 	"testing"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -361,4 +363,8 @@ func ExecuteCommandC(t *testing.T, root *cobra.Command, args ...string) (c *cobr
 	c, err = root.ExecuteC()
 
 	return c, buf.String(), err
+}
+
+func init() {
+	log.SetOutput(ioutil.Discard)
 }

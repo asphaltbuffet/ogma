@@ -2,10 +2,12 @@ package datastore_test
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"testing"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/asphaltbuffet/ogma/pkg/datastore"
@@ -55,4 +57,8 @@ func initDatastoreManager() (*datastore.Manager, string, error) {
 	manager, err := datastore.New(filename)
 
 	return manager, filename, err
+}
+
+func init() {
+	log.SetOutput(ioutil.Discard)
 }
