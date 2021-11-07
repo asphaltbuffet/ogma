@@ -33,11 +33,6 @@ import (
 	"github.com/asphaltbuffet/ogma/pkg/datastore"
 )
 
-// A Listings hold unmarshalled listing data for import.
-type Listings struct {
-	Listings []Listing `json:"listings"`
-}
-
 // RunImportListings adds one to many listings to the datastore from a file.
 func RunImportListings(f io.Reader, d datastore.Writer) (string, error) {
 	// verify that the import reader is valid
