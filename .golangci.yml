@@ -65,3 +65,7 @@ linters:
 issues:
   # enable issues excluded by default 
   exclude-use-default: false
+  exclude-rules:
+    - path: _test.go
+      linters:
+        - funlen

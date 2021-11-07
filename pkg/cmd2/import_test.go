@@ -35,7 +35,7 @@ import (
 	dsmocks "github.com/asphaltbuffet/ogma/pkg/datastore/mocks"
 )
 
-func TestRunImportListings(t *testing.T) { //nolint:funlen // do this later 2021-11-06 BL
+func TestRunImportListings(t *testing.T) {
 	type args struct {
 		fp string
 	}
@@ -109,7 +109,7 @@ func TestRunImportListings(t *testing.T) { //nolint:funlen // do this later 2021
 	}
 }
 
-func TestImportListings(t *testing.T) { //nolint:funlen // do this later 2021-11-05 BL
+func TestImportListings(t *testing.T) {
 	type args struct {
 		fp string
 	}

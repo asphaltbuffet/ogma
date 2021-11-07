@@ -28,7 +28,7 @@ var (
 	flag          bool
 )
 
-func TestListingsSearchCmd(t *testing.T) { //nolint:funlen // ignore this for now 2021/10/29 BL
+func TestListingsSearchCmd(t *testing.T) {
 	var buf bytes.Buffer
 
 	// Search config in application directory with name ".ogma" (without extension).
@@ -158,7 +158,7 @@ func TestListingsSearchCmd(t *testing.T) { //nolint:funlen // ignore this for no
 	}
 }
 
-func TestListingsAddCmd(t *testing.T) { //nolint:funlen // ignore this for now 2021/10/29 BL
+func TestListingsAddCmd(t *testing.T) {
 	var buf bytes.Buffer
 
 	// Search config in application directory with name ".ogma" (without extension).
