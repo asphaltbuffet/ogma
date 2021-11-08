@@ -23,12 +23,15 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"os"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	cmd2 "github.com/asphaltbuffet/ogma/pkg/cmd2"
+	"github.com/asphaltbuffet/ogma/pkg/datastore"
 )
 
 var (
@@ -44,7 +47,6 @@ var (
 	text          string
 	art           bool
 	flag          bool
-	importPath    string
 	verbose       bool
 )
 
@@ -100,23 +102,10 @@ var importListingsCmd = &cobra.Command{
 	Use:   "import",
 	Short: "Import listings from a file.",
 	Long:  ``,
-	Args:  cobra.MaximumNArgs(2), //nolint:gomnd // this should be fine for now 2021-11-03 BL
-	RunE: func(c *cobra.Command, args []string) error {
-		out, err := cmd2.RunImportListings(importPath)
-
-		if err == nil {
-			if verbose {
-				c.Println(out)
-			}
-		}
-
-		return err
-	},
+	RunE:  RunImportListingsCmd,
 }
 
 func init() {
-	importListingsCmd.Flags().StringVarP(&importPath, "file", "f", "", "JSON file to be imported.")
-	importListingsCmd.MarkFlagRequired("file") //nolint:errcheck,gosec // TODO: put in error check later 2021-11-03 BL
 	importListingsCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Print imported listings to stdout.")
 	listingsCmd.AddCommand(importListingsCmd)
 
@@ -150,4 +139,40 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// listingsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+}
+
+// RunImportListingsCmd performs action associated with listings-import application command.
+func RunImportListingsCmd(c *cobra.Command, args []string) error {
+	jsonFile, err := os.Open(args[0])
+	if err != nil {
+		log.Error("Failed to open import file.")
+		return err
+	}
+
+	log.Info("Successfully opened import file.")
+
+	// defer closing the import file until after we're done with it
+	defer func() {
+		err = jsonFile.Close()
+		if err != nil {
+			log.Error("Failed to close import file.")
+		}
+	}()
+
+	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
+	if err != nil {
+		log.Error("Datastore manager failure.")
+		return err
+	}
+	defer dsManager.Stop()
+
+	out, err := cmd2.ImportListings(jsonFile, dsManager)
+
+	if err == nil {
+		if verbose {
+			c.Println(out)
+		}
+	}
+
+	return err
 }

@@ -55,7 +55,7 @@ func RunAddListing(ll []Listing) (string, error) {
 	for _, l := range ll {
 		// copy loop variable so i can accurately reference it for saving
 		listing := l
-		err = dsManager.Store.Save(&listing)
+		err = dsManager.Save(&listing)
 		if err != nil {
 			log.Error("Failed to save new listing.")
 			return "", err

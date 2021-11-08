@@ -25,6 +25,8 @@ package cmd
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRender(t *testing.T) {
@@ -68,7 +70,7 @@ func TestRender(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := Render(tt.args.ll); got != tt.want {
-				t.Errorf("Render() = %v, want %v", got, tt.want)
+				assert.Equal(t, got, tt.want)
 			}
 		})
 	}

@@ -28,6 +28,11 @@ import (
 	"github.com/jedib0t/go-pretty/v6/text"
 )
 
+// A Listings hold unmarshalled listing data for import.
+type Listings struct {
+	Listings []Listing `json:"listings"`
+}
+
 // A Listing contains relevant information for LEX listings.
 type Listing struct {
 	ID                  int    `storm:"id,increment"`

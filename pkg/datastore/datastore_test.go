@@ -2,10 +2,12 @@ package datastore_test
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"testing"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/asphaltbuffet/ogma/pkg/datastore"
@@ -55,4 +57,27 @@ func initDatastoreManager() (*datastore.Manager, string, error) {
 	manager, err := datastore.New(filename)
 
 	return manager, filename, err
+}
+
+func init() {
+	log.SetOutput(ioutil.Discard)
+}
+
+func TestManager_Save(t *testing.T) {
+	manager, dbFilePath, err := initDatastoreManager()
+	assert.NoError(t, err)
+
+	defer func() {
+		err = os.Remove(dbFilePath)
+		assert.NoError(t, err)
+	}()
+
+	type testData struct {
+		ID      int
+		TestNum int
+	}
+
+	td := testData{ID: 1, TestNum: 5}
+	err = manager.Save(&td)
+	assert.NoError(t, err)
 }
