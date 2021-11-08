@@ -62,3 +62,22 @@ func initDatastoreManager() (*datastore.Manager, string, error) {
 func init() {
 	log.SetOutput(ioutil.Discard)
 }
+
+func TestManager_Save(t *testing.T) {
+	manager, dbFilePath, err := initDatastoreManager()
+	assert.NoError(t, err)
+
+	defer func() {
+		err = os.Remove(dbFilePath)
+		assert.NoError(t, err)
+	}()
+
+	type testData struct {
+		ID      int
+		TestNum int
+	}
+
+	td := testData{ID: 1, TestNum: 5}
+	err = manager.Save(&td)
+	assert.NoError(t, err)
+}

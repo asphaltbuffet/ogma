@@ -16,6 +16,7 @@ type Manager struct {
 
 // New returns a new datastore Manager.
 func New(filePath string) (*Manager, error) {
+	// TODO: can this be converted to use afero? 2021-11-07 BL
 	storm, err := storm.Open(filePath)
 	if err != nil {
 		fmt.Println("Failed to open db: ", err)
