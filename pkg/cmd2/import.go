@@ -33,8 +33,8 @@ import (
 	"github.com/asphaltbuffet/ogma/pkg/datastore"
 )
 
-// RunImportListings adds one to many listings to the datastore from a file.
-func RunImportListings(f io.Reader, d datastore.Writer) (string, error) {
+// ImportListings adds one to many listings to the datastore from a file.
+func ImportListings(f io.Reader, d datastore.Writer) (string, error) {
 	// verify that the import reader is valid
 	if f == nil {
 		return "", errors.New("import : import reader cannot be nil")
@@ -44,7 +44,7 @@ func RunImportListings(f io.Reader, d datastore.Writer) (string, error) {
 	var listings Listings
 
 	// convert import file into a listings struct
-	listings, err := ImportListings(f)
+	listings, err := ParseListingInput(f)
 	if err != nil {
 		log.WithFields(log.Fields{"cmd": "listings.import"}).Error("Failed to import listings.")
 		return "", err
@@ -66,8 +66,8 @@ func RunImportListings(f io.Reader, d datastore.Writer) (string, error) {
 	return Render(listings.Listings), nil
 }
 
-// ImportListings unmarshalls a json file into a Listings struct.
-func ImportListings(j io.Reader) (Listings, error) {
+// ParseListingInput unmarshalls json into a Listings struct.
+func ParseListingInput(j io.Reader) (Listings, error) {
 	// verify that the parameter is valid
 	if j == nil {
 		return Listings{}, errors.New("import : parameter cannot be nil")

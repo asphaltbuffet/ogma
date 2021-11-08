@@ -35,7 +35,7 @@ import (
 	dsmocks "github.com/asphaltbuffet/ogma/pkg/datastore/mocks"
 )
 
-func TestRunImportListings(t *testing.T) { //nolint:funlen // do this later 2021-11-06 BL
+func TestRunImportListings(t *testing.T) {
 	type args struct {
 		fp string
 	}
@@ -97,7 +97,7 @@ func TestRunImportListings(t *testing.T) { //nolint:funlen // do this later 2021
 			mockDatastore := &dsmocks.Writer{}
 			mockDatastore.On("Save", mock.Anything).Return(nil)
 
-			got, err := RunImportListings(testFile, mockDatastore)
+			got, err := ImportListings(testFile, mockDatastore)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RunImportListings(%s) error = %v, wantErr %v", tt.args.fp, err, tt.wantErr)
 				return
@@ -171,7 +171,7 @@ func TestImportListings(t *testing.T) {
 
 			testFile, _ := appFS.Open(tt.args.fp)
 
-			got, err := ImportListings(testFile)
+			got, err := ParseListingInput(testFile)
 			if err != nil {
 				assert.Truef(t, tt.wantErr, "ImportListings() error = %v, wantErr %v", err, tt.wantErr)
 				return
