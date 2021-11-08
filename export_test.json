@@ -1,0 +1,59 @@
+{
+    "listings": [
+        {
+            "volume": 2,
+            "issue": 55,
+            "year": 2021,
+            "season": "Spring",
+            "page": 1,
+            "category": "Art & Photography",
+            "member": 2989,
+            "alt": "",
+            "international": false,
+            "review": false,
+            "text": "Fingerpainting exchange.",
+            "art": false,
+            "flag": false
+        },
+        {
+            "volume": 2,
+            "issue": 56,
+            "year": 2021,
+            "page": 2,
+            "category": "Crafts",
+            "member": 12784,
+            "international": true,
+            "review": false,
+            "text": "",
+            "art": true,
+            "flag": false
+        },
+        {
+            "volume": 2,
+            "issue": 56,
+            "year": 2021,
+            "page": 2,
+            "category": "Creative Writing",
+            "member": 11062,
+            "alt": "Z",
+            "international": false,
+            "review": false,
+            "text": "Writer's workshop zine.",
+            "art": false,
+            "flag": true
+        },
+        {
+            "volume": 2,
+            "issue": 56,
+            "year": 2021,
+            "page": 2,
+            "category": "Creative Writing",
+            "member": 7214,
+            "international": false,
+            "review": true,
+            "text": "_Crimson Letters: Voices from Death Row_ consists of 30 compelling essays written in the prisoners' own words, offering stories of brutal beatings inside Juvenile Hall, botched suicide attempts, the terror of the first night on Death Row, the pain of goodbye as a friend is led to execution, and the small acts of humanity that keep hope alive for men living in the shadow of death.",
+            "art": false,
+            "flag": true
+        }
+    ]
+}
