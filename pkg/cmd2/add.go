@@ -29,30 +29,28 @@ import (
 	"github.com/asphaltbuffet/ogma/pkg/datastore"
 )
 
-// RunAddListing adds a single listing to the datastore.
-func RunAddListing(ll []Listing) (string, error) {
+// AddListing adds a single listing to the datastore.
+func AddListing(ll []Listing) (string, error) {
+	// if there's nothing to add, return quickly
+	if len(ll) == 0 {
+		return "", nil
+	}
 	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
 	if err != nil {
 		log.Error("Datastore manager failure.")
 		return "", err
 	}
-
 	defer dsManager.Stop()
-	if err != nil {
-		log.Error("Failed to save to db: ")
-		return "", err
-	}
 
-	if err != nil {
-		log.Error("Failed to save to db: ")
-		return "", err
-	}
+	cl := UniqueListings(ll)
 
 	log.WithFields(log.Fields{
-		"cmd": "listings.add",
-	}).Info("Adding a listing.")
+		"cmd":        "listings.add",
+		"count":      len(cl),
+		"duplicates": len(ll) - len(cl),
+	}).Info("Adding listing(s).")
 
-	for _, l := range ll {
+	for _, l := range cl {
 		// copy loop variable so i can accurately reference it for saving
 		listing := l
 		err = dsManager.Save(&listing)
@@ -62,5 +60,26 @@ func RunAddListing(ll []Listing) (string, error) {
 		}
 	}
 
-	return Render(ll), nil
+	return Render(cl), nil
+}
+
+// UniqueListings returns the passed in slice of listings with at most one of each listing. Listing order is
+// preserved by first occurrence in initial slice.
+func UniqueListings(ll []Listing) []Listing {
+	// nothing to filter here...
+	if len(ll) == 0 {
+		return []Listing{}
+	}
+
+	keys := make(map[Listing]bool)
+	cl := []Listing{}
+
+	for _, l := range ll {
+		if _, found := keys[l]; !found {
+			keys[l] = true
+			cl = append(cl, l)
+		}
+	}
+
+	return cl
 }
