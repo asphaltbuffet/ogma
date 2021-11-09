@@ -37,13 +37,6 @@ var (
 func TestListingsImportCmd(t *testing.T) {
 	var buf bytes.Buffer
 
-	// Search config in application directory with name ".ogma" (without extension).
-	viper.AddConfigPath("../")
-	viper.SetConfigType("yaml")
-	viper.SetConfigName(".ogma")
-
-	viper.AutomaticEnv() // read in environment variables that match
-
 	// If a config file is found, read it in.
 	err := viper.ReadInConfig()
 	assert.NoError(t, err)
@@ -183,13 +176,6 @@ func TestListingsImportCmd(t *testing.T) {
 func TestListingsAddCmd(t *testing.T) {
 	var buf bytes.Buffer
 
-	// Search config in application directory with name ".ogma" (without extension).
-	viper.AddConfigPath("../")
-	viper.SetConfigType("yaml")
-	viper.SetConfigName(".ogma")
-
-	viper.AutomaticEnv() // read in environment variables that match
-
 	// If a config file is found, read it in.
 	err := viper.ReadInConfig()
 	assert.NoError(t, err)
@@ -201,12 +187,14 @@ func TestListingsAddCmd(t *testing.T) {
 		assert.NoError(t, err)
 	}()
 
-	tt := map[string]struct {
+	tt := []struct {
+		name     string
 		args     []string
 		function func() func(cmd *cobra.Command, args []string) error
-		output   string
+		want     string
 	}{
-		"no flags": {
+		{
+			name: "no flags",
 			args: []string{
 				"listings", "add",
 			},
@@ -215,7 +203,7 @@ func TestListingsAddCmd(t *testing.T) {
 					c.SetOut(&buf)
 					assert.NoError(t, err)
 
-					out, err := cmd2.RunAddListing([]cmd2.Listing{ //nolint:govet // fine for testing right now?
+					out, err := cmd2.AddListing([]cmd2.Listing{ //nolint:govet // TODO: fine for testing right now?
 						{
 							Volume:              volume,
 							IssueNumber:         lex,
@@ -239,13 +227,14 @@ func TestListingsAddCmd(t *testing.T) {
 					return err
 				}
 			},
-			output: "+--------+-------+------+--------+------+----------+--------+---------------+--------+------+--------+---------+\n" +
+			want: "+--------+-------+------+--------+------+----------+--------+---------------+--------+------+--------+---------+\n" +
 				"| VOLUME | ISSUE | YEAR | SEASON | PAGE | CATEGORY | MEMBER | INTERNATIONAL | REVIEW | TEXT | SKETCH | FLAGGED |\n" +
 				"+--------+-------+------+--------+------+----------+--------+---------------+--------+------+--------+---------+\n" +
 				"|     -1 |    56 | 2021 |        |   -1 |          |     -1 | false         | false  |      | false  | false   |\n" +
 				"+--------+-------+------+--------+------+----------+--------+---------------+--------+------+--------+---------+\n",
 		},
-		"required flags": {
+		{
+			name: "required flags",
 			args: []string{
 				"listings", "add", "-v2", "-l40", "-y2021", "-sAutumn", "-p2", "-cCrafts", "-m12345", "-t\"Some text goes here.\"",
 			},
@@ -254,7 +243,7 @@ func TestListingsAddCmd(t *testing.T) {
 					c.SetOut(&buf)
 					assert.NoError(t, err)
 
-					out, err := cmd2.RunAddListing([]cmd2.Listing{ //nolint:govet // fine for testing right now?
+					out, err := cmd2.AddListing([]cmd2.Listing{ //nolint:govet // TODO: fine for testing right now?
 						{
 							Volume:              volume,
 							IssueNumber:         lex,
@@ -278,13 +267,14 @@ func TestListingsAddCmd(t *testing.T) {
 					return err
 				}
 			},
-			output: "+--------+-------+------+--------+------+----------+--------+---------------+--------+------------------------+--------+---------+\n" +
+			want: "+--------+-------+------+--------+------+----------+--------+---------------+--------+------------------------+--------+---------+\n" +
 				"| VOLUME | ISSUE | YEAR | SEASON | PAGE | CATEGORY | MEMBER | INTERNATIONAL | REVIEW | TEXT                   | SKETCH | FLAGGED |\n" +
 				"+--------+-------+------+--------+------+----------+--------+---------------+--------+------------------------+--------+---------+\n" +
 				"|      2 |    40 | 2021 | Autumn |    2 | Crafts   |  12345 | false         | false  | \"Some text goes here.\" | false  | false   |\n" +
 				"+--------+-------+------+--------+------+----------+--------+---------------+--------+------------------------+--------+---------+\n",
 		},
-		"all flags": {
+		{
+			name: "all flags",
 			args: []string{
 				"listings", "add", "-v9", "-l999", "-y9999", "-sasdfb", "-p9", "-c\"some category\"", "-m9876", "-t\"Some kind of text goes here.\"", "-i", "-r", "-a", "-f",
 			},
@@ -310,7 +300,7 @@ func TestListingsAddCmd(t *testing.T) {
 							IsFlagged:           flag,
 						},
 					}
-					out, err := cmd2.RunAddListing(ll)
+					out, err := cmd2.AddListing(ll)
 					if err == nil {
 						c.Println(out)
 					}
@@ -318,7 +308,7 @@ func TestListingsAddCmd(t *testing.T) {
 					return err
 				}
 			},
-			output: "+--------+-------+------+--------+------+-----------------+--------+---------------+--------+--------------------------------+--------+---------+\n" +
+			want: "+--------+-------+------+--------+------+-----------------+--------+---------------+--------+--------------------------------+--------+---------+\n" +
 				"| VOLUME | ISSUE | YEAR | SEASON | PAGE | CATEGORY        | MEMBER | INTERNATIONAL | REVIEW | TEXT                           | SKETCH | FLAGGED |\n" +
 				"+--------+-------+------+--------+------+-----------------+--------+---------------+--------+--------------------------------+--------+---------+\n" +
 				"|      9 |   999 | 9999 | asdfb  |    9 | \"some category\" |   9876 | true          | true   | \"Some kind of text goes here.\" | true   | true    |\n" +
@@ -326,8 +316,8 @@ func TestListingsAddCmd(t *testing.T) {
 		},
 	}
 
-	for name, tc := range tt {
-		t.Run(name, func(t *testing.T) {
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
 			ogmaCmd := &cobra.Command{Use: "ogma"}
 
 			listingsCmd := &cobra.Command{
@@ -363,7 +353,7 @@ func TestListingsAddCmd(t *testing.T) {
 				t.Errorf("Unexpected output: %v", out)
 			}
 			assert.NoError(t, err)
-			assert.Equal(t, tc.output, buf.String())
+			assert.Equal(t, tc.want, buf.String())
 			if c.Name() != "add" {
 				t.Errorf(`invalid command returned from ExecuteC: expected "search"', got: %q`, c.Name())
 			}
@@ -374,13 +364,6 @@ func TestListingsAddCmd(t *testing.T) {
 
 func TestListingsSearchCmd(t *testing.T) {
 	var buf bytes.Buffer
-
-	// Search config in application directory with name ".ogma" (without extension).
-	viper.AddConfigPath("../")
-	viper.SetConfigType("yaml")
-	viper.SetConfigName(".ogma")
-
-	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
 	err := viper.ReadInConfig()
@@ -518,13 +501,6 @@ func ExecuteCommandC(t *testing.T, root *cobra.Command, args ...string) (c *cobr
 func TestRunImportListingsCmd(t *testing.T) {
 	var buf bytes.Buffer
 
-	// Search config in application directory with name ".ogma" (without extension).
-	viper.AddConfigPath("../")
-	viper.SetConfigType("yaml")
-	viper.SetConfigName(".ogma")
-
-	viper.AutomaticEnv() // read in environment variables that match
-
 	// If a config file is found, read it in.
 	err := viper.ReadInConfig()
 	assert.NoError(t, err)
@@ -603,4 +579,11 @@ func TestRunImportListingsCmd(t *testing.T) {
 
 func init() {
 	log.SetOutput(ioutil.Discard)
+
+	// Search config in application directory with name ".ogma" (without extension).
+	viper.AddConfigPath("../")
+	viper.SetConfigType("yaml")
+	viper.SetConfigName(".ogma")
+
+	viper.AutomaticEnv() // read in environment variables that match
 }
