@@ -72,30 +72,7 @@ var addListingCmd = &cobra.Command{
 	Short: "Add a single listing.",
 	Long:  ``,
 	Args:  cobra.NoArgs,
-	RunE: func(c *cobra.Command, args []string) error {
-		out, err := cmd2.RunAddListing([]cmd2.Listing{
-			{
-				Volume:              volume,
-				IssueNumber:         lex,
-				Year:                year,
-				Season:              season,
-				PageNumber:          page,
-				IndexedCategory:     category,
-				IndexedMemberNumber: member,
-				MemberExtension:     "",
-				IsInternational:     international,
-				IsReview:            review,
-				ListingText:         text,
-				IsArt:               art,
-				IsFlagged:           flag,
-			},
-		})
-		if err == nil {
-			c.Println(out)
-		}
-
-		return err
-	},
+	RunE:  RunAddListingCmd,
 }
 
 var importListingsCmd = &cobra.Command{
@@ -139,6 +116,39 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// listingsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+}
+
+// RunAddListingCmd performs action associated with listings-add application command.
+func RunAddListingCmd(c *cobra.Command, args []string) error {
+	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
+	if err != nil {
+		log.Error("Datastore manager failure.")
+		return err
+	}
+	defer dsManager.Stop()
+
+	out, err := cmd2.AddListing([]cmd2.Listing{
+		{
+			Volume:              volume,
+			IssueNumber:         lex,
+			Year:                year,
+			Season:              season,
+			PageNumber:          page,
+			IndexedCategory:     category,
+			IndexedMemberNumber: member,
+			MemberExtension:     "",
+			IsInternational:     international,
+			IsReview:            review,
+			ListingText:         text,
+			IsArt:               art,
+			IsFlagged:           flag,
+		},
+	}, dsManager)
+	if err == nil {
+		c.Println(out)
+	}
+
+	return err
 }
 
 // RunImportListingsCmd performs action associated with listings-import application command.
