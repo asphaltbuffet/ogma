@@ -24,23 +24,16 @@ package cmd
 
 import (
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 
 	"github.com/asphaltbuffet/ogma/pkg/datastore"
 )
 
 // AddListing adds a single listing to the datastore.
-func AddListing(ll []Listing) (string, error) {
+func AddListing(ll []Listing, ds datastore.Writer) (string, error) {
 	// if there's nothing to add, return quickly
 	if len(ll) == 0 {
 		return "", nil
 	}
-	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
-	if err != nil {
-		log.Error("Datastore manager failure.")
-		return "", err
-	}
-	defer dsManager.Stop()
 
 	cl := UniqueListings(ll)
 
@@ -53,7 +46,7 @@ func AddListing(ll []Listing) (string, error) {
 	for _, l := range cl {
 		// copy loop variable so i can accurately reference it for saving
 		listing := l
-		err = dsManager.Save(&listing)
+		err := ds.Save(&listing)
 		if err != nil {
 			log.Error("Failed to save new listing.")
 			return "", err

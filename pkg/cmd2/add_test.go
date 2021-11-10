@@ -23,22 +23,16 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"os"
 	"reflect"
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+
+	dsmocks "github.com/asphaltbuffet/ogma/pkg/datastore/mocks"
 )
 
 func TestAddListing(t *testing.T) {
-	// Change datastore for testing
-	viper.Set("datastore.filename", "test_db.db")
-	defer func() {
-		err := os.Remove("test_db.db")
-		assert.NoError(t, err)
-	}()
-
 	type args struct {
 		ll []Listing
 	}
@@ -102,9 +96,13 @@ func TestAddListing(t *testing.T) {
 			assertion: assert.NoError,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := AddListing(tt.args.ll)
+			mockDatastore := &dsmocks.Writer{}
+			mockDatastore.On("Save", mock.Anything).Return(nil)
+
+			got, err := AddListing(tt.args.ll, mockDatastore)
 			tt.assertion(t, err)
 			if err != nil {
 				return

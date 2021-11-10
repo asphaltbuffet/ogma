@@ -120,6 +120,13 @@ func init() {
 
 // RunAddListingCmd performs action associated with listings-add application command.
 func RunAddListingCmd(c *cobra.Command, args []string) error {
+	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
+	if err != nil {
+		log.Error("Datastore manager failure.")
+		return err
+	}
+	defer dsManager.Stop()
+
 	out, err := cmd2.AddListing([]cmd2.Listing{
 		{
 			Volume:              volume,
@@ -136,7 +143,7 @@ func RunAddListingCmd(c *cobra.Command, args []string) error {
 			IsArt:               art,
 			IsFlagged:           flag,
 		},
-	})
+	}, dsManager)
 	if err == nil {
 		c.Println(out)
 	}
