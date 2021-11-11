@@ -26,6 +26,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"strconv"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -63,7 +64,15 @@ func ImportListings(f io.Reader, d datastore.Writer) (string, error) {
 	}
 	log.WithFields(log.Fields{"cmd": "listings.import", "count": len(listings.Listings)}).Info("Imported listings.")
 
-	return Render(listings.Listings), nil
+	// In all cases, tell user how many records were imported.
+	output := "Imported " + strconv.Itoa(len(listings.Listings)) + " record"
+	if len(listings.Listings) == 1 {
+		output += ".\n"
+	} else {
+		output += "s.\n"
+	}
+
+	return output + Render(listings.Listings), nil
 }
 
 // ParseListingInput unmarshalls json into a Listings struct.
