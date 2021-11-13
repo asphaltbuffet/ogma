@@ -57,16 +57,6 @@ var listingsCmd = &cobra.Command{
 	Long:  ``,
 }
 
-var searchListingsCmd = &cobra.Command{
-	Use:   "search",
-	Short: "Returns all listing information based on search criteria.",
-	Long:  ``,
-	Args:  cobra.NoArgs,
-	RunE: func(c *cobra.Command, args []string) error {
-		return cmd2.RunSearchListings(c)
-	},
-}
-
 var addListingCmd = &cobra.Command{
 	Use:   "add",
 	Short: "Add a single listing.",
@@ -99,11 +89,6 @@ func init() {
 	addListingCmd.Flags().BoolVarP(&art, "art", "a", false, "Is this a sketch listing entry?")
 	addListingCmd.Flags().BoolVarP(&flag, "flag", "f", false, "Has this listing entry been flagged?")
 	listingsCmd.AddCommand(addListingCmd)
-
-	searchListingsCmd.Flags().IntP("year", "y", -1, "Search listings by LEX Issue year.")
-	searchListingsCmd.Flags().IntP("issue", "i", -1, "Search listings by LEX Issue Number.")
-	searchListingsCmd.Flags().IntP("member", "m", -1, "Search listings by member number.")
-	listingsCmd.AddCommand(searchListingsCmd)
 
 	rootCmd.AddCommand(listingsCmd)
 

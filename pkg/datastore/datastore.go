@@ -54,7 +54,17 @@ func (m *Manager) Save(data interface{}) error {
 	return nil
 }
 
+// Data provides access to datastore storage.
+func (m *Manager) Data() *storm.DB {
+	return m.Store
+}
+
 // A Writer can write to a datastore.
 type Writer interface {
 	Save(data interface{}) error
+}
+
+// A Reader can read from a datastore.
+type Reader interface {
+	Data() *storm.DB
 }

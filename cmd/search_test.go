@@ -20,17 +20,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package cmd
+package cmd_test
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+
+	"github.com/asphaltbuffet/ogma/cmd"
+	cmd2 "github.com/asphaltbuffet/ogma/pkg/cmd2"
+	dsmocks "github.com/asphaltbuffet/ogma/pkg/datastore/mocks"
 )
 
-func TestRunSearchListings(t *testing.T) {
+func TestRunSearchCmd(t *testing.T) {
 	type args struct {
-		c *cobra.Command
+		c    *cobra.Command
+		args []string
 	}
 	tests := []struct {
 		name    string
@@ -41,30 +49,36 @@ func TestRunSearchListings(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := RunSearchListings(tt.args.c); (err != nil) != tt.wantErr {
-				t.Errorf("RunSearchListings() error = %v, wantErr %v", err, tt.wantErr)
+			if err := cmd.RunSearchCmd(tt.args.c, tt.args.args); (err != nil) != tt.wantErr {
+				t.Errorf("RunSearchCmd() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
 }
 
-func TestSearchListings(t *testing.T) {
-	type args struct {
-		y int
-		i int
-		m int
-	}
+func TestSearch(t *testing.T) {
 	tests := []struct {
 		name      string
-		args      args
-		wantCount int
+		member    int
+		want      []cmd2.Listing
+		assertion assert.ErrorAssertionFunc
 	}{
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotCount := SearchListings(tt.args.y, tt.args.i, tt.args.m); gotCount != tt.wantCount {
-				t.Errorf("SearchListings() = %v, want %v", gotCount, tt.wantCount)
+			mockDatastore := &dsmocks.Reader{}
+			mockDatastore.On("Data", mock.Anything).Return()
+
+			got, err := cmd.Search(tt.member, mockDatastore)
+			tt.assertion(t, err)
+			if err != nil {
+				return
+			}
+			assert.Equal(t, tt.want, got)
+
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Search() = %v, want %v", got, tt.want)
 			}
 		})
 	}
