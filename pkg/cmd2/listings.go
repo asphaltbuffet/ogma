@@ -24,6 +24,8 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 )
@@ -77,7 +79,7 @@ func Render(ll []Listing) string {
 			l.Season,
 			l.PageNumber,
 			l.IndexedCategory,
-			l.IndexedMemberNumber,
+			fmt.Sprint(l.IndexedMemberNumber) + l.MemberExtension,
 			l.IsInternational,
 			l.IsReview,
 			l.ListingText,
@@ -91,6 +93,11 @@ func Render(ll []Listing) string {
 			Name:             "Text",
 			WidthMax:         80, //nolint:gomnd // using viper fails unit tests. Fix this 2021-11-04 BL
 			WidthMaxEnforcer: text.WrapSoft,
+		},
+		{
+			Name:  "Member",
+			Align: text.AlignRight,
+			// AutoMerge:    true,
 		},
 	})
 

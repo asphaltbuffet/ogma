@@ -70,25 +70,25 @@ func TestRunImportListings(t *testing.T) {
 			err := appFS.MkdirAll("test", 0o755)
 			assert.NoError(t, err)
 			if tt.args.fp != "" {
-				err = afero.WriteFile(appFS, tt.args.fp, []byte("{\n"+
-					"\"listings\": [\n"+
-					"{\n"+
-					"\"volume\": 2,\n"+
-					"\"issue\": 55,\n"+
-					"\"year\": 2021,\n"+
-					"\"season\": \"Spring\",\n"+
-					"\"page\": 1,\n"+
-					"\"category\": \"Art & Photography\",\n"+
-					"\"member\": 2989,\n"+
-					"\"alt\": \"\",\n"+
-					"\"international\": false,\n"+
-					"\"review\": false,\n"+
-					"\"text\": \"Fingerpainting exchange.\",\n"+
-					"\"art\": false,\n"+
-					"\"flag\": false\n"+
-					"}\n"+
-					"]\n"+
-					"}"), 0o644)
+				err = afero.WriteFile(appFS, tt.args.fp, []byte(`{
+					"listings": [
+					{
+					"volume": 2,
+					"issue": 55,
+					"year": 2021,
+					"season": "Spring",
+					"page": 1,
+					"category": "Art & Photography",
+					"member": 2989,
+					"alt": "B",
+					"international": false,
+					"review": false,
+					"text": "Fingerpainting exchange.",
+					"art": false,
+					"flag": false
+					}
+					]
+					}`), 0o644)
 				assert.NoError(t, err)
 			}
 
