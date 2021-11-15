@@ -26,26 +26,76 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"os"
 	"strconv"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/asphaltbuffet/ogma/pkg/datastore"
+	lstg "github.com/asphaltbuffet/ogma/pkg/listing"
 )
 
-// ImportListings adds one to many listings to the datastore from a file.
-func ImportListings(f io.Reader, d datastore.Writer) (string, error) {
+// importCmd represents the import command.
+var importCmd = &cobra.Command{
+	Use:   "import",
+	Short: "Import listings from a file.",
+	Long:  ``,
+	RunE:  RunImportCmd,
+}
+
+var verbose bool
+
+// RunImportCmd performs action associated with listings-import application command.
+func RunImportCmd(c *cobra.Command, args []string) error {
+	jsonFile, err := os.Open(args[0])
+	if err != nil {
+		log.Error("Failed to open import file.")
+		return err
+	}
+
+	log.Info("Successfully opened import file.")
+
+	// defer closing the import file until after we're done with it
+	defer func() {
+		err = jsonFile.Close()
+		if err != nil {
+			log.Error("Failed to close import file.")
+		}
+	}()
+
+	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
+	if err != nil {
+		log.Error("Datastore manager failure.")
+		return err
+	}
+	defer dsManager.Stop()
+
+	out, err := Import(jsonFile, dsManager)
+
+	if err == nil {
+		if verbose {
+			c.Println(out)
+		}
+	}
+
+	return err
+}
+
+// Import adds one to many listings to the datastore from a file.
+func Import(f io.Reader, d datastore.Writer) (string, error) {
 	// verify that the import reader is valid
 	if f == nil {
 		return "", errors.New("import : import reader cannot be nil")
 	}
 
 	// we initialize our listings array
-	var listings Listings
+	var listings lstg.Listings
 
 	// convert import file into a listings struct
-	listings, err := ParseListingInput(f)
+	listings, err := ParseImportInput(f)
 	if err != nil {
 		log.WithFields(log.Fields{"cmd": "listings.import"}).Error("Failed to import listings.")
 		return "", err
@@ -72,14 +122,14 @@ func ImportListings(f io.Reader, d datastore.Writer) (string, error) {
 		output += "s.\n"
 	}
 
-	return output + Render(listings.Listings), nil
+	return output + lstg.Render(listings.Listings), nil
 }
 
-// ParseListingInput unmarshalls json into a Listings struct.
-func ParseListingInput(j io.Reader) (Listings, error) {
+// ParseImportInput unmarshalls json into a Listings struct.
+func ParseImportInput(j io.Reader) (lstg.Listings, error) {
 	// verify that the parameter is valid
 	if j == nil {
-		return Listings{}, errors.New("import : parameter cannot be nil")
+		return lstg.Listings{}, errors.New("import : parameter cannot be nil")
 	}
 
 	// read our opened jsonFile as a byte array.
@@ -88,10 +138,10 @@ func ParseListingInput(j io.Reader) (Listings, error) {
 		log.WithFields(log.Fields{
 			"cmd": "listings.import",
 		}).Error("Failed to unmarshall import file.")
-		return Listings{}, err
+		return lstg.Listings{}, err
 	}
 
-	var ll Listings
+	var ll lstg.Listings
 
 	// we unmarshal our byteArray which contains our
 	// jsonFile's content into 'users' which we defined above
@@ -100,8 +150,23 @@ func ParseListingInput(j io.Reader) (Listings, error) {
 		log.WithFields(log.Fields{
 			"cmd": "listings.import",
 		}).Error("Failed to unmarshall import file.")
-		return Listings{}, err
+		return lstg.Listings{}, err
 	}
 
 	return ll, nil
+}
+
+func init() {
+	importCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Print imported listings to stdout.")
+	rootCmd.AddCommand(importCmd)
+
+	// Here you will define your flags and configuration settings.
+
+	// Cobra supports Persistent Flags which will work for this command
+	// and all subcommands, e.g.:
+	// importCmd.PersistentFlags().String("foo", "", "A help for foo")
+
+	// Cobra supports local flags which will only run when this command
+	// is called directly, e.g.:
+	// importCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
