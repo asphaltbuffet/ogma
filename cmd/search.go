@@ -26,12 +26,13 @@ import (
 	"errors"
 	"strconv"
 
+	"github.com/asdine/storm/v3"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	cmd2 "github.com/asphaltbuffet/ogma/pkg/cmd2"
 	"github.com/asphaltbuffet/ogma/pkg/datastore"
+	lstg "github.com/asphaltbuffet/ogma/pkg/listing"
 )
 
 // searchCmd represents the search command.
@@ -73,23 +74,23 @@ func RunSearchCmd(c *cobra.Command, args []string) error {
 		return err
 	}
 
-	c.Println("Found", len(ll), "listings.\n", cmd2.Render(ll))
+	// c.Printf("Found %d listings.\n", len(ll))
+	c.Printf(lstg.Render(ll))
 
 	return nil
 }
 
 // Search returns all records with a matching member number (ignores member extensions).
-func Search(member int, ds datastore.Reader) ([]cmd2.Listing, error) {
-	var searchResults []cmd2.Listing
-
-	err := ds.Data().Find("IndexedMemberNumber", member, &searchResults)
+func Search(member int, ds storm.Finder) ([]lstg.Listing, error) {
+	var searchResults []lstg.Listing
+	err := ds.Find("IndexedMemberNumber", member, &searchResults)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"cmd":            "search",
 			"member":         member,
 			"internal_error": err,
 		}).Error("Search failure.")
-		return nil, errors.New("search failed")
+		return nil, errors.New("search: query failed")
 	}
 
 	if len(searchResults) > viper.GetInt("search.max_results") {

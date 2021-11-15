@@ -23,16 +23,11 @@ THE SOFTWARE.
 package cmd_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 
 	"github.com/asphaltbuffet/ogma/cmd"
-	cmd2 "github.com/asphaltbuffet/ogma/pkg/cmd2"
-	dsmocks "github.com/asphaltbuffet/ogma/pkg/datastore/mocks"
 )
 
 func TestRunSearchCmd(t *testing.T) {
@@ -56,30 +51,73 @@ func TestRunSearchCmd(t *testing.T) {
 	}
 }
 
-func TestSearch(t *testing.T) {
-	tests := []struct {
-		name      string
-		member    int
-		want      []cmd2.Listing
-		assertion assert.ErrorAssertionFunc
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mockDatastore := &dsmocks.Reader{}
-			mockDatastore.On("Data", mock.Anything).Return()
+// func TestSearch(t *testing.T) {
+// 	var mockFinder *dsmocks.Finder
 
-			got, err := cmd.Search(tt.member, mockDatastore)
-			tt.assertion(t, err)
-			if err != nil {
-				return
-			}
-			assert.Equal(t, tt.want, got)
+// 	// type finderMock struct {
+// 	// 	finder *dsmocks.Finder
+// 	// }
+// 	tests := []struct {
+// 		name   string
+// 		member int
+// 		// on        func(*finderMock)
+// 		want      []lstg.Listing
+// 		assertion assert.ErrorAssertionFunc
+// 	}{
+// 		{
+// 			name:   "error",
+// 			member: 12345,
+// 			// on: func(f *finderMock) {
+// 			// 	f.finder.On("Find", "IndexedMemberNumber", mock.AnythingOfType("int"), mock.Anything).Return(nil)
+// 			// },
+// 			want:      []lstg.Listing{},
+// 			assertion: assert.Error,
+// 		},
+// 	}
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			// fMock := &finderMock{
+// 			// 	&dsmocks.Finder{},
+// 			// }
+// 			// if tt.on != nil {
+// 			// 	tt.on(fMock)
+// 			// }
 
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Search() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+// 			// var ml []cmd2.Listing
+
+// 			mockFinder.On("Find", "IndexedMemberNumber", tt.member).Return(func(s string, i int) interface{} {
+// 				return nil
+// 			}, func(s string, i int) error {
+// 				return errors.New("testing error")
+// 			})
+
+// 			// mockFinder.On("Find", "IndexedMemberNumber", tt.member, ml).Return(nil).Run(func(args mock.Arguments) {
+// 			// 	arg, ok := args.Get(2).(*[]cmd2.Listing)
+// 			// 	assert.False(t, ok)
+// 			// 	arg = append(arg, cmd2.Listing{
+// 			// 		ID:                  123,
+// 			// 		Volume:              45,
+// 			// 		IssueNumber:         6,
+// 			// 		Year:                7890,
+// 			// 		Season:              "abcdef",
+// 			// 		PageNumber:          1,
+// 			// 		IndexedCategory:     "Ghi Jk",
+// 			// 		IndexedMemberNumber: 23456,
+// 			// 		MemberExtension:     "L",
+// 			// 		IsInternational:     false,
+// 			// 		IsReview:            false,
+// 			// 		ListingText:         "Et reprehenderit duis consequat incididunt laborum commodo labore.",
+// 			// 		IsArt:               false,
+// 			// 		IsFlagged:           false,
+// 			// 	})
+// 			// })
+
+// 			got, err := cmd.Search(tt.member, mockFinder)
+// 			tt.assertion(t, err)
+// 			if err != nil {
+// 				return
+// 			}
+// 			assert.ObjectsAreEqual(tt.want, got)
+// 		})
+// 	}
+// }
