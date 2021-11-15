@@ -1,4 +1,5 @@
 # OGMA
+
 A LEX Magazine DB ~~and letter tracking application~~(coming soon).
 
 [![Keep a Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog-%23E05735)](CHANGELOG.md)
@@ -10,49 +11,104 @@ A LEX Magazine DB ~~and letter tracking application~~(coming soon).
 [![Go Report Card](https://goreportcard.com/badge/github.com/asphaltbuffet/ogma)](https://goreportcard.com/report/github.com/asphaltbuffet/ogma)
 [![Codecov](https://codecov.io/gh/asphaltbuffet/ogma/branch/main/graph/badge.svg)](https://codecov.io/gh/asphaltbuffet/ogma)
 
+- [OGMA](#ogma)
+  - [Usage](#usage)
+    - [Add Command](#add-command)
+    - [Import Command](#import-command)
+      - [Example import file](#example-import-file)
+    - [Search Command](#search-command)
+  - [Configuration](#configuration)
+    - [Default config](#default-config)
+
 ## Usage
+
 Ogma does not come pre-loaded with any issue information. As the service requires members to buy issues but not pay for letters forwarded, this application is not intended to skirt that monetary flow. You can hand-type information, scan, invoke blood magic, whatever.
 
-There are two methods to add issue listings for later use, _Add_ and _Import_.
+There are two methods to add issue listings for later use, [Add](#add-command) and [Import](#import-command).
+
+Application usage details can be found via the `-h` or `--help` flag in the base application or with any command. This will show argument details, flag detail, and some examples. In-application documentation always supercedes this documentation.
+
 ### Add Command
-The add command allows single entries to be saved. It is very manual and is really only good for occasional data entry. Seriously, use import.
-```
+
+The add command allows single entries to be saved. It is very manual and is really only good for occasional data entry. Seriously, use [import](#import-command).
+
+```bash
 ogma add [FLAGS]
 ```
-Ok, fine. Each listing field is a separate flag. Not all flags are required, but the needed ones are.
 
-TODO: details on flags and fields go here
+Ok, fine. Each listing field is a separate flag. No flags are currently set as required, but the defaults are meaningless for several fields.
+
+| Flag                  |   Type   |   Default    | Description                          |
+| --------------------- | :------: | :----------: | ------------------------------------ |
+| `-a, --art`           |  `bool`  |   `false`    | Is this a sketch listing entry?      |
+| `-c, --category`      | `string` |     `""`     | Category of listing entry.           |
+| `-f, --flag`          |  `bool`  |   `false`    | Has this listing entry been flagged? |
+| `-i, --international` |  `bool`  |   `false`    | Is international postage required?   |
+| `-l, --lex`           |  `int`   |     `56`     | LEX issue containing listing entry.  |
+| `-m, --member`        |  `int`   |     `-1`     | Member number of listing entry.      |
+| `-p, --page`          |  `int`   |     `-1`     | Page number of listing entry.        |
+| `-r, --review`        |  `bool`  |   `false`    | Is this a book review listing entry? |
+| `-s, --season`        | `string` |     `""`     | Season of listing entry.             |
+| `-t, --text`          | `string` |     `""`     | Text of listing entry.               |
+| `-v, --volume`        |  `int`   |     `-1`     | Volume containing listing entry.     |
+| `-y, --year`          |  `int`   | current year | Year of listing entry.               |
 
 ### Import Command
-The import command takes the filename (for now) of a json file that contains listing entries. 
+
+The import command takes the filename (for now) of a json file that contains listing entries.
 
 **There is no checking for duplicates already in the application database. Careful!**
-```
+
+```bash
 ogma import <filename>
 ```
 
-By default, the import command will only output the number of listings saved to the db (#33). No, there's no way to check this right now other than doing manual searches for entries to figure out what made it in.
+By default, the import command will only output the number of listings saved to the db ([#33](https://github.com/asphaltbuffet/ogma/issues/33)). No, there's no way to check this right now other than doing manual searches for entries to figure out what made it in.
 
 If you want to see everything that has been imported, use the verbose flag (`-v` or `--verbose`) to see all entries printed to screen. This may be a lot of stuff on your screen...
 
-```
+```bash
 ogma import <filename> -v
 ```
 
 #### Example import file
-TODO: put the example here...
+
+```json
+{
+    "listings": [
+        {
+            "volume": 1,
+            "issue": 1,
+            "year": 1986,
+            "season": "Spring",
+            "page": 1,
+            "category": "Art & Photography",
+            "member": 123,
+            "alt": "",
+            "international": true,
+            "review": false,
+            "text": "This is an example.",
+            "art": false,
+            "flag": false
+        }
+    ]
+}
+```
 
 ### Search Command
+
 This is the primary use of the application and is simplified at the moment. Only searching by member number is supported, and this must be entered as an integer. Adding in a letter after the member number as seen in some issues is invalid and will fail. All listings with that member number will be found (listings with an alphabetic extension will be included and shown as such).
 
-```
+```bash
 ogma search <member number>
 ```
 
-Currently the output defaults to something pretty, with colors. This may be enhanced in the future. #16
+Currently the output defaults to something pretty, with colors. Output configuration may be expanded in the future. [#16](https://github.com/asphaltbuffet/ogma/issues/16)
 
 ## Configuration
-### Default config (.ogma)
+
+### Default config
+
 ```yaml
 logging:
     level: warn
