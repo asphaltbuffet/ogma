@@ -2,14 +2,11 @@ package cmd_test
 
 import (
 	"bytes"
-	"errors"
 	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/asphaltbuffet/ogma/cmd"
 )
 
 func TestRootCmd(t *testing.T) {
@@ -20,22 +17,17 @@ func TestRootCmd(t *testing.T) {
 	}{
 		{
 			args: nil,
-			err:  errors.New("not ok"),
+			err:  nil,
+			out:  "",
 		},
 		{
-			args: []string{"-i"},
+			args: []string{"foo"},
 			err:  nil,
-			out:  "ok",
-		},
-		{
-			args: []string{"--info"},
-			err:  nil,
-			out:  "ok",
+			out:  "",
 		},
 	}
 
-	root := &cobra.Command{Use: "root", RunE: cmd.RootCmdRunE}
-	cmd.RootCmdFlags(root)
+	root := &cobra.Command{Use: "root"}
 
 	for _, tc := range tt {
 		out, err := execute(t, root, tc.args...)
