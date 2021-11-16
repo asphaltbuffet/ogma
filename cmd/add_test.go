@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-package cmd
+package cmd_test
 
 import (
 	"reflect"
@@ -29,12 +29,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/asphaltbuffet/ogma/cmd"
 	dsmocks "github.com/asphaltbuffet/ogma/pkg/datastore/mocks"
+	lstg "github.com/asphaltbuffet/ogma/pkg/listing"
 )
 
 func TestAddListing(t *testing.T) {
 	type args struct {
-		ll []Listing
+		ll []lstg.Listing
 	}
 	tests := []struct {
 		name      string
@@ -46,7 +48,7 @@ func TestAddListing(t *testing.T) {
 			// TODO: This may make more sense to return an error. 2021-11-08
 			name: "empty",
 			args: args{
-				ll: []Listing{},
+				ll: []lstg.Listing{},
 			},
 			want:      "",
 			assertion: assert.NoError,
@@ -54,45 +56,45 @@ func TestAddListing(t *testing.T) {
 		{
 			name: "single entry",
 			args: args{
-				ll: []Listing{
+				ll: []lstg.Listing{
 					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 				},
 			},
-			want:      "+--------+-------+------+---------+------+----------+--------+---------------+--------+----------------------------------------------------------------------+--------+---------+\n| VOLUME | ISSUE | YEAR | SEASON  | PAGE | CATEGORY | MEMBER | INTERNATIONAL | REVIEW | TEXT                                                                 | SKETCH | FLAGGED |\n+--------+-------+------+---------+------+----------+--------+---------------+--------+----------------------------------------------------------------------+--------+---------+\n|      1 |     1 | 1999 | Qui sit |    1 | Pariatur |  99999 | false         | false  | Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit. | false  | false   |\n+--------+-------+------+---------+------+----------+--------+---------------+--------+----------------------------------------------------------------------+--------+---------+",
+			want:      "\x1b[106;30m ID \x1b[0m\x1b[106;30m VOLUME \x1b[0m\x1b[106;30m ISSUE \x1b[0m\x1b[106;30m YEAR \x1b[0m\x1b[106;30m SEASON  \x1b[0m\x1b[106;30m PAGE \x1b[0m\x1b[106;30m CATEGORY \x1b[0m\x1b[106;30m MEMBER \x1b[0m\x1b[106;30m INTERNATIONAL \x1b[0m\x1b[106;30m REVIEW \x1b[0m\x1b[106;30m TEXT                                                                 \x1b[0m\x1b[106;30m SKETCH \x1b[0m\x1b[106;30m FLAGGED \x1b[0m\n\x1b[107;30m  0 \x1b[0m\x1b[107;30m      1 \x1b[0m\x1b[107;30m     1 \x1b[0m\x1b[107;30m 1999 \x1b[0m\x1b[107;30m Qui sit \x1b[0m\x1b[107;30m    1 \x1b[0m\x1b[107;30m Pariatur \x1b[0m\x1b[107;30m 99999A \x1b[0m\x1b[107;30m               \x1b[0m\x1b[107;30m        \x1b[0m\x1b[107;30m Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit. \x1b[0m\x1b[107;30m        \x1b[0m\x1b[107;30m         \x1b[0m",
 			assertion: assert.NoError,
 		},
 		{
 			name: "multiple unique",
 			args: args{
-				ll: []Listing{
+				ll: []lstg.Listing{
 					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 					{Volume: 2, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 				},
 			},
-			want:      "+--------+-------+------+---------+------+----------+--------+---------------+--------+----------------------------------------------------------------------+--------+---------+\n| VOLUME | ISSUE | YEAR | SEASON  | PAGE | CATEGORY | MEMBER | INTERNATIONAL | REVIEW | TEXT                                                                 | SKETCH | FLAGGED |\n+--------+-------+------+---------+------+----------+--------+---------------+--------+----------------------------------------------------------------------+--------+---------+\n|      1 |     1 | 1999 | Qui sit |    1 | Pariatur |  99999 | false         | false  | Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit. | false  | false   |\n|      2 |     1 | 1999 | Qui sit |    1 | Pariatur |  99999 | false         | false  | Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit. | false  | false   |\n+--------+-------+------+---------+------+----------+--------+---------------+--------+----------------------------------------------------------------------+--------+---------+",
+			want:      "\x1b[106;30m ID \x1b[0m\x1b[106;30m VOLUME \x1b[0m\x1b[106;30m ISSUE \x1b[0m\x1b[106;30m YEAR \x1b[0m\x1b[106;30m SEASON  \x1b[0m\x1b[106;30m PAGE \x1b[0m\x1b[106;30m CATEGORY \x1b[0m\x1b[106;30m MEMBER \x1b[0m\x1b[106;30m INTERNATIONAL \x1b[0m\x1b[106;30m REVIEW \x1b[0m\x1b[106;30m TEXT                                                                 \x1b[0m\x1b[106;30m SKETCH \x1b[0m\x1b[106;30m FLAGGED \x1b[0m\n\x1b[107;30m  0 \x1b[0m\x1b[107;30m      1 \x1b[0m\x1b[107;30m     1 \x1b[0m\x1b[107;30m 1999 \x1b[0m\x1b[107;30m Qui sit \x1b[0m\x1b[107;30m    1 \x1b[0m\x1b[107;30m Pariatur \x1b[0m\x1b[107;30m 99999A \x1b[0m\x1b[107;30m               \x1b[0m\x1b[107;30m        \x1b[0m\x1b[107;30m Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit. \x1b[0m\x1b[107;30m        \x1b[0m\x1b[107;30m         \x1b[0m\n\x1b[47;30m  0 \x1b[0m\x1b[47;30m      2 \x1b[0m\x1b[47;30m     1 \x1b[0m\x1b[47;30m 1999 \x1b[0m\x1b[47;30m Qui sit \x1b[0m\x1b[47;30m    1 \x1b[0m\x1b[47;30m Pariatur \x1b[0m\x1b[47;30m 99999A \x1b[0m\x1b[47;30m               \x1b[0m\x1b[47;30m        \x1b[0m\x1b[47;30m Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit. \x1b[0m\x1b[47;30m        \x1b[0m\x1b[47;30m         \x1b[0m",
 			assertion: assert.NoError,
 		},
 		{
 			name: "duplicates - single unique",
 			args: args{
-				ll: []Listing{
+				ll: []lstg.Listing{
 					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 				},
 			},
-			want:      "+--------+-------+------+---------+------+----------+--------+---------------+--------+----------------------------------------------------------------------+--------+---------+\n| VOLUME | ISSUE | YEAR | SEASON  | PAGE | CATEGORY | MEMBER | INTERNATIONAL | REVIEW | TEXT                                                                 | SKETCH | FLAGGED |\n+--------+-------+------+---------+------+----------+--------+---------------+--------+----------------------------------------------------------------------+--------+---------+\n|      1 |     1 | 1999 | Qui sit |    1 | Pariatur |  99999 | false         | false  | Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit. | false  | false   |\n+--------+-------+------+---------+------+----------+--------+---------------+--------+----------------------------------------------------------------------+--------+---------+",
+			want:      "\x1b[106;30m ID \x1b[0m\x1b[106;30m VOLUME \x1b[0m\x1b[106;30m ISSUE \x1b[0m\x1b[106;30m YEAR \x1b[0m\x1b[106;30m SEASON  \x1b[0m\x1b[106;30m PAGE \x1b[0m\x1b[106;30m CATEGORY \x1b[0m\x1b[106;30m MEMBER \x1b[0m\x1b[106;30m INTERNATIONAL \x1b[0m\x1b[106;30m REVIEW \x1b[0m\x1b[106;30m TEXT                                                                 \x1b[0m\x1b[106;30m SKETCH \x1b[0m\x1b[106;30m FLAGGED \x1b[0m\n\x1b[107;30m  0 \x1b[0m\x1b[107;30m      1 \x1b[0m\x1b[107;30m     1 \x1b[0m\x1b[107;30m 1999 \x1b[0m\x1b[107;30m Qui sit \x1b[0m\x1b[107;30m    1 \x1b[0m\x1b[107;30m Pariatur \x1b[0m\x1b[107;30m 99999A \x1b[0m\x1b[107;30m               \x1b[0m\x1b[107;30m        \x1b[0m\x1b[107;30m Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit. \x1b[0m\x1b[107;30m        \x1b[0m\x1b[107;30m         \x1b[0m",
 			assertion: assert.NoError,
 		},
 		{
 			name: "duplicates - multiple unique",
 			args: args{
-				ll: []Listing{
+				ll: []lstg.Listing{
 					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 					{Volume: 2, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 				},
 			},
-			want:      "+--------+-------+------+---------+------+----------+--------+---------------+--------+----------------------------------------------------------------------+--------+---------+\n| VOLUME | ISSUE | YEAR | SEASON  | PAGE | CATEGORY | MEMBER | INTERNATIONAL | REVIEW | TEXT                                                                 | SKETCH | FLAGGED |\n+--------+-------+------+---------+------+----------+--------+---------------+--------+----------------------------------------------------------------------+--------+---------+\n|      1 |     1 | 1999 | Qui sit |    1 | Pariatur |  99999 | false         | false  | Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit. | false  | false   |\n|      2 |     1 | 1999 | Qui sit |    1 | Pariatur |  99999 | false         | false  | Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit. | false  | false   |\n+--------+-------+------+---------+------+----------+--------+---------------+--------+----------------------------------------------------------------------+--------+---------+",
+			want:      "\x1b[106;30m ID \x1b[0m\x1b[106;30m VOLUME \x1b[0m\x1b[106;30m ISSUE \x1b[0m\x1b[106;30m YEAR \x1b[0m\x1b[106;30m SEASON  \x1b[0m\x1b[106;30m PAGE \x1b[0m\x1b[106;30m CATEGORY \x1b[0m\x1b[106;30m MEMBER \x1b[0m\x1b[106;30m INTERNATIONAL \x1b[0m\x1b[106;30m REVIEW \x1b[0m\x1b[106;30m TEXT                                                                 \x1b[0m\x1b[106;30m SKETCH \x1b[0m\x1b[106;30m FLAGGED \x1b[0m\n\x1b[107;30m  0 \x1b[0m\x1b[107;30m      1 \x1b[0m\x1b[107;30m     1 \x1b[0m\x1b[107;30m 1999 \x1b[0m\x1b[107;30m Qui sit \x1b[0m\x1b[107;30m    1 \x1b[0m\x1b[107;30m Pariatur \x1b[0m\x1b[107;30m 99999A \x1b[0m\x1b[107;30m               \x1b[0m\x1b[107;30m        \x1b[0m\x1b[107;30m Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit. \x1b[0m\x1b[107;30m        \x1b[0m\x1b[107;30m         \x1b[0m\n\x1b[47;30m  0 \x1b[0m\x1b[47;30m      2 \x1b[0m\x1b[47;30m     1 \x1b[0m\x1b[47;30m 1999 \x1b[0m\x1b[47;30m Qui sit \x1b[0m\x1b[47;30m    1 \x1b[0m\x1b[47;30m Pariatur \x1b[0m\x1b[47;30m 99999A \x1b[0m\x1b[47;30m               \x1b[0m\x1b[47;30m        \x1b[0m\x1b[47;30m Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit. \x1b[0m\x1b[47;30m        \x1b[0m\x1b[47;30m         \x1b[0m",
 			assertion: assert.NoError,
 		},
 	}
@@ -102,7 +104,7 @@ func TestAddListing(t *testing.T) {
 			mockDatastore := &dsmocks.Writer{}
 			mockDatastore.On("Save", mock.Anything).Return(nil)
 
-			got, err := AddListing(tt.args.ll, mockDatastore)
+			got, err := cmd.AddListing(tt.args.ll, mockDatastore)
 			tt.assertion(t, err)
 			if err != nil {
 				return
@@ -114,29 +116,29 @@ func TestAddListing(t *testing.T) {
 
 func TestUniqueListings(t *testing.T) {
 	type args struct {
-		ll []Listing
+		ll []lstg.Listing
 	}
 	tests := []struct {
 		name string
 		args args
-		want []Listing
+		want []lstg.Listing
 	}{
 		{
 			name: "empty",
 			args: args{
-				ll: []Listing{},
+				ll: []lstg.Listing{},
 			},
-			want: []Listing{},
+			want: []lstg.Listing{},
 		},
 		{
 			name: "no duplicates",
 			args: args{
-				ll: []Listing{
+				ll: []lstg.Listing{
 					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 					{Volume: 2, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 				},
 			},
-			want: []Listing{
+			want: []lstg.Listing{
 				{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 				{Volume: 2, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 			},
@@ -144,26 +146,26 @@ func TestUniqueListings(t *testing.T) {
 		{
 			name: "only duplicates",
 			args: args{
-				ll: []Listing{
+				ll: []lstg.Listing{
 					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 				},
 			},
-			want: []Listing{
+			want: []lstg.Listing{
 				{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 			},
 		},
 		{
 			name: "duplicates with unique",
 			args: args{
-				ll: []Listing{
+				ll: []lstg.Listing{
 					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 					{Volume: 2, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 				},
 			},
-			want: []Listing{
+			want: []lstg.Listing{
 				{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 				{Volume: 2, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 			},
@@ -171,7 +173,7 @@ func TestUniqueListings(t *testing.T) {
 		{
 			name: "multiple duplicates with unique",
 			args: args{
-				ll: []Listing{
+				ll: []lstg.Listing{
 					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 					{Volume: 2, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
@@ -183,7 +185,7 @@ func TestUniqueListings(t *testing.T) {
 					{Volume: 4, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 				},
 			},
-			want: []Listing{
+			want: []lstg.Listing{
 				{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 				{Volume: 2, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
 				{Volume: 3, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
@@ -194,7 +196,7 @@ func TestUniqueListings(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := UniqueListings(tt.args.ll); !reflect.DeepEqual(got, tt.want) {
+			if got := cmd.UniqueListings(tt.args.ll); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("UniqueListings() = %v, want %v", got, tt.want)
 			}
 		})

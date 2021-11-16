@@ -20,10 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-// Package cmd contains all CLI commands implementations.
-package cmd
+// Package lstg contains all CLI commands implementations.
+package lstg
 
 import (
+	"fmt"
+
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 )
@@ -51,10 +53,47 @@ type Listing struct {
 	IsFlagged           bool   `json:"flag"`
 }
 
+var columnConfigs = []table.ColumnConfig{
+	{
+		Name:             "Text",
+		WidthMax:         80, //nolint:gomnd // using viper fails unit tests. Fix this 2021-11-04 BL
+		WidthMaxEnforcer: text.WrapSoft,
+	},
+	{
+		Name:  "Member",
+		Align: text.AlignRight,
+		// AutoMerge: true, // doesn't look right without row separators
+		// VAlign:    text.VAlignMiddle,
+	},
+	{
+		Name:  "International",
+		Align: text.AlignCenter,
+	},
+	{
+		Name:  "Review",
+		Align: text.AlignCenter,
+	},
+	{
+		Name:  "Sketch",
+		Align: text.AlignCenter,
+	},
+	{
+		Name:  "Flagged",
+		Align: text.AlignCenter,
+	},
+}
+
 // Render returns a pretty formatted listing as table.
 func Render(ll []Listing) string {
+	// empty string if there are no listings to render
+	if len(ll) == 0 {
+		return ""
+	}
+
 	lt := table.NewWriter()
+	// lt.SetTitle("Search results for Member #%d", ll[0].IndexedMemberNumber)
 	lt.AppendHeader(table.Row{
+		"ID",
 		"Volume",
 		"Issue",
 		"Year",
@@ -71,28 +110,35 @@ func Render(ll []Listing) string {
 
 	for _, l := range ll {
 		lt.AppendRow([]interface{}{
+			l.ID,
 			l.Volume,
 			l.IssueNumber,
 			l.Year,
 			l.Season,
 			l.PageNumber,
 			l.IndexedCategory,
-			l.IndexedMemberNumber,
-			l.IsInternational,
-			l.IsReview,
+			fmt.Sprint(l.IndexedMemberNumber) + l.MemberExtension,
+			ConvertBool(l.IsInternational),
+			ConvertBool(l.IsReview),
 			l.ListingText,
-			l.IsArt,
-			l.IsFlagged,
+			ConvertBool(l.IsArt),
+			ConvertBool(l.IsFlagged),
 		})
+		// lt.AppendSeparator() // disabling for now, it makes it look messy - may want it configurable at run-time
 	}
 
-	lt.SetColumnConfigs([]table.ColumnConfig{
-		{
-			Name:             "Text",
-			WidthMax:         80, //nolint:gomnd // using viper fails unit tests. Fix this 2021-11-04 BL
-			WidthMaxEnforcer: text.WrapSoft,
-		},
-	})
+	lt.SetColumnConfigs(columnConfigs)
+
+	// lt.SetStyle(table.StyleLight)
+	lt.SetStyle(table.StyleColoredBright)
 
 	return lt.Render()
+}
+
+// ConvertBool strips out 'false' values for easier reading.
+func ConvertBool(b bool) string {
+	if b {
+		return "✔"
+	}
+	return ""
 }

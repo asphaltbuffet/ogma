@@ -4,9 +4,21 @@ package datastore
 import (
 	"fmt"
 
-	"github.com/asdine/storm/v3"
+	storm "github.com/asdine/storm/v3"
+	"github.com/asdine/storm/v3/index"
+	"github.com/asdine/storm/v3/q"
 	log "github.com/sirupsen/logrus"
 )
+
+// A Writer can write to a datastore.
+type Writer interface {
+	Save(data interface{}) error
+}
+
+// A Finder can fetch types from BoltDB.
+type Finder interface {
+	storm.Finder
+}
 
 // Manager main object for data store.
 type Manager struct {
@@ -54,7 +66,44 @@ func (m *Manager) Save(data interface{}) error {
 	return nil
 }
 
-// A Writer can write to a datastore.
-type Writer interface {
-	Save(data interface{}) error
+// One returns one record by the specified index.
+func (m *Manager) One(fieldName string, value interface{}, to interface{}) error {
+	return m.Store.One(fieldName, value, to)
+}
+
+// Find returns one or more records by the specified index.
+func (m *Manager) Find(fieldName string, value interface{}, to interface{}, options ...func(*index.Options)) error {
+	return m.Store.Find(fieldName, value, to, options...)
+}
+
+// AllByIndex gets all the records of a bucket that are indexed in the specified index.
+func (m *Manager) AllByIndex(fieldName string, to interface{}, options ...func(*index.Options)) error {
+	return m.Store.AllByIndex(fieldName, to, options...)
+}
+
+// All gets all the records of a bucket.
+// If there are no records it returns no error and the 'to' parameter is set to an empty slice.
+func (m *Manager) All(to interface{}, options ...func(*index.Options)) error {
+	return m.Store.All(to, options...)
+}
+
+// Select a list of records that match a list of matchers. Doesn't use indexes.
+func (m *Manager) Select(matchers ...q.Matcher) storm.Query {
+	return m.Store.Select(matchers...)
+}
+
+// Range returns one or more records by the specified index within the specified range.
+func (m *Manager) Range(fieldName string, min interface{}, max interface{}, to interface{}, options ...func(*index.Options)) error {
+	return m.Store.Range(fieldName, min, max, to, options...)
+}
+
+// Prefix returns one or more records whose given field starts with the specified prefix.
+func (m *Manager) Prefix(fieldName string, prefix string, to interface{}, options ...func(*index.Options)) error {
+	return m.Store.Prefix(fieldName, prefix, to, options...)
+}
+
+// Count counts all the records of a bucket.
+func (m *Manager) Count(data interface{}) (int, error) {
+	c, err := m.Store.Count(data)
+	return c, err
 }
