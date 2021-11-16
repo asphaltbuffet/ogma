@@ -23,11 +23,19 @@ THE SOFTWARE.
 package cmd_test
 
 import (
+	"fmt"
+	"os"
+	"reflect"
 	"testing"
+	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/asphaltbuffet/ogma/cmd"
+	"github.com/asphaltbuffet/ogma/pkg/datastore"
+	lstg "github.com/asphaltbuffet/ogma/pkg/listing"
 )
 
 func TestRunSearchCmd(t *testing.T) {
@@ -51,73 +59,157 @@ func TestRunSearchCmd(t *testing.T) {
 	}
 }
 
-// func TestSearch(t *testing.T) {
-// 	var mockFinder *dsmocks.Finder
+func TestSearch(t *testing.T) {
+	m, dbFilePath, err := initDatastoreManager()
+	assert.NoError(t, err)
+	defer m.Stop()
 
-// 	// type finderMock struct {
-// 	// 	finder *dsmocks.Finder
-// 	// }
-// 	tests := []struct {
-// 		name   string
-// 		member int
-// 		// on        func(*finderMock)
-// 		want      []lstg.Listing
-// 		assertion assert.ErrorAssertionFunc
-// 	}{
-// 		{
-// 			name:   "error",
-// 			member: 12345,
-// 			// on: func(f *finderMock) {
-// 			// 	f.finder.On("Find", "IndexedMemberNumber", mock.AnythingOfType("int"), mock.Anything).Return(nil)
-// 			// },
-// 			want:      []lstg.Listing{},
-// 			assertion: assert.Error,
-// 		},
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			// fMock := &finderMock{
-// 			// 	&dsmocks.Finder{},
-// 			// }
-// 			// if tt.on != nil {
-// 			// 	tt.on(fMock)
-// 			// }
+	defer func() {
+		err = os.Remove(dbFilePath)
+		assert.NoError(t, err)
+	}()
 
-// 			// var ml []cmd2.Listing
+	_, err = cmd.AddListing([]lstg.Listing{
+		{
+			Volume:              1,
+			IssueNumber:         1,
+			Year:                1986,
+			Season:              "Mollit",
+			PageNumber:          1,
+			IndexedCategory:     "Pariatur",
+			IndexedMemberNumber: 1234,
+			MemberExtension:     "",
+			IsInternational:     false,
+			IsReview:            false,
+			ListingText:         "Esse Lorem do nulla sunt mollit nulla in.",
+			IsArt:               false,
+			IsFlagged:           true,
+		},
+	}, m)
+	assert.NoError(t, err)
 
-// 			mockFinder.On("Find", "IndexedMemberNumber", tt.member).Return(func(s string, i int) interface{} {
-// 				return nil
-// 			}, func(s string, i int) error {
-// 				return errors.New("testing error")
-// 			})
+	_, err = cmd.AddListing([]lstg.Listing{
+		{
+			Volume:              1,
+			IssueNumber:         1,
+			Year:                1986,
+			Season:              "Eiusmod",
+			PageNumber:          2,
+			IndexedCategory:     "Commodo",
+			IndexedMemberNumber: 1234,
+			MemberExtension:     "B",
+			IsInternational:     false,
+			IsReview:            false,
+			ListingText:         "Magna officia anim dolore enim.",
+			IsArt:               false,
+			IsFlagged:           true,
+		},
+	}, m)
+	assert.NoError(t, err)
 
-// 			// mockFinder.On("Find", "IndexedMemberNumber", tt.member, ml).Return(nil).Run(func(args mock.Arguments) {
-// 			// 	arg, ok := args.Get(2).(*[]cmd2.Listing)
-// 			// 	assert.False(t, ok)
-// 			// 	arg = append(arg, cmd2.Listing{
-// 			// 		ID:                  123,
-// 			// 		Volume:              45,
-// 			// 		IssueNumber:         6,
-// 			// 		Year:                7890,
-// 			// 		Season:              "abcdef",
-// 			// 		PageNumber:          1,
-// 			// 		IndexedCategory:     "Ghi Jk",
-// 			// 		IndexedMemberNumber: 23456,
-// 			// 		MemberExtension:     "L",
-// 			// 		IsInternational:     false,
-// 			// 		IsReview:            false,
-// 			// 		ListingText:         "Et reprehenderit duis consequat incididunt laborum commodo labore.",
-// 			// 		IsArt:               false,
-// 			// 		IsFlagged:           false,
-// 			// 	})
-// 			// })
+	for i := 1; i <= 10; i++ {
+		_, err = cmd.AddListing([]lstg.Listing{
+			{
+				Volume:              1,
+				IssueNumber:         1,
+				Year:                1986,
+				Season:              "Id",
+				PageNumber:          3,
+				IndexedCategory:     "Consequat",
+				IndexedMemberNumber: 5678,
+				MemberExtension:     "",
+				IsInternational:     false,
+				IsReview:            false,
+				ListingText:         "Velit cillum cillum ea officia nulla enim.",
+				IsArt:               false,
+				IsFlagged:           true,
+			},
+		}, m)
+		assert.NoError(t, err)
+	}
 
-// 			got, err := cmd.Search(tt.member, mockFinder)
-// 			tt.assertion(t, err)
-// 			if err != nil {
-// 				return
-// 			}
-// 			assert.ObjectsAreEqual(tt.want, got)
-// 		})
-// 	}
-// }
+	type args struct {
+		member int
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []lstg.Listing
+		wantErr bool
+	}{
+		{
+			name: "find multiple",
+			args: args{
+				member: 1234,
+			},
+			want: []lstg.Listing{
+				{
+					ID:                  1,
+					Volume:              1,
+					IssueNumber:         1,
+					Year:                1986,
+					Season:              "Mollit",
+					PageNumber:          1,
+					IndexedCategory:     "Pariatur",
+					IndexedMemberNumber: 1234,
+					MemberExtension:     "",
+					IsInternational:     false,
+					IsReview:            false,
+					ListingText:         "Esse Lorem do nulla sunt mollit nulla in.",
+					IsArt:               false,
+					IsFlagged:           true,
+				},
+				{
+					ID:                  2,
+					Volume:              1,
+					IssueNumber:         1,
+					Year:                1986,
+					Season:              "Eiusmod",
+					PageNumber:          2,
+					IndexedCategory:     "Commodo",
+					IndexedMemberNumber: 1234,
+					MemberExtension:     "B",
+					IsInternational:     false,
+					IsReview:            false,
+					ListingText:         "Magna officia anim dolore enim.",
+					IsArt:               false,
+					IsFlagged:           true,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "no results",
+			args: args{
+				member: 1,
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		// TODO: checked against max_results in config
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := cmd.Search(tt.args.member, m)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Search() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Search() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func initDatastoreManager() (*datastore.Manager, string, error) {
+	currentTime := time.Now()
+	filename := fmt.Sprintf("test_%d.db", currentTime.Unix())
+	manager, err := datastore.New(filename)
+
+	return manager, filename, err
+}
+
+func init() {
+	viper.GetViper().Set("search.max_results", 10)
+}
