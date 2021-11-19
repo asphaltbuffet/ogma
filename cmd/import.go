@@ -40,10 +40,12 @@ import (
 
 // importCmd represents the import command.
 var importCmd = &cobra.Command{
-	Use:   "import",
-	Short: "Import listings from a file.",
-	Long:  ``,
-	RunE:  RunImportCmd,
+	Use:     "import",
+	Short:   "Bulk import records.",
+	Long:    ``,
+	Args:    cobra.ExactArgs(1),
+	Example: "ogma import somefile.json -v",
+	RunE:    RunImportCmd,
 }
 
 var verbose bool
