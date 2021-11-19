@@ -62,9 +62,9 @@ func TestRunSearchCmd(t *testing.T) {
 func TestSearch(t *testing.T) {
 	m, dbFilePath, err := initDatastoreManager()
 	assert.NoError(t, err)
-	defer m.Stop()
 
 	defer func() {
+		m.Stop()
 		err = os.Remove(dbFilePath)
 		assert.NoError(t, err)
 	}()

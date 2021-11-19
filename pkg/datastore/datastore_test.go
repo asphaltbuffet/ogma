@@ -19,10 +19,10 @@ import (
 func TestManagerNew(t *testing.T) {
 	manager, dbFilePath, err := initDatastoreManager()
 	defer func() {
+		manager.Stop()
 		err = os.Remove(dbFilePath)
 		assert.NoError(t, err)
 	}()
-	defer manager.Stop()
 
 	assert.NoError(t, err)
 
@@ -34,10 +34,10 @@ func TestManagerNew(t *testing.T) {
 func TestManagerNewFail(t *testing.T) {
 	manager, dbFilePath, err := initDatastoreManager()
 	defer func() {
+		manager.Stop()
 		err = os.Remove(dbFilePath)
 		assert.NoError(t, err)
 	}()
-	defer manager.Stop()
 
 	_, err = datastore.New(dbFilePath)
 	assert.Error(t, err, "datastore manager should fail to open duplicate db file")
@@ -46,10 +46,10 @@ func TestManagerNewFail(t *testing.T) {
 func TestManagerGetPath(t *testing.T) {
 	manager, dbFilePath, err := initDatastoreManager()
 	defer func() {
+		manager.Stop()
 		err = os.Remove(dbFilePath)
 		assert.NoError(t, err)
 	}()
-	defer manager.Stop()
 
 	assert.Equal(t, dbFilePath, manager.GetPath())
 }
@@ -69,9 +69,9 @@ func init() {
 func TestManager_Save(t *testing.T) {
 	manager, dbFilePath, err := initDatastoreManager()
 	assert.NoError(t, err)
-	defer manager.Stop()
 
 	defer func() {
+		manager.Stop()
 		err = os.Remove(dbFilePath)
 		assert.NoError(t, err)
 	}()
