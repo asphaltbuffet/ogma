@@ -12,17 +12,18 @@ import (
 )
 
 func main() {
-	log.Info("Started ogma.")
-	defer log.Info("Closed ogma.")
+	log.Trace("Started ogma.")
+	defer log.Trace("Closed ogma.")
 
 	cmd.Execute()
 }
 
-func init() {
+// InitConfig sets up the viper configuration.
+func InitConfig(cf string) {
 	// Search config in application directory with name ".ogma" (without extension).
 	viper.AddConfigPath("./")
 	viper.SetConfigType("yaml")
-	viper.SetConfigName(".ogma")
+	viper.SetConfigName(cf)
 
 	viper.AutomaticEnv() // read in environment variables that match
 
@@ -36,4 +37,9 @@ func init() {
 		loggingLevel = log.InfoLevel // default to info level logging
 	}
 	log.SetLevel(loggingLevel)
+}
+
+func init() {
+	// TODO: add a logging init here? 2021-11-19 BL
+	InitConfig(".ogma")
 }
