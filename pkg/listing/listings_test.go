@@ -25,6 +25,7 @@ package lstg_test
 import (
 	"testing"
 
+	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/stretchr/testify/assert"
 
 	lstg "github.com/asphaltbuffet/ogma/pkg/listing"
@@ -72,6 +73,58 @@ func TestRender(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := lstg.Render(tt.args.ll)
 			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestGetStyle(t *testing.T) {
+	type args struct {
+		s []string
+	}
+	tests := []struct {
+		name      string
+		args      args
+		want      table.Style
+		assertion assert.ErrorAssertionFunc
+	}{
+		{
+			name: "no style",
+			args: args{
+				s: []string{},
+			},
+			want:      table.StyleColoredBright,
+			assertion: assert.NoError,
+		},
+		{
+			name: "one valid style",
+			args: args{
+				s: []string{"light"},
+			},
+			want:      table.StyleLight,
+			assertion: assert.NoError,
+		},
+		{
+			name: "multiple styles",
+			args: args{
+				s: []string{"light", "bright"},
+			},
+			want:      table.StyleLight,
+			assertion: assert.NoError,
+		},
+		{
+			name: "invalid style",
+			args: args{
+				s: []string{"foo"},
+			},
+			want:      table.StyleDefault,
+			assertion: assert.Error,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := lstg.GetStyle(tt.args.s)
+			tt.assertion(t, err)
+			assert.True(t, assert.ObjectsAreEqual(tt.want, got))
 		})
 	}
 }

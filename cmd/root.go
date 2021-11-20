@@ -33,6 +33,7 @@ var rootCmd = &cobra.Command{
 	Version:           "1.0.1",
 	Short:             "A LEX listing database and letter tracking application.",
 	Long:              `Ogma is a go application that tracks LEX listings as entered from LEX magazine. It provides member-focused metrics, basic stats, and tracking of letters sent and received.`,
+	Args:              cobra.NoArgs,
 	CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: true},
 }
 
