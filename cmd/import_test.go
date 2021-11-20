@@ -215,6 +215,14 @@ func TestImportInput(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "invalid json",
+			args: args{
+				fp: "test/invalid.json",
+			},
+			want:    lstg.Listings{},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -241,6 +249,21 @@ func TestImportInput(t *testing.T) {
 						"art": false,
 						"flag": false
 					}
+				]
+				}`), 0o644)
+			assert.NoError(t, err)
+
+			err = afero.WriteFile(appFS, "test/invalid.json", []byte(`{
+				"listings": [
+					{
+						"volume": 2,
+						"issue": 55,
+						"year": 2021,
+						"season": "Spring",
+						"page": 1,
+						"category": "Art & Photography",
+						"member": 2989,
+						"alt": "",
 				]
 				}`), 0o644)
 			assert.NoError(t, err)

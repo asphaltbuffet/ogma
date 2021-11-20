@@ -12,7 +12,8 @@ import (
 )
 
 func main() {
-	log.Info("Starting ogma...")
+	log.Info("Started ogma.")
+	defer log.Info("Closed ogma.")
 
 	cmd.Execute()
 }
