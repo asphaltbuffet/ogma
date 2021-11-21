@@ -93,45 +93,44 @@ func Import(f io.Reader, d datastore.Writer) (string, error) {
 		return "", errors.New("import : import reader cannot be nil")
 	}
 
-	// we initialize our listings array
-	var listings lstg.Listings
-
 	// convert import file into a listings struct
-	listings, err := ParseImportInput(f)
+	rawListings, err := ParseImportInput(f)
 	if err != nil {
 		log.WithFields(log.Fields{"cmd": "listings.import"}).Error("Failed to import listings.")
 		return "", err
 	}
 
+	listings := UniqueListings(rawListings)
+
 	// datastore needs to add one listing at a time, walk through imported listings and save one by one
-	for _, l := range listings.Listings {
+	for _, l := range listings {
 		listing := l
 
 		err = d.Save(&listing)
 		if err != nil {
-			log.WithFields(log.Fields{"cmd": "listings.import", "count": len(listings.Listings)}).Error("Failed datastore save.")
+			log.WithFields(log.Fields{"cmd": "listings.import", "count": len(listings)}).Error("Failed datastore save.")
 			return "", err
 		}
 		log.WithFields(log.Fields{"cmd": "listings.import", "listing": listing}).Debug("Imported listing.")
 	}
-	log.WithFields(log.Fields{"cmd": "listings.import", "count": len(listings.Listings)}).Info("Imported listings.")
+	log.WithFields(log.Fields{"cmd": "listings.import", "count": len(listings)}).Info("Imported listings.")
 
 	// In all cases, tell user how many records were imported.
-	output := "Imported " + strconv.Itoa(len(listings.Listings)) + " record"
-	if len(listings.Listings) == 1 {
+	output := "Imported " + strconv.Itoa(len(listings)) + " record"
+	if len(listings) == 1 {
 		output += ".\n"
 	} else {
 		output += "s.\n"
 	}
 
-	return output + lstg.Render(listings.Listings), nil
+	return output + lstg.Render(listings), nil
 }
 
 // ParseImportInput unmarshalls json into a Listings struct.
-func ParseImportInput(j io.Reader) (lstg.Listings, error) {
+func ParseImportInput(j io.Reader) ([]lstg.Listing, error) {
 	// verify that the parameter is valid
 	if j == nil {
-		return lstg.Listings{}, errors.New("import : parameter cannot be nil")
+		return []lstg.Listing{}, errors.New("import : parameter cannot be nil")
 	}
 
 	// read our opened jsonFile as a byte array.
@@ -140,7 +139,7 @@ func ParseImportInput(j io.Reader) (lstg.Listings, error) {
 		log.WithFields(log.Fields{
 			"cmd": "listings.import",
 		}).Error("Failed to unmarshall import file.")
-		return lstg.Listings{}, err
+		return []lstg.Listing{}, err
 	}
 
 	var ll lstg.Listings
@@ -152,10 +151,59 @@ func ParseImportInput(j io.Reader) (lstg.Listings, error) {
 		log.WithFields(log.Fields{
 			"cmd": "listings.import",
 		}).Error("Failed to unmarshall import file.")
-		return lstg.Listings{}, err
+		return []lstg.Listing{}, err
 	}
 
-	return ll, nil
+	return ll.Listings, nil
+}
+
+// AddListing adds a single listing to the datastore.
+func AddListing(rawRecords []lstg.Listing, ds datastore.Writer) (string, error) {
+	// if there's nothing to add, return quickly
+	if len(rawRecords) == 0 {
+		return "", nil
+	}
+
+	cleanRecords := UniqueListings(rawRecords)
+
+	log.WithFields(log.Fields{
+		"cmd":        "listings.add",
+		"count":      len(cleanRecords),
+		"duplicates": len(rawRecords) - len(cleanRecords),
+	}).Info("Adding listing(s).")
+
+	for _, record := range cleanRecords {
+		// copy loop variable so i can accurately reference it for saving
+		listing := record
+		err := ds.Save(&listing)
+		if err != nil {
+			log.Error("Failed to save new listing.")
+			return "", err
+		}
+	}
+
+	return lstg.Render(cleanRecords), nil
+}
+
+// UniqueListings returns the passed in slice of listings with at most one of each listing. Listing order is
+// preserved by first occurrence in initial slice.
+func UniqueListings(rawListings []lstg.Listing) []lstg.Listing {
+	// nothing to filter here...
+	if len(rawListings) == 0 {
+		return []lstg.Listing{}
+	}
+
+	keys := make(map[lstg.Listing]bool)
+	cleanListings := []lstg.Listing{}
+
+	for _, listing := range rawListings {
+		if _, found := keys[listing]; !found {
+			keys[listing] = true
+			cleanListings = append(cleanListings, listing)
+		}
+	}
+
+	return cleanListings
 }
 
 func init() {

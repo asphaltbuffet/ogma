@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - completion command disabled [#37](https://github.com/asphaltbuffet/ogma/issues/37)
 - docker images no longer generated as part of release artifacts
+- add command has been removed in favor of using import.
 
 ### Fixes
 
