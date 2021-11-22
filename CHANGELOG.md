@@ -13,17 +13,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - _README.md_
   - _LICENSE_
   - _CHANGELOG.md_
+- Taskfile functionality added for local development
 
 ### Changed
 
 - version information updated [#38](https://github.com/asphaltbuffet/ogma/issues/38)
+- significant internal refactoring
 - mocks are now automatically generated
 
 ### Removed
 
 - completion command disabled [#37](https://github.com/asphaltbuffet/ogma/issues/37)
 - docker images no longer generated as part of release artifacts
-- add command has been removed in favor of using import.
+- add command has been removed in favor of using import
 
 ### Fixes
 
