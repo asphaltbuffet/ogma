@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+//go:generate mockery --output=../../mocks --log-level=warn --name=Writer
 // A Writer can write to a datastore.
 type Writer interface {
 	Save(data interface{}) error

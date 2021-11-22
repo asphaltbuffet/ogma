@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - version information updated [#38](https://github.com/asphaltbuffet/ogma/issues/38)
+- mocks are now automatically generated
 
 ### Removed
 

@@ -36,7 +36,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/asphaltbuffet/ogma/cmd"
-	dsmocks "github.com/asphaltbuffet/ogma/pkg/datastore/mocks"
+	"github.com/asphaltbuffet/ogma/mocks"
 	lstg "github.com/asphaltbuffet/ogma/pkg/listing"
 )
 
@@ -93,7 +93,7 @@ func TestRunImport(t *testing.T) {
 			testFile, err := appFS.Open(tt.filepath)
 			assert.NoError(t, err)
 
-			mockDatastore := &dsmocks.Writer{}
+			mockDatastore := &mocks.Writer{}
 			mockDatastore.On("Save", mock.Anything).Return(nil)
 
 			got, err := cmd.Import(testFile, mockDatastore)
@@ -437,7 +437,7 @@ func TestAddListing(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockDatastore := &dsmocks.Writer{}
+			mockDatastore := &mocks.Writer{}
 			mockDatastore.On("Save", mock.Anything).Return(nil)
 
 			got, err := cmd.AddListing(tt.args.ll, mockDatastore)
