@@ -38,17 +38,24 @@ import (
 	lstg "github.com/asphaltbuffet/ogma/pkg/listing"
 )
 
-// importCmd represents the import command.
-var importCmd = &cobra.Command{
-	Use:     "import",
-	Short:   "Bulk import records.",
-	Long:    ``,
-	Args:    cobra.ExactArgs(1),
-	Example: "ogma import somefile.json -v",
-	RunE:    RunImportCmd,
-}
-
 var verbose bool
+
+// NewImportCmd sets up an import subcommand.
+func NewImportCmd() *cobra.Command {
+	// importCmd represents the import command.
+	importCmd := &cobra.Command{
+		Use:     "import",
+		Short:   "Bulk import records.",
+		Long:    ``,
+		Args:    cobra.ExactArgs(1),
+		Example: "ogma import somefile.json -v",
+		RunE:    RunImportCmd,
+	}
+
+	importCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Print imported listings to stdout.")
+
+	return importCmd
+}
 
 // RunImportCmd performs action associated with listings-import application command.
 func RunImportCmd(c *cobra.Command, args []string) error {
@@ -142,11 +149,11 @@ func ParseImportInput(j io.Reader) ([]lstg.Listing, error) {
 		return []lstg.Listing{}, err
 	}
 
-	var ll lstg.Listings
+	var newListings lstg.Listings
 
 	// we unmarshal our byteArray which contains our
-	// jsonFile's content into 'users' which we defined above
-	err = json.Unmarshal(byteValue, &ll)
+	// jsonFile's content into 'newListings' which we defined above
+	err = json.Unmarshal(byteValue, &newListings)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"cmd": "listings.import",
@@ -154,7 +161,7 @@ func ParseImportInput(j io.Reader) ([]lstg.Listing, error) {
 		return []lstg.Listing{}, err
 	}
 
-	return ll.Listings, nil
+	return newListings.Listings, nil
 }
 
 // AddListing adds a single listing to the datastore.
@@ -207,8 +214,7 @@ func UniqueListings(rawListings []lstg.Listing) []lstg.Listing {
 }
 
 func init() {
-	importCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Print imported listings to stdout.")
-	rootCmd.AddCommand(importCmd)
+	rootCmd.AddCommand(NewImportCmd())
 
 	// Here you will define your flags and configuration settings.
 
