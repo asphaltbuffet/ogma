@@ -1,0 +1,80 @@
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - task: dev
+  dev:
+    desc: dev build
+    cmds:
+      - task: clean
+      - task: install
+      - task: generate
+      - task: vet
+      - task: fmt
+      - task: lint
+      - task: test
+      - task: mod-tidy
+  ci:
+    desc: CI build
+    cmds:
+      - task: dev
+      - task: diff
+  clean:
+    desc: remove files created during build pipeline
+    cmds:
+      - rm -rf dist
+      - rm -f coverage.*
+  install:
+    desc: go install tools
+    cmds: 
+      - go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.1 
+      - go install github.com/goreleaser/goreleaser@v0.183.0
+  generate:
+    desc: go generate
+    cmds:
+      - go generate ./...
+  vet:
+    desc: go vet
+    cmds:
+      - go vet ./...
+  fmt:
+    desc: go fmt
+    cmds:
+      - go fmt ./...
+  lint:
+    desc: golangci-lint
+    cmds:
+      - golangci-lint run
+  test:
+    desc: go test with race detector and code coverage
+    cmds:
+      - go test -race -covermode=atomic -coverprofile=coverage.out ./...
+      - go tool cover -html=coverage.out -o coverage.html
+  mod-tidy:
+    desc: go mod tidy
+    cmds:
+      - go mod tidy
+  diff:
+    desc: git diff
+    cmds:
+      - git diff --exit-code
+      - RES=$$(git status --porcelain) ; if [ -n "$$RES" ]; then echo $$RES && exit 1 ; fi
+  build:
+    desc: goreleaser --snapshot --skip-publish --rm-dist
+    cmds:
+      - task: install
+      - goreleaser --snapshot --skip-publish --rm-dist
+  release:
+    desc: goreleaser --rm-dist
+    cmds:
+      - task: install
+      - goreleaser --rm-dist
+  run:
+    desc: go run
+    cmds:
+      - go run -race .
+  go-clean:
+    desc: go clean build, test and modules caches
+    cmds:
+      - go clean -r -i -cache -testcache -modcache
