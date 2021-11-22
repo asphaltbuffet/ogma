@@ -19,6 +19,7 @@ install: ## go install tools
 	$(call print-target)
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.1 
 	go install github.com/goreleaser/goreleaser@v0.183.0
+	go install github.com/vektra/mockery/v2@latest
 
 .PHONY: generate
 generate: ## go generate
