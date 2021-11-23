@@ -38,15 +38,24 @@ import (
 	lstg "github.com/asphaltbuffet/ogma/pkg/listing"
 )
 
-// importCmd represents the import command.
-var importCmd = &cobra.Command{
-	Use:   "import",
-	Short: "Import listings from a file.",
-	Long:  ``,
-	RunE:  RunImportCmd,
-}
-
 var verbose bool
+
+// NewImportCmd sets up an import subcommand.
+func NewImportCmd() *cobra.Command {
+	// importCmd represents the import command.
+	importCmd := &cobra.Command{
+		Use:     "import",
+		Short:   "Bulk import records.",
+		Long:    ``,
+		Args:    cobra.ExactArgs(1),
+		Example: "ogma import somefile.json -v",
+		RunE:    RunImportCmd,
+	}
+
+	importCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Print imported listings to stdout.")
+
+	return importCmd
+}
 
 // RunImportCmd performs action associated with listings-import application command.
 func RunImportCmd(c *cobra.Command, args []string) error {
@@ -91,45 +100,44 @@ func Import(f io.Reader, d datastore.Writer) (string, error) {
 		return "", errors.New("import : import reader cannot be nil")
 	}
 
-	// we initialize our listings array
-	var listings lstg.Listings
-
 	// convert import file into a listings struct
-	listings, err := ParseImportInput(f)
+	rawListings, err := ParseImportInput(f)
 	if err != nil {
 		log.WithFields(log.Fields{"cmd": "listings.import"}).Error("Failed to import listings.")
 		return "", err
 	}
 
+	listings := UniqueListings(rawListings)
+
 	// datastore needs to add one listing at a time, walk through imported listings and save one by one
-	for _, l := range listings.Listings {
+	for _, l := range listings {
 		listing := l
 
 		err = d.Save(&listing)
 		if err != nil {
-			log.WithFields(log.Fields{"cmd": "listings.import", "count": len(listings.Listings)}).Error("Failed datastore save.")
+			log.WithFields(log.Fields{"cmd": "listings.import", "count": len(listings)}).Error("Failed datastore save.")
 			return "", err
 		}
 		log.WithFields(log.Fields{"cmd": "listings.import", "listing": listing}).Debug("Imported listing.")
 	}
-	log.WithFields(log.Fields{"cmd": "listings.import", "count": len(listings.Listings)}).Info("Imported listings.")
+	log.WithFields(log.Fields{"cmd": "listings.import", "count": len(listings)}).Info("Imported listings.")
 
 	// In all cases, tell user how many records were imported.
-	output := "Imported " + strconv.Itoa(len(listings.Listings)) + " record"
-	if len(listings.Listings) == 1 {
+	output := "Imported " + strconv.Itoa(len(listings)) + " record"
+	if len(listings) == 1 {
 		output += ".\n"
 	} else {
 		output += "s.\n"
 	}
 
-	return output + lstg.Render(listings.Listings), nil
+	return output, nil
 }
 
 // ParseImportInput unmarshalls json into a Listings struct.
-func ParseImportInput(j io.Reader) (lstg.Listings, error) {
+func ParseImportInput(j io.Reader) ([]lstg.Listing, error) {
 	// verify that the parameter is valid
 	if j == nil {
-		return lstg.Listings{}, errors.New("import : parameter cannot be nil")
+		return []lstg.Listing{}, errors.New("import : parameter cannot be nil")
 	}
 
 	// read our opened jsonFile as a byte array.
@@ -138,27 +146,47 @@ func ParseImportInput(j io.Reader) (lstg.Listings, error) {
 		log.WithFields(log.Fields{
 			"cmd": "listings.import",
 		}).Error("Failed to unmarshall import file.")
-		return lstg.Listings{}, err
+		return []lstg.Listing{}, err
 	}
 
-	var ll lstg.Listings
+	var newListings lstg.Listings
 
 	// we unmarshal our byteArray which contains our
-	// jsonFile's content into 'users' which we defined above
-	err = json.Unmarshal(byteValue, &ll)
+	// jsonFile's content into 'newListings' which we defined above
+	err = json.Unmarshal(byteValue, &newListings)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"cmd": "listings.import",
 		}).Error("Failed to unmarshall import file.")
-		return lstg.Listings{}, err
+		return []lstg.Listing{}, err
 	}
 
-	return ll, nil
+	return newListings.Listings, nil
+}
+
+// UniqueListings returns the passed in slice of listings with at most one of each listing. Listing order is
+// preserved by first occurrence in initial slice.
+func UniqueListings(rawListings []lstg.Listing) []lstg.Listing {
+	// nothing to filter here...
+	if len(rawListings) == 0 {
+		return []lstg.Listing{}
+	}
+
+	keys := make(map[lstg.Listing]bool)
+	cleanListings := []lstg.Listing{}
+
+	for _, listing := range rawListings {
+		if _, found := keys[listing]; !found {
+			keys[listing] = true
+			cleanListings = append(cleanListings, listing)
+		}
+	}
+
+	return cleanListings
 }
 
 func init() {
-	importCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Print imported listings to stdout.")
-	rootCmd.AddCommand(importCmd)
+	rootCmd.AddCommand(NewImportCmd())
 
 	// Here you will define your flags and configuration settings.
 

@@ -14,20 +14,18 @@ archives:
 - format_overrides:
     - goos: windows
       format: zip
+  files:
+  - src: .ogma
+  - src: README*
+    dst: docs
+  - src: LICENSE*
+    dst: docs
+  - src: CHANGELOG*
+    dst: docs
 release:
   github:
+    owner: asphaltbuffet
+    name: ogma
   prerelease: auto
-dockers:
-  -
-    image_templates:
-    - "docker.pkg.github.com/asphaltbuffet/ogma/{{ .ProjectName }}:latest"
-    - "docker.pkg.github.com/asphaltbuffet/ogma/{{ .ProjectName }}:{{ .Major }}"
-    - "docker.pkg.github.com/asphaltbuffet/ogma/{{ .ProjectName }}:{{ .Major }}.{{ .Minor }}"
-    - "docker.pkg.github.com/asphaltbuffet/ogma/{{ .ProjectName }}:{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
-    build_flag_templates:
-    - "--pull"
-    - "--label=org.opencontainers.image.created={{.Date}}"
-    - "--label=org.opencontainers.image.name={{.ProjectName}}"
-    - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-    - "--label=org.opencontainers.image.version={{.Version}}"
-    - "--label=org.opencontainers.image.source={{.GitURL}}"
+announce:
+  skip: 'true'

@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Packaging now includes docs directory:
+  - _README.md_
+  - _LICENSE_
+  - _CHANGELOG.md_
+- Taskfile functionality added for local development
+
+### Changed
+
+- version information updated [#38](https://github.com/asphaltbuffet/ogma/issues/38)
+- significant internal refactoring
+- mocks are now automatically generated
+
+### Removed
+
+- completion command disabled [#37](https://github.com/asphaltbuffet/ogma/issues/37)
+- docker images no longer generated as part of release artifacts
+- add command has been removed in favor of using import
+
+### Fixes
+
+- base root command no longer returns an error [#35](https://github.com/asphaltbuffet/ogma/issues/35)
+- default config file now included as part of packaging [#36](https://github.com/asphaltbuffet/ogma/issues/36)
+
 ## [1.0.0] - 2021-11-15
 
 ### Added

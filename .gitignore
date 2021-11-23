@@ -11,10 +11,6 @@
 # Application runtime cruft
 ogma.db
 ogma
-*.log
-
-# Testing files
-*_test.json
 
 # Test binary, built with `go test -c`
 *.test
@@ -46,3 +42,6 @@ dist/
 # env files that usually contain secrets or local config
 .env
 .envrc
+
+# Mocks
+mocks/

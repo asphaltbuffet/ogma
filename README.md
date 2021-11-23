@@ -13,7 +13,6 @@ A LEX Magazine DB ~~and letter tracking application~~(coming soon).
 
 - [OGMA](#ogma)
   - [Usage](#usage)
-    - [Add Command](#add-command)
     - [Import Command](#import-command)
       - [Example import file](#example-import-file)
     - [Search Command](#search-command)
@@ -27,31 +26,6 @@ Ogma does not come pre-loaded with any issue information. As the service require
 There are two methods to add issue listings for later use, [Add](#add-command) and [Import](#import-command).
 
 Application usage details can be found via the `-h` or `--help` flag in the base application or with any command. This will show argument details, flag detail, and some examples. In-application documentation always supercedes this documentation.
-
-### Add Command
-
-The add command allows single entries to be saved. It is very manual and is really only good for occasional data entry. Seriously, use [import](#import-command).
-
-```bash
-ogma add [FLAGS]
-```
-
-Ok, fine. Each listing field is a separate flag. No flags are currently set as required, but the defaults are meaningless for several fields.
-
-| Flag                  |   Type   |   Default    | Description                          |
-| --------------------- | :------: | :----------: | ------------------------------------ |
-| `-a, --art`           |  `bool`  |   `false`    | Is this a sketch listing entry?      |
-| `-c, --category`      | `string` |     `""`     | Category of listing entry.           |
-| `-f, --flag`          |  `bool`  |   `false`    | Has this listing entry been flagged? |
-| `-i, --international` |  `bool`  |   `false`    | Is international postage required?   |
-| `-l, --lex`           |  `int`   |     `56`     | LEX issue containing listing entry.  |
-| `-m, --member`        |  `int`   |     `-1`     | Member number of listing entry.      |
-| `-p, --page`          |  `int`   |     `-1`     | Page number of listing entry.        |
-| `-r, --review`        |  `bool`  |   `false`    | Is this a book review listing entry? |
-| `-s, --season`        | `string` |     `""`     | Season of listing entry.             |
-| `-t, --text`          | `string` |     `""`     | Text of listing entry.               |
-| `-v, --volume`        |  `int`   |     `-1`     | Volume containing listing entry.     |
-| `-y, --year`          |  `int`   | current year | Year of listing entry.               |
 
 ### Import Command
 

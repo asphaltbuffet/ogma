@@ -24,10 +24,12 @@ THE SOFTWARE.
 package lstg
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
+	log "github.com/sirupsen/logrus"
 )
 
 // A Listings hold unmarshalled listing data for import.
@@ -83,15 +85,49 @@ var columnConfigs = []table.ColumnConfig{
 	},
 }
 
+// GetStyle converts a []string into a valid rendering style.
+func GetStyle(s []string) (table.Style, error) {
+	// set default style as bright
+	sa := "bright"
+
+	// if too many args, just use the first one
+	if len(s) > 0 {
+		if len(s) > 1 {
+			log.WithFields(log.Fields{
+				"args": s,
+			}).Warn("Too many styles passed in. Using first argument only.")
+		}
+
+		sa = s[0]
+	}
+
+	// check style
+	switch sa {
+	case "bright":
+		return table.StyleColoredBright, nil
+	case "light":
+		return table.StyleLight, nil
+	case "default":
+		return table.StyleDefault, nil
+	default:
+		log.WithFields(log.Fields{
+			"style": sa,
+		}).Error("Invalid table style.")
+		return table.StyleDefault, errors.New("invalid argument")
+	}
+}
+
 // Render returns a pretty formatted listing as table.
-func Render(ll []Listing) string {
+func Render(ll []Listing, s ...string) string {
 	// empty string if there are no listings to render
 	if len(ll) == 0 {
 		return ""
 	}
 
 	lt := table.NewWriter()
+
 	// lt.SetTitle("Search results for Member #%d", ll[0].IndexedMemberNumber)
+
 	lt.AppendHeader(table.Row{
 		"ID",
 		"Volume",
@@ -129,8 +165,8 @@ func Render(ll []Listing) string {
 
 	lt.SetColumnConfigs(columnConfigs)
 
-	// lt.SetStyle(table.StyleLight)
-	lt.SetStyle(table.StyleColoredBright)
+	style, _ := GetStyle(s)
+	lt.SetStyle(style)
 
 	return lt.Render()
 }

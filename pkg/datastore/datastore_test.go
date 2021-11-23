@@ -9,6 +9,7 @@ import (
 
 	"github.com/asdine/storm/v3/q"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/asphaltbuffet/ogma/cmd"
@@ -19,10 +20,10 @@ import (
 func TestManagerNew(t *testing.T) {
 	manager, dbFilePath, err := initDatastoreManager()
 	defer func() {
+		manager.Stop()
 		err = os.Remove(dbFilePath)
 		assert.NoError(t, err)
 	}()
-	defer manager.Stop()
 
 	assert.NoError(t, err)
 
@@ -34,10 +35,10 @@ func TestManagerNew(t *testing.T) {
 func TestManagerNewFail(t *testing.T) {
 	manager, dbFilePath, err := initDatastoreManager()
 	defer func() {
+		manager.Stop()
 		err = os.Remove(dbFilePath)
 		assert.NoError(t, err)
 	}()
-	defer manager.Stop()
 
 	_, err = datastore.New(dbFilePath)
 	assert.Error(t, err, "datastore manager should fail to open duplicate db file")
@@ -46,10 +47,10 @@ func TestManagerNewFail(t *testing.T) {
 func TestManagerGetPath(t *testing.T) {
 	manager, dbFilePath, err := initDatastoreManager()
 	defer func() {
+		manager.Stop()
 		err = os.Remove(dbFilePath)
 		assert.NoError(t, err)
 	}()
-	defer manager.Stop()
 
 	assert.Equal(t, dbFilePath, manager.GetPath())
 }
@@ -58,8 +59,82 @@ func initDatastoreManager() (*datastore.Manager, string, error) {
 	currentTime := time.Now()
 	filename := fmt.Sprintf("test_%d.db", currentTime.Unix())
 	manager, err := datastore.New(filename)
+	if err != nil {
+		return nil, "", err
+	}
 
-	return manager, filename, err
+	appFS := afero.NewMemMapFs()
+
+	// create test files and directories
+	err = appFS.MkdirAll("test", 0o755)
+	if err != nil {
+		return nil, "", err
+	}
+
+	err = afero.WriteFile(appFS, "test/search.json", []byte(`{
+				"listings": [
+					{
+						"volume": 1,
+						"issue": 1,
+						"year": 1986,
+						"season": "Mollit",
+						"page": 1,
+						"category": "Pariatur",
+						"member": 1234,
+						"alt": "",
+						"international": false,
+						"review": false,
+						"text": "Esse Lorem do nulla sunt mollit nulla in.",
+						"art": false,
+						"flag": true
+					},
+					{
+						"volume": 1,
+						"issue": 1,
+						"year": 1986,
+						"season": "Eiusmod",
+						"page": 2,
+						"category": "Commodo",
+						"member": 1234,
+						"alt": "B",
+						"international": false,
+						"review": false,
+						"text": "Magna officia anim dolore enim.",
+						"art": false,
+						"flag": true
+					},
+					{
+						"volume": 1,
+						"issue": 1,
+						"year": 1986,
+						"season": "Id",
+						"page": 3,
+						"category": "Conisere",
+						"member": 5678,
+						"alt": "",
+						"international": false,
+						"review": false,
+						"text": "Velit cillum cillum ea officia nulla enim.",
+						"art": false,
+						"flag": true
+					}
+				]
+				}`), 0o644)
+	if err != nil {
+		return nil, "", err
+	}
+
+	testFile, err := appFS.Open("test/search.json")
+	if err != nil {
+		return nil, "", err
+	}
+
+	_, err = cmd.Import(testFile, manager)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return manager, filename, nil
 }
 
 func init() {
@@ -69,9 +144,9 @@ func init() {
 func TestManager_Save(t *testing.T) {
 	manager, dbFilePath, err := initDatastoreManager()
 	assert.NoError(t, err)
-	defer manager.Stop()
 
 	defer func() {
+		manager.Stop()
 		err = os.Remove(dbFilePath)
 		assert.NoError(t, err)
 	}()
@@ -89,50 +164,12 @@ func TestManager_Save(t *testing.T) {
 func TestManager_One(t *testing.T) {
 	m, dbFilePath, err := initDatastoreManager()
 	assert.NoError(t, err)
-	defer m.Stop()
 
 	defer func() {
+		m.Stop()
 		err = os.Remove(dbFilePath)
 		assert.NoError(t, err)
 	}()
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Mollit",
-			PageNumber:          1,
-			IndexedCategory:     "Pariatur",
-			IndexedMemberNumber: 1234,
-			MemberExtension:     "",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Esse Lorem do nulla sunt mollit nulla in.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Eiusmod",
-			PageNumber:          2,
-			IndexedCategory:     "Commodo",
-			IndexedMemberNumber: 1234,
-			MemberExtension:     "B",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Magna officia anim dolore enim.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
 
 	type args struct {
 		fieldName string
@@ -165,7 +202,7 @@ func TestManager_One(t *testing.T) {
 				fieldName: "IndexedMemberNumber",
 				value:     5678,
 			},
-			wantErr: true,
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
@@ -182,69 +219,12 @@ func TestManager_One(t *testing.T) {
 func TestManager_Find(t *testing.T) {
 	m, dbFilePath, err := initDatastoreManager()
 	assert.NoError(t, err)
-	defer m.Stop()
 
 	defer func() {
+		m.Stop()
 		err = os.Remove(dbFilePath)
 		assert.NoError(t, err)
 	}()
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Mollit",
-			PageNumber:          1,
-			IndexedCategory:     "Pariatur",
-			IndexedMemberNumber: 1234,
-			MemberExtension:     "",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Esse Lorem do nulla sunt mollit nulla in.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Eiusmod",
-			PageNumber:          2,
-			IndexedCategory:     "Commodo",
-			IndexedMemberNumber: 1234,
-			MemberExtension:     "B",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Magna officia anim dolore enim.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Id",
-			PageNumber:          3,
-			IndexedCategory:     "Consequat",
-			IndexedMemberNumber: 5678,
-			MemberExtension:     "",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Velit cillum cillum ea officia nulla enim.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
 
 	type args struct {
 		fieldName string
@@ -300,69 +280,12 @@ func TestManager_Find(t *testing.T) {
 func TestManager_AllByIndex(t *testing.T) {
 	m, dbFilePath, err := initDatastoreManager()
 	assert.NoError(t, err)
-	defer m.Stop()
 
 	defer func() {
+		m.Stop()
 		err = os.Remove(dbFilePath)
 		assert.NoError(t, err)
 	}()
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Mollit",
-			PageNumber:          1,
-			IndexedCategory:     "Pariatur",
-			IndexedMemberNumber: 1234,
-			MemberExtension:     "",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Esse Lorem do nulla sunt mollit nulla in.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Eiusmod",
-			PageNumber:          2,
-			IndexedCategory:     "Commodo",
-			IndexedMemberNumber: 1234,
-			MemberExtension:     "B",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Magna officia anim dolore enim.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Id",
-			PageNumber:          3,
-			IndexedCategory:     "Consequat",
-			IndexedMemberNumber: 5678,
-			MemberExtension:     "",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Velit cillum cillum ea officia nulla enim.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
 
 	type args struct {
 		fieldName string
@@ -399,69 +322,12 @@ func TestManager_AllByIndex(t *testing.T) {
 func TestManager_All(t *testing.T) {
 	m, dbFilePath, err := initDatastoreManager()
 	assert.NoError(t, err)
-	defer m.Stop()
 
 	defer func() {
+		m.Stop()
 		err = os.Remove(dbFilePath)
 		assert.NoError(t, err)
 	}()
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Mollit",
-			PageNumber:          1,
-			IndexedCategory:     "Pariatur",
-			IndexedMemberNumber: 1234,
-			MemberExtension:     "",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Esse Lorem do nulla sunt mollit nulla in.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Eiusmod",
-			PageNumber:          2,
-			IndexedCategory:     "Commodo",
-			IndexedMemberNumber: 1234,
-			MemberExtension:     "B",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Magna officia anim dolore enim.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Id",
-			PageNumber:          3,
-			IndexedCategory:     "Consequat",
-			IndexedMemberNumber: 5678,
-			MemberExtension:     "",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Velit cillum cillum ea officia nulla enim.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
 
 	tests := []struct {
 		name      string
@@ -491,69 +357,12 @@ func TestManager_All(t *testing.T) {
 func TestManager_Select(t *testing.T) {
 	m, dbFilePath, err := initDatastoreManager()
 	assert.NoError(t, err)
-	defer m.Stop()
 
 	defer func() {
+		m.Stop()
 		err = os.Remove(dbFilePath)
 		assert.NoError(t, err)
 	}()
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Mollit",
-			PageNumber:          1,
-			IndexedCategory:     "Pariatur",
-			IndexedMemberNumber: 1234,
-			MemberExtension:     "",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Esse Lorem do nulla sunt mollit nulla in.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Eiusmod",
-			PageNumber:          2,
-			IndexedCategory:     "Commodo",
-			IndexedMemberNumber: 1234,
-			MemberExtension:     "B",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Magna officia anim dolore enim.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Id",
-			PageNumber:          3,
-			IndexedCategory:     "Consequat",
-			IndexedMemberNumber: 5678,
-			MemberExtension:     "",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Velit cillum cillum ea officia nulla enim.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
 
 	type args struct {
 		matcher q.Matcher
@@ -598,69 +407,12 @@ func TestManager_Select(t *testing.T) {
 func TestManager_Range(t *testing.T) {
 	m, dbFilePath, err := initDatastoreManager()
 	assert.NoError(t, err)
-	defer m.Stop()
 
 	defer func() {
+		m.Stop()
 		err = os.Remove(dbFilePath)
 		assert.NoError(t, err)
 	}()
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Mollit",
-			PageNumber:          1,
-			IndexedCategory:     "Pariatur",
-			IndexedMemberNumber: 1234,
-			MemberExtension:     "",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Esse Lorem do nulla sunt mollit nulla in.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Eiusmod",
-			PageNumber:          2,
-			IndexedCategory:     "Commodo",
-			IndexedMemberNumber: 1234,
-			MemberExtension:     "B",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Magna officia anim dolore enim.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Id",
-			PageNumber:          3,
-			IndexedCategory:     "Consequat",
-			IndexedMemberNumber: 5678,
-			MemberExtension:     "",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Velit cillum cillum ea officia nulla enim.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
 
 	type args struct {
 		fieldName string
@@ -730,69 +482,12 @@ func TestManager_Range(t *testing.T) {
 func TestManager_Prefix(t *testing.T) {
 	m, dbFilePath, err := initDatastoreManager()
 	assert.NoError(t, err)
-	defer m.Stop()
 
 	defer func() {
+		m.Stop()
 		err = os.Remove(dbFilePath)
 		assert.NoError(t, err)
 	}()
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Mollit",
-			PageNumber:          1,
-			IndexedCategory:     "Pariatur",
-			IndexedMemberNumber: 1234,
-			MemberExtension:     "",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Esse Lorem do nulla sunt mollit nulla in.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Eiusmod",
-			PageNumber:          2,
-			IndexedCategory:     "Commodo",
-			IndexedMemberNumber: 1234,
-			MemberExtension:     "B",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Magna officia anim dolore enim.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Id",
-			PageNumber:          3,
-			IndexedCategory:     "Consequat",
-			IndexedMemberNumber: 5678,
-			MemberExtension:     "",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Velit cillum cillum ea officia nulla enim.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
 
 	type args struct {
 		fieldName string
@@ -839,69 +534,12 @@ func TestManager_Prefix(t *testing.T) {
 func TestManager_Count(t *testing.T) {
 	m, dbFilePath, err := initDatastoreManager()
 	assert.NoError(t, err)
-	defer m.Stop()
 
 	defer func() {
+		m.Stop()
 		err = os.Remove(dbFilePath)
 		assert.NoError(t, err)
 	}()
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Mollit",
-			PageNumber:          1,
-			IndexedCategory:     "Pariatur",
-			IndexedMemberNumber: 1234,
-			MemberExtension:     "",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Esse Lorem do nulla sunt mollit nulla in.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Eiusmod",
-			PageNumber:          2,
-			IndexedCategory:     "Commodo",
-			IndexedMemberNumber: 1234,
-			MemberExtension:     "B",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Magna officia anim dolore enim.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Id",
-			PageNumber:          3,
-			IndexedCategory:     "Consequat",
-			IndexedMemberNumber: 5678,
-			MemberExtension:     "",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Velit cillum cillum ea officia nulla enim.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
 
 	tests := []struct {
 		name      string

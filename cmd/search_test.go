@@ -29,6 +29,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -62,71 +63,12 @@ func TestRunSearchCmd(t *testing.T) {
 func TestSearch(t *testing.T) {
 	m, dbFilePath, err := initDatastoreManager()
 	assert.NoError(t, err)
-	defer m.Stop()
 
 	defer func() {
+		m.Stop()
 		err = os.Remove(dbFilePath)
 		assert.NoError(t, err)
 	}()
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Mollit",
-			PageNumber:          1,
-			IndexedCategory:     "Pariatur",
-			IndexedMemberNumber: 1234,
-			MemberExtension:     "",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Esse Lorem do nulla sunt mollit nulla in.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
-
-	_, err = cmd.AddListing([]lstg.Listing{
-		{
-			Volume:              1,
-			IssueNumber:         1,
-			Year:                1986,
-			Season:              "Eiusmod",
-			PageNumber:          2,
-			IndexedCategory:     "Commodo",
-			IndexedMemberNumber: 1234,
-			MemberExtension:     "B",
-			IsInternational:     false,
-			IsReview:            false,
-			ListingText:         "Magna officia anim dolore enim.",
-			IsArt:               false,
-			IsFlagged:           true,
-		},
-	}, m)
-	assert.NoError(t, err)
-
-	for i := 1; i <= 10; i++ {
-		_, err = cmd.AddListing([]lstg.Listing{
-			{
-				Volume:              1,
-				IssueNumber:         1,
-				Year:                1986,
-				Season:              "Id",
-				PageNumber:          3,
-				IndexedCategory:     "Consequat",
-				IndexedMemberNumber: 5678,
-				MemberExtension:     "",
-				IsInternational:     false,
-				IsReview:            false,
-				ListingText:         "Velit cillum cillum ea officia nulla enim.",
-				IsArt:               false,
-				IsFlagged:           true,
-			},
-		}, m)
-		assert.NoError(t, err)
-	}
 
 	type args struct {
 		member int
@@ -206,8 +148,82 @@ func initDatastoreManager() (*datastore.Manager, string, error) {
 	currentTime := time.Now()
 	filename := fmt.Sprintf("test_%d.db", currentTime.Unix())
 	manager, err := datastore.New(filename)
+	if err != nil {
+		return nil, "", err
+	}
 
-	return manager, filename, err
+	appFS := afero.NewMemMapFs()
+
+	// create test files and directories
+	err = appFS.MkdirAll("test", 0o755)
+	if err != nil {
+		return nil, "", err
+	}
+
+	err = afero.WriteFile(appFS, "test/search.json", []byte(`{
+				"listings": [
+					{
+						"volume": 1,
+						"issue": 1,
+						"year": 1986,
+						"season": "Mollit",
+						"page": 1,
+						"category": "Pariatur",
+						"member": 1234,
+						"alt": "",
+						"international": false,
+						"review": false,
+						"text": "Esse Lorem do nulla sunt mollit nulla in.",
+						"art": false,
+						"flag": true
+					},
+					{
+						"volume": 1,
+						"issue": 1,
+						"year": 1986,
+						"season": "Eiusmod",
+						"page": 2,
+						"category": "Commodo",
+						"member": 1234,
+						"alt": "B",
+						"international": false,
+						"review": false,
+						"text": "Magna officia anim dolore enim.",
+						"art": false,
+						"flag": true
+					},
+					{
+						"volume": 1,
+						"issue": 1,
+						"year": 1986,
+						"season": "Id",
+						"page": 3,
+						"category": "Pariatur",
+						"member": 5678,
+						"alt": "",
+						"international": false,
+						"review": false,
+						"text": "Velit cillum cillum ea officia nulla enim.",
+						"art": false,
+						"flag": true
+					}
+				]
+				}`), 0o644)
+	if err != nil {
+		return nil, "", err
+	}
+
+	testFile, err := appFS.Open("test/search.json")
+	if err != nil {
+		return nil, "", err
+	}
+
+	_, err = cmd.Import(testFile, manager)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return manager, filename, nil
 }
 
 func init() {
