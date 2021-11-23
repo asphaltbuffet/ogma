@@ -10,10 +10,7 @@ tasks:
   
   dev:
     desc: dev build
-    deps:
-      - task: clean
-      - task: install
-      - task: generate
+    deps: [ clean, install, generate]
     cmds:
       - task: vet
       - task: fmt
@@ -74,18 +71,18 @@ tasks:
     desc: git diff
     cmds:
       - git diff --exit-code
-      - RES=$$(git status --porcelain) ; if [ -n "$$RES" ]; then echo $$RES && exit 1 ; fi
+      - sh: RES=$$(git status --porcelain) ; if [ -n "$$RES" ]; then echo $$RES && exit 1 ; fi
   
   build:
     desc: goreleaser --snapshot --skip-publish --rm-dist
+    deps: [install]
     cmds:
-      - task: install
       - goreleaser --snapshot --skip-publish --rm-dist
   
   release:
     desc: goreleaser --rm-dist
+    deps: [install]
     cmds:
-      - task: install
       - goreleaser --rm-dist
   
   run:
