@@ -10,8 +10,9 @@ tasks:
   
   dev:
     desc: dev build
-    deps: [ clean, install, generate]
+    deps: [ clean, install]
     cmds:
+      - task: generate
       - task: vet
       - task: fmt
       - task: lint
@@ -32,9 +33,14 @@ tasks:
   install:
     desc: go install tools
     cmds: 
-      - go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.1 
-      - go install github.com/goreleaser/goreleaser@v0.183.0
-      - go install github.com/vektra/mockery/v2@latest
+      - cmd: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.1 
+      - cmd: go install github.com/vektra/mockery/v2@latest
+
+  install-build:
+    desc: goreleaser install
+    cmds:
+      - cmd: go install github.com/goreleaser/goreleaser@v0.183.0
+
   
   generate:
     desc: go generate
@@ -75,13 +81,13 @@ tasks:
   
   build:
     desc: goreleaser --snapshot --skip-publish --rm-dist
-    deps: [install]
+    deps: [install, install-build]
     cmds:
       - goreleaser --snapshot --skip-publish --rm-dist
   
   release:
     desc: goreleaser --rm-dist
-    deps: [install]
+    deps: [install, install-build]
     cmds:
       - goreleaser --rm-dist
   
