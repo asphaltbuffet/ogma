@@ -107,6 +107,8 @@ func GetStyle(s []string) (table.Style, error) {
 		return table.StyleColoredBright, nil
 	case "light":
 		return table.StyleLight, nil
+	case "default":
+		return table.StyleDefault, nil
 	default:
 		log.WithFields(log.Fields{
 			"style": sa,

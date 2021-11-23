@@ -130,7 +130,7 @@ func Import(f io.Reader, d datastore.Writer) (string, error) {
 		output += "s.\n"
 	}
 
-	return output + lstg.Render(listings), nil
+	return output, nil
 }
 
 // ParseImportInput unmarshalls json into a Listings struct.
@@ -162,34 +162,6 @@ func ParseImportInput(j io.Reader) ([]lstg.Listing, error) {
 	}
 
 	return newListings.Listings, nil
-}
-
-// AddListing adds a single listing to the datastore.
-func AddListing(rawRecords []lstg.Listing, ds datastore.Writer) (string, error) {
-	// if there's nothing to add, return quickly
-	if len(rawRecords) == 0 {
-		return "", nil
-	}
-
-	cleanRecords := UniqueListings(rawRecords)
-
-	log.WithFields(log.Fields{
-		"cmd":        "listings.add",
-		"count":      len(cleanRecords),
-		"duplicates": len(rawRecords) - len(cleanRecords),
-	}).Info("Adding listing(s).")
-
-	for _, record := range cleanRecords {
-		// copy loop variable so i can accurately reference it for saving
-		listing := record
-		err := ds.Save(&listing)
-		if err != nil {
-			log.Error("Failed to save new listing.")
-			return "", err
-		}
-	}
-
-	return lstg.Render(cleanRecords), nil
 }
 
 // UniqueListings returns the passed in slice of listings with at most one of each listing. Listing order is
