@@ -5,3 +5,4 @@ tasks:
     desc: remove files created during build pipeline (windows)
     cmds:
       - echo "This is the windows command stuff..."
+      # TODO: implement clean for windows
