@@ -13,6 +13,7 @@ A LEX Magazine DB ~~and letter tracking application~~(coming soon).
 
 - [OGMA](#ogma)
   - [Usage](#usage)
+    - [Mail Command](#mail-command)
     - [Import Command](#import-command)
       - [Example import file](#example-import-file)
     - [Search Command](#search-command)
@@ -26,6 +27,8 @@ Ogma does not come pre-loaded with any issue information. As the service require
 There are two methods to add issue listings for later use, [Add](#add-command) and [Import](#import-command).
 
 Application usage details can be found via the `-h` or `--help` flag in the base application or with any command. This will show argument details, flag detail, and some examples. In-application documentation always supercedes this documentation.
+
+### Mail Command
 
 ### Import Command
 
