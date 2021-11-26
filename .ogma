@@ -1,9 +1,10 @@
 logging:
-    level: warn
+  level: info
 search:
-    max_results: 10
+  max_results: 10
 datastore:
-    filename: "ogma.db"
+  filename: "ogma.db"
 defaults:
-    issue: 56
-    max_column: 40
+  issue: 56
+  max_column: 40
+member: 13401
