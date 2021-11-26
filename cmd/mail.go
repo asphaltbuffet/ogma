@@ -26,6 +26,7 @@ import (
 
 	//nolint:gosec // not using this for security purposes
 	"crypto/md5"
+	"errors"
 	"fmt"
 	"time"
 
@@ -33,6 +34,8 @@ import (
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/asphaltbuffet/ogma/pkg/datastore"
 )
 
 // Mail contains relevant information for correspondence.
@@ -77,7 +80,7 @@ func RunMailCmd(cmd *cobra.Command, args []string) error {
 		log.WithFields(log.Fields{
 			"command": cmd.Name(),
 		}).Error(`Unable to determine time location.`)
-		return err
+		return errors.New("failed to add correspondence")
 	}
 
 	d, err := time.ParseInLocation("2006-01-02", date, loc)
@@ -86,7 +89,7 @@ func RunMailCmd(cmd *cobra.Command, args []string) error {
 			"command": cmd.Name(),
 			"date":    date,
 		}).Error("Invalid date argument.")
-		return err
+		return errors.New("failed to add correspondence")
 	}
 
 	// TODO: validate link is valid
@@ -102,6 +105,23 @@ func RunMailCmd(cmd *cobra.Command, args []string) error {
 		Link:     link,
 	}
 
+	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
+	if err != nil {
+		log.WithFields(log.Fields{
+			"command": cmd.Name(),
+		}).Error("Failed to open datastore.")
+		return errors.New("failed to add correspondence")
+	}
+	defer dsManager.Stop()
+
+	err = dsManager.Save(&m)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"command": cmd.Name(),
+		}).Error("Failed to save correspondence.")
+		return errors.New("failed to add correspondence")
+	}
+
 	log.WithFields(log.Fields{
 		"command":  cmd.Name(),
 		"ref":      m.Ref,
@@ -111,6 +131,7 @@ func RunMailCmd(cmd *cobra.Command, args []string) error {
 		"link":     m.Link,
 	}).Info("Added mail entry.")
 
+	cmd.Printf("Added mail. Reference: %s\n", m.Ref)
 	return nil
 }
 
