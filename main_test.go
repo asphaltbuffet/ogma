@@ -59,14 +59,6 @@ func TestInitConfig(t *testing.T) {
 		assertion assert.ErrorAssertionFunc
 	}{
 		{
-			name: "filename doesn't exist",
-			args: args{
-				cf: "foo",
-			},
-			wantLevel: log.WarnLevel,
-			assertion: assert.Error,
-		},
-		{
 			name: "debug logging",
 			args: args{
 				cf: ".debugConfig",

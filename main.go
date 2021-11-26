@@ -2,7 +2,10 @@
 package main
 
 import (
+	"log/syslog"
+
 	log "github.com/sirupsen/logrus"
+	lSyslog "github.com/sirupsen/logrus/hooks/syslog"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 
@@ -50,4 +53,9 @@ func InitConfig(fs afero.Fs, cf string) {
 
 func init() {
 	// TODO: add a logging init here? 2021-11-19 BL
+	hook, err := lSyslog.NewSyslogHook("", "", syslog.LOG_INFO, "")
+	if err != nil {
+		log.Warn("Unable to set up syslog hook.")
+	}
+	log.AddHook(hook)
 }
