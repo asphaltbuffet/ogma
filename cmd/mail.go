@@ -28,6 +28,7 @@ import (
 	"crypto/md5"
 	"errors"
 	"fmt"
+	"io"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -48,11 +49,15 @@ type Mail struct {
 	Link     string
 }
 
-var (
-	sender   int
-	receiver int
-	date     string
-	link     string
+const (
+	// MaxHashLength is the maximum hash length for md5 checksum.
+	MaxHashLength = 32
+
+	// MinHashLength is the minimum hash length for md5 checksum.
+	MinHashLength = 0
+
+	// RefLength is the default reference length.
+	RefLength = 6
 )
 
 // NewMailCmd creates a mail command.
@@ -65,52 +70,33 @@ func NewMailCmd() *cobra.Command {
 	}
 
 	dm := viper.GetInt("member")
-	cmd.Flags().IntVarP(&sender, "sender", "s", dm, "Correspondence sender.")
-	cmd.Flags().IntVarP(&receiver, "receiver", "r", dm, "Correspondence receiver.")
-	cmd.Flags().StringVarP(&date, "date", "d", time.Now().Format("2006-01-02"), "Correspondence date.")
-	cmd.Flags().StringVarP(&link, "link", "l", "", "Link to listing ID or previous correspondence. 'L' prefix for listing entry, 'M' prefix for mail")
+	cmd.Flags().IntP("sender", "s", dm, "Correspondence sender.")
+	cmd.Flags().IntP("receiver", "r", dm, "Correspondence receiver.")
+	cmd.Flags().StringP("date", "d", time.Now().Format("2006-01-02"), "Correspondence date.")
+	cmd.Flags().StringP("link", "l", "", "Link to listing ID or previous correspondence. 'L' prefix for listing entry, 'M' prefix for mail")
+	cmd.Flags().IntP("length", "L", RefLength, "Correspondence receiver.")
 
 	return cmd
 }
 
 // RunMailCmd implements functionality of a mail command.
 func RunMailCmd(cmd *cobra.Command, args []string) error {
-	loc, err := time.LoadLocation("Local")
+	m, err := MailFromArgs(cmd)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"command": cmd.Name(),
-		}).Error(`Unable to determine time location.`)
-		return errors.New("failed to add correspondence")
-	}
-
-	d, err := time.ParseInLocation("2006-01-02", date, loc)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"command": cmd.Name(),
-			"date":    date,
-		}).Error("Invalid date argument.")
-		return errors.New("failed to add correspondence")
-	}
-
-	// TODO: validate link is valid
-
-	hSrc := fmt.Sprint(sender, receiver, d)
-	ref := fmt.Sprintf("%x", md5.Sum([]byte(hSrc))) //nolint:gosec // not using this for security purposes
-
-	m := Mail{
-		Ref:      ref[26:], // grab the last 6 characters of the hash
-		Sender:   sender,
-		Receiver: receiver,
-		Date:     d,
-		Link:     link,
+			"args":    args,
+			"err":     err,
+		}).Error("failed to parse arguments")
+		return err
 	}
 
 	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"command": cmd.Name(),
-		}).Error("Failed to open datastore.")
-		return errors.New("failed to add correspondence")
+		}).Error("failed to open datastore")
+		return errors.New("datastore: failed to add correspondence")
 	}
 	defer dsManager.Stop()
 
@@ -118,8 +104,8 @@ func RunMailCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"command": cmd.Name(),
-		}).Error("Failed to save correspondence.")
-		return errors.New("failed to add correspondence")
+		}).Error("failed to save correspondence")
+		return errors.New("save: failed to add correspondence")
 	}
 
 	log.WithFields(log.Fields{
@@ -129,10 +115,118 @@ func RunMailCmd(cmd *cobra.Command, args []string) error {
 		"receiver": m.Receiver,
 		"date":     m.Date.Local().Format("2006-01-02"),
 		"link":     m.Link,
-	}).Info("Added mail entry.")
+	}).Info("added mail entry")
 
 	cmd.Printf("Added mail. Reference: %s\n", m.Ref)
 	return nil
+}
+
+// MailFromArgs creates a new mail object from command arguments.
+func MailFromArgs(cmd *cobra.Command) (Mail, error) {
+	s, err := cmd.Flags().GetInt("sender")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"command": cmd.Name(),
+			"args":    cmd.Args,
+		}).Warn("failed to get sender argument")
+	}
+
+	r, err := cmd.Flags().GetInt("receiver")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"command": cmd.Name(),
+			"args":    cmd.Args,
+		}).Warn("failed to get receiver argument")
+	}
+
+	m := Mail{
+		Sender:   s,
+		Receiver: r,
+	}
+
+	date, err := cmd.Flags().GetString("date")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"command": cmd.Name(),
+			"args":    cmd.Args,
+		}).Warn("failed to get date argument")
+	}
+
+	d, err := ValidateDate(date)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"command": cmd.Name(),
+			"date":    date,
+		}).Error("failed to validate date")
+		return Mail{}, errors.New("date: failed to add correspondence")
+	}
+	m.Date = d
+
+	link, err := cmd.Flags().GetString("link")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"command": cmd.Name(),
+			"args":    cmd.Args,
+		}).Warn("failed to get link argument")
+	}
+	// TODO: validate link is valid
+	m.Link = link
+
+	m.Ref = MailHash(m, RefLength)
+
+	return m, nil
+}
+
+// MailHash creates a 'unique' hash of the sender, receiver, and mail date.
+func MailHash(m Mail, l int) string {
+	if l > MaxHashLength {
+		l = MaxHashLength
+	} else if l < MinHashLength {
+		l = MinHashLength
+	}
+
+	h := md5.New() //nolint:gosec // not using this for security purposes
+	hSrc := fmt.Sprint(m.Sender, m.Receiver, m.Date.Local().Format("2006-01-02"))
+	if _, err := io.WriteString(h, hSrc); err != nil {
+		log.WithFields(log.Fields{
+			"pre-hash": hSrc,
+		}).Warn(`failed to calculate reference`)
+		return ""
+	}
+
+	ref := fmt.Sprintf("%x", md5.Sum(nil)) //nolint:gosec // not using this for security purposes
+	log.WithFields(log.Fields{
+		"pre-hash":  hSrc,
+		"full-hash": ref,
+	}).Debug(`calculated reference hash`)
+
+	return ref[len(ref)-l:]
+}
+
+// ValidateDate checks date string format and parses with local time location.
+func ValidateDate(dd string) (time.Time, error) {
+	// hardcoded location for now. could be a configuration later.
+	location := "Local"
+	loc, err := time.LoadLocation(location)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"time_location": location,
+		}).Warn(`failed to load time location`)
+
+		// set to UTC if cannot get local location
+		loc = time.UTC
+	}
+
+	d, err := time.ParseInLocation("2006-01-02", dd, loc)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"date":          dd,
+			"time_location": location,
+		}).Error("invalid date argument")
+		return time.Time{}, err
+	}
+
+	return d, nil
 }
 
 func init() {
@@ -151,7 +245,7 @@ func init() {
 		log.WithFields(log.Fields{
 			"configFile": "ogma",
 			"err":        err,
-		}).Warn("No config file found.")
+		}).Warn("no config file found")
 	}
 
 	rootCmd.AddCommand(NewMailCmd())
