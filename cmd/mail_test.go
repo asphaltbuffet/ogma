@@ -65,7 +65,7 @@ func TestRunMailCmd(t *testing.T) {
 			name:      "valid",
 			args:      []string{"-d2021-11-15", "-s1234", "-r5678"},
 			assertion: assert.NoError,
-			want:      "Added mail. Reference: f8427e\n",
+			want:      "Added mail. Reference: f2165e\n",
 		},
 	}
 
@@ -98,7 +98,17 @@ func TestMailHash(t *testing.T) {
 				Date:     time.Date(2021, time.November, 15, 0, 0, 0, 0, time.Local),
 			},
 			length: 6,
-			want:   "f8427e",
+			want:   "f2165e",
+		},
+		{
+			name: "6 char hash - 2", // try with different values to ensure we're getting variation
+			mail: cmd.Mail{
+				Sender:   123,
+				Receiver: 45678,
+				Date:     time.Date(2021, time.November, 15, 0, 0, 0, 0, time.Local),
+			},
+			length: 6,
+			want:   "650e0a",
 		},
 		{
 			name: "0 char hash",
@@ -118,7 +128,7 @@ func TestMailHash(t *testing.T) {
 				Date:     time.Date(2021, time.November, 15, 0, 0, 0, 0, time.Local),
 			},
 			length: 32,
-			want:   "d41d8cd98f00b204e9800998ecf8427e",
+			want:   "28bf0b58528e41181e13d0f789f2165e",
 		},
 		{
 			name: "overbound hash",
@@ -128,7 +138,7 @@ func TestMailHash(t *testing.T) {
 				Date:     time.Date(2021, time.November, 15, 0, 0, 0, 0, time.Local),
 			},
 			length: 33,
-			want:   "d41d8cd98f00b204e9800998ecf8427e",
+			want:   "28bf0b58528e41181e13d0f789f2165e",
 		},
 		{
 			name: "underbound hash",

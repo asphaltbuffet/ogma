@@ -186,15 +186,16 @@ func MailHash(m Mail, l int) string {
 	}
 
 	h := md5.New() //nolint:gosec // not using this for security purposes
+	padding := "qwertyuiopasdfghjklzxcvbnm1234567890"
 	hSrc := fmt.Sprint(m.Sender, m.Receiver, m.Date.Local().Format("2006-01-02"))
-	if _, err := io.WriteString(h, hSrc); err != nil {
+	if _, err := io.WriteString(h, padding); err != nil {
 		log.WithFields(log.Fields{
 			"pre-hash": hSrc,
 		}).Warn(`failed to calculate reference`)
 		return ""
 	}
 
-	ref := fmt.Sprintf("%x", md5.Sum(nil)) //nolint:gosec // not using this for security purposes
+	ref := fmt.Sprintf("%x", md5.Sum([]byte(hSrc))) //nolint:gosec // not using this for security purposes
 	log.WithFields(log.Fields{
 		"pre-hash":  hSrc,
 		"full-hash": ref,
