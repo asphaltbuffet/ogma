@@ -117,8 +117,8 @@ func GetStyle(s []string) (table.Style, error) {
 	}
 }
 
-// Render returns a pretty formatted listing as table.
-func Render(ll []Listing, s ...string) string {
+// RenderListings returns a pretty formatted listing as table.
+func RenderListings(ll []Listing, s ...string) string {
 	// empty string if there are no listings to render
 	if len(ll) == 0 {
 		return ""
@@ -126,7 +126,7 @@ func Render(ll []Listing, s ...string) string {
 
 	lt := table.NewWriter()
 
-	// lt.SetTitle("Search results for Member #%d", ll[0].IndexedMemberNumber)
+	lt.SetTitle("LEX Issue Matches:")
 
 	lt.AppendHeader(table.Row{
 		"ID",

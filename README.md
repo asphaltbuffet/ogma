@@ -1,6 +1,6 @@
 # OGMA
 
-A LEX Magazine DB ~~and letter tracking application~~(coming soon).
+A LEX Magazine DB and letter tracking application.
 
 [![Keep a Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog-%23E05735)](CHANGELOG.md)
 [![GitHub Release](https://img.shields.io/github/v/release/asphaltbuffet/ogma)](https://github.com/asphaltbuffet/ogma/releases)
@@ -24,11 +24,26 @@ A LEX Magazine DB ~~and letter tracking application~~(coming soon).
 
 Ogma does not come pre-loaded with any issue information. As the service requires members to buy issues but not pay for letters forwarded, this application is not intended to skirt that monetary flow. You can hand-type information, scan, invoke blood magic, whatever.
 
-There are two methods to add issue listings for later use, [Add](#add-command) and [Import](#import-command).
+There is one method to add issue listings for later use: [Import](#import-command).
 
 Application usage details can be found via the `-h` or `--help` flag in the base application or with any command. This will show argument details, flag detail, and some examples. In-application documentation always supercedes this documentation.
 
 ### Mail Command
+
+The mail command tracks correspondence and provides the ability to link with LEX listings, members, and/or other correspondence.
+
+```bash
+ogma mail -s<member> -r<member> -d<date> -l<member or mail ref>
+```
+
+By default, the member numbers are set to the configured member number in the application configuration.
+
+On success, a reference number is returned for use in physically marking correspondence artifacts.
+
+```bash
+ogma mail -s 1234 -r 5678 -d2021-11-15
+Added mail. Reference: f8427e
+```
 
 ### Import Command
 
@@ -80,7 +95,7 @@ This is the primary use of the application and is simplified at the moment. Only
 ogma search <member number>
 ```
 
-Currently the output defaults to something pretty, with colors. Output configuration may be expanded in the future. [#16](https://github.com/asphaltbuffet/ogma/issues/16)
+Currently the output defaults to something pretty, with colors (results on windows may vary). Output configuration may be expanded in the future. See [#16](https://github.com/asphaltbuffet/ogma/issues/16)
 
 ## Configuration
 

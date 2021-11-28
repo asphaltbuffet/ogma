@@ -39,9 +39,9 @@ import (
 var searchCmd = &cobra.Command{
 	Use:   "search",
 	Short: "Returns all listing information based on search criteria.",
-	Long:  `TODO: Add longer description about 'search'.`,
-	Args:  cobra.ExactArgs(1),
-	RunE:  RunSearchCmd,
+	// Long:  `TODO: Add longer description about 'search'.`,
+	Args: cobra.ExactArgs(1),
+	RunE: RunSearchCmd,
 }
 
 // RunSearchCmd performs action associated with listings application command.
@@ -66,7 +66,15 @@ func RunSearchCmd(c *cobra.Command, args []string) error {
 	}
 	defer dsManager.Stop()
 
-	ll, err := Search(member, dsManager)
+	ll, err := SearchListings(member, dsManager)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"member": member,
+		}).Error("Unable to get search results.")
+		return err
+	}
+
+	mm, err := SearchMail(member, dsManager)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"member": member,
@@ -75,13 +83,13 @@ func RunSearchCmd(c *cobra.Command, args []string) error {
 	}
 
 	// c.Printf("Found %d listings.\n", len(ll))
-	c.Printf(lstg.Render(ll))
+	c.Printf("\n%s\n\n%s\n", lstg.RenderListings(ll), RenderMail(mm))
 
 	return nil
 }
 
-// Search returns all records with a matching member number (ignores member extensions).
-func Search(member int, ds storm.Finder) ([]lstg.Listing, error) {
+// SearchListings returns all records with a matching member number (ignores member extensions).
+func SearchListings(member int, ds storm.Finder) ([]lstg.Listing, error) {
 	var searchResults []lstg.Listing
 	err := ds.Find("IndexedMemberNumber", member, &searchResults)
 	if err != nil {
@@ -105,8 +113,32 @@ func Search(member int, ds storm.Finder) ([]lstg.Listing, error) {
 	return searchResults, nil
 }
 
+// SearchMail returns all mail records with a matching member number.
+func SearchMail(member int, ds storm.Finder) ([]Mail, error) {
+	var senderResults []Mail
+	err := ds.Find("Sender", member, &senderResults)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"sender":         member,
+			"internal_error": err,
+		}).Warn("Search failure.")
+		return nil, errors.New("search: query failed")
+	}
+
+	var receiverResults []Mail
+	err = ds.Find("Receiver", member, &receiverResults)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"receiver":       member,
+			"internal_error": err,
+		}).Warn("Search failure.")
+		return nil, errors.New("search: query failed")
+	}
+
+	return append(senderResults, receiverResults...), nil
+}
+
 func init() {
-	searchCmd.Flags().IntP("member", "m", -1, "Search listings by member number.")
 	rootCmd.AddCommand(searchCmd)
 
 	// Here you will define your flags and configuration settings.
