@@ -60,7 +60,7 @@ func TestRunSearchCmd(t *testing.T) {
 	}
 }
 
-func TestSearch(t *testing.T) {
+func TestSearchListings(t *testing.T) {
 	m, dbFilePath, err := initDatastoreManager()
 	assert.NoError(t, err)
 
@@ -132,7 +132,7 @@ func TestSearch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := cmd.Search(tt.args.member, m)
+			got, err := cmd.SearchListings(tt.args.member, m)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Search() error = %v, wantErr %v", err, tt.wantErr)
 				return

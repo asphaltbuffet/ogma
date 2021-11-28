@@ -31,6 +31,8 @@ import (
 	"io"
 	"time"
 
+	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -228,6 +230,102 @@ func ValidateDate(dd string) (time.Time, error) {
 	}
 
 	return d, nil
+}
+
+// RenderMail returns a pretty formatted listing as table.
+func RenderMail(mm []Mail, s ...string) string {
+	// empty string if there are no listings to render
+	if len(mm) == 0 {
+		return ""
+	}
+
+	mt := table.NewWriter()
+
+	mt.SetTitle("Correspondence Matches:")
+
+	mt.AppendHeader(table.Row{
+		"Reference",
+		"Sender",
+		"Receiver",
+		"Date",
+		"Link",
+	})
+
+	for _, m := range mm {
+		mt.AppendRow([]interface{}{
+			m.Ref,
+			m.Sender,
+			m.Receiver,
+			m.Date.Local().Format("2006-01-02"),
+			m.Link,
+		})
+	}
+
+	columnConfigs := []table.ColumnConfig{
+		{
+			Name:  "Sender",
+			Align: text.AlignRight,
+		},
+		{
+			Name:  "Receiver",
+			Align: text.AlignRight,
+		},
+		{
+			Name:  "Ref",
+			Align: text.AlignCenter,
+		},
+		{
+			Name:  "Date",
+			Align: text.AlignRight,
+		},
+		{
+			Name:  "Link",
+			Align: text.AlignCenter,
+		},
+	}
+	mt.SetColumnConfigs(columnConfigs)
+
+	mt.SortBy([]table.SortBy{
+		{Name: "Date", Mode: table.Asc},
+		{Name: "Ref", Mode: table.Asc},
+	})
+
+	style, _ := GetStyle(s)
+	mt.SetStyle(style)
+
+	return mt.Render()
+}
+
+// GetStyle converts a []string into a valid rendering style.
+func GetStyle(s []string) (table.Style, error) {
+	// set default style as bright
+	sa := "bright"
+
+	// if too many args, just use the first one
+	if len(s) > 0 {
+		if len(s) > 1 {
+			log.WithFields(log.Fields{
+				"args": s,
+			}).Warn("Too many styles passed in. Using first argument only.")
+		}
+
+		sa = s[0]
+	}
+
+	// check style
+	switch sa {
+	case "bright":
+		return table.StyleColoredBright, nil
+	case "light":
+		return table.StyleLight, nil
+	case "default":
+		return table.StyleDefault, nil
+	default:
+		log.WithFields(log.Fields{
+			"style": sa,
+		}).Error("Invalid table style.")
+		return table.StyleDefault, errors.New("invalid argument")
+	}
 }
 
 func init() {
