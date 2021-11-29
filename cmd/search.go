@@ -35,13 +35,18 @@ import (
 	lstg "github.com/asphaltbuffet/ogma/pkg/listing"
 )
 
-// searchCmd represents the search command.
-var searchCmd = &cobra.Command{
-	Use:   "search",
-	Short: "Returns all listing information based on search criteria.",
-	// Long:  `TODO: Add longer description about 'search'.`,
-	Args: cobra.ExactArgs(1),
-	RunE: RunSearchCmd,
+// NewSearchCmd creates a mail command.
+func NewSearchCmd() *cobra.Command {
+	// cmd represents the mail command
+	cmd := &cobra.Command{
+		Use:   "search",
+		Short: "Returns all listing information based on search criteria.",
+		// Long:  `TODO: Add longer description about 'search'.`,
+		Args: cobra.ExactArgs(1),
+		RunE: RunSearchCmd,
+	}
+
+	return cmd
 }
 
 // RunSearchCmd performs action associated with listings application command.
@@ -83,22 +88,38 @@ func RunSearchCmd(c *cobra.Command, args []string) error {
 	}
 
 	// c.Printf("Found %d listings.\n", len(ll))
-	c.Printf("\n%s\n\n%s\n", lstg.RenderListings(ll), RenderMail(mm))
+	var lret string
+	var mret string
+	if len(ll) == 0 {
+		lret = "No LEX listings found."
+	} else {
+		lret = lstg.RenderListings(ll, false)
+	}
+
+	if len(mm) == 0 {
+		mret = "No correspondences found."
+	} else {
+		mret = RenderMail(mm, false)
+	}
+
+	c.Printf("\n%s\n\n%s\n", lret, mret)
 
 	return nil
 }
 
 // SearchListings returns all records with a matching member number (ignores member extensions).
 func SearchListings(member int, ds storm.Finder) ([]lstg.Listing, error) {
-	var searchResults []lstg.Listing
+	searchResults := []lstg.Listing{}
 	err := ds.Find("IndexedMemberNumber", member, &searchResults)
 	if err != nil {
+		if !errors.Is(err, storm.ErrNotFound) {
+			return nil, errors.New("listing search: query failed")
+		}
+
 		log.WithFields(log.Fields{
-			"cmd":            "search",
-			"member":         member,
-			"internal_error": err,
-		}).Error("Search failure.")
-		return nil, errors.New("search: query failed")
+			"cmd":    "search",
+			"member": member,
+		}).Debug("no listings found")
 	}
 
 	if len(searchResults) > viper.GetInt("search.max_results") {
@@ -118,28 +139,32 @@ func SearchMail(member int, ds storm.Finder) ([]Mail, error) {
 	var senderResults []Mail
 	err := ds.Find("Sender", member, &senderResults)
 	if err != nil {
+		if !errors.Is(err, storm.ErrNotFound) {
+			return nil, errors.New("search query failure")
+		}
+
 		log.WithFields(log.Fields{
-			"sender":         member,
-			"internal_error": err,
-		}).Warn("Search failure.")
-		return nil, errors.New("search: query failed")
+			"sender": member,
+		}).Debug("no sender correspondence found")
 	}
 
 	var receiverResults []Mail
 	err = ds.Find("Receiver", member, &receiverResults)
 	if err != nil {
+		if !errors.Is(err, storm.ErrNotFound) {
+			return nil, errors.New("search query failure")
+		}
+
 		log.WithFields(log.Fields{
-			"receiver":       member,
-			"internal_error": err,
-		}).Warn("Search failure.")
-		return nil, errors.New("search: query failed")
+			"receiver": member,
+		}).Debug("no receiver correspondence found")
 	}
 
 	return append(senderResults, receiverResults...), nil
 }
 
 func init() {
-	rootCmd.AddCommand(searchCmd)
+	rootCmd.AddCommand(NewSearchCmd())
 
 	// Here you will define your flags and configuration settings.
 

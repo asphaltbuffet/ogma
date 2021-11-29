@@ -62,6 +62,29 @@ const (
 	RefLength = 6
 )
 
+var mailColumnConfigs = []table.ColumnConfig{
+	{
+		Name:  "Sender",
+		Align: text.AlignRight,
+	},
+	{
+		Name:  "Receiver",
+		Align: text.AlignRight,
+	},
+	{
+		Name:  "Ref",
+		Align: text.AlignCenter,
+	},
+	{
+		Name:  "Date",
+		Align: text.AlignRight,
+	},
+	{
+		Name:  "Link",
+		Align: text.AlignCenter,
+	},
+}
+
 // NewMailCmd creates a mail command.
 func NewMailCmd() *cobra.Command {
 	// cmd represents the mail command
@@ -233,7 +256,7 @@ func ValidateDate(dd string) (time.Time, error) {
 }
 
 // RenderMail returns a pretty formatted listing as table.
-func RenderMail(mm []Mail, s ...string) string {
+func RenderMail(mm []Mail, p bool) string {
 	// empty string if there are no listings to render
 	if len(mm) == 0 {
 		return ""
@@ -261,71 +284,21 @@ func RenderMail(mm []Mail, s ...string) string {
 		})
 	}
 
-	columnConfigs := []table.ColumnConfig{
-		{
-			Name:  "Sender",
-			Align: text.AlignRight,
-		},
-		{
-			Name:  "Receiver",
-			Align: text.AlignRight,
-		},
-		{
-			Name:  "Ref",
-			Align: text.AlignCenter,
-		},
-		{
-			Name:  "Date",
-			Align: text.AlignRight,
-		},
-		{
-			Name:  "Link",
-			Align: text.AlignCenter,
-		},
-	}
-	mt.SetColumnConfigs(columnConfigs)
+	mt.SetColumnConfigs(mailColumnConfigs)
 
 	mt.SortBy([]table.SortBy{
 		{Name: "Date", Mode: table.Asc},
 		{Name: "Ref", Mode: table.Asc},
 	})
 
-	style, _ := GetStyle(s)
-	mt.SetStyle(style)
+	if p {
+		mt.SetStyle(table.StyleColoredBright)
+	}
+	log.WithFields(log.Fields{
+		"is_pretty": p,
+	}).Debug("set rendering style")
 
 	return mt.Render()
-}
-
-// GetStyle converts a []string into a valid rendering style.
-func GetStyle(s []string) (table.Style, error) {
-	// set default style as bright
-	sa := "bright"
-
-	// if too many args, just use the first one
-	if len(s) > 0 {
-		if len(s) > 1 {
-			log.WithFields(log.Fields{
-				"args": s,
-			}).Warn("Too many styles passed in. Using first argument only.")
-		}
-
-		sa = s[0]
-	}
-
-	// check style
-	switch sa {
-	case "bright":
-		return table.StyleColoredBright, nil
-	case "light":
-		return table.StyleLight, nil
-	case "default":
-		return table.StyleDefault, nil
-	default:
-		log.WithFields(log.Fields{
-			"style": sa,
-		}).Error("Invalid table style.")
-		return table.StyleDefault, errors.New("invalid argument")
-	}
 }
 
 func init() {
