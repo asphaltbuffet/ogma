@@ -24,7 +24,6 @@ THE SOFTWARE.
 package lstg
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -55,17 +54,16 @@ type Listing struct {
 	IsFlagged           bool   `json:"flag"`
 }
 
-var columnConfigs = []table.ColumnConfig{
+var listingColumnConfigs = []table.ColumnConfig{
 	{
 		Name:             "Text",
-		WidthMax:         80, //nolint:gomnd // using viper fails unit tests. Fix this 2021-11-04 BL
+		WidthMax:         80, //nolint:gomnd // using viper fails unit tests. TODO: Fix this 2021-11-04 BL
 		WidthMaxEnforcer: text.WrapSoft,
 	},
 	{
 		Name:  "Member",
 		Align: text.AlignRight,
 		// AutoMerge: true, // doesn't look right without row separators
-		// VAlign:    text.VAlignMiddle,
 	},
 	{
 		Name:  "International",
@@ -85,40 +83,8 @@ var columnConfigs = []table.ColumnConfig{
 	},
 }
 
-// GetStyle converts a []string into a valid rendering style.
-func GetStyle(s []string) (table.Style, error) {
-	// set default style as bright
-	sa := "bright"
-
-	// if too many args, just use the first one
-	if len(s) > 0 {
-		if len(s) > 1 {
-			log.WithFields(log.Fields{
-				"args": s,
-			}).Warn("Too many styles passed in. Using first argument only.")
-		}
-
-		sa = s[0]
-	}
-
-	// check style
-	switch sa {
-	case "bright":
-		return table.StyleColoredBright, nil
-	case "light":
-		return table.StyleLight, nil
-	case "default":
-		return table.StyleDefault, nil
-	default:
-		log.WithFields(log.Fields{
-			"style": sa,
-		}).Error("Invalid table style.")
-		return table.StyleDefault, errors.New("invalid argument")
-	}
-}
-
 // RenderListings returns a pretty formatted listing as table.
-func RenderListings(ll []Listing, s ...string) string {
+func RenderListings(ll []Listing, p bool) string {
 	// empty string if there are no listings to render
 	if len(ll) == 0 {
 		return ""
@@ -163,10 +129,14 @@ func RenderListings(ll []Listing, s ...string) string {
 		// lt.AppendSeparator() // disabling for now, it makes it look messy - may want it configurable at run-time
 	}
 
-	lt.SetColumnConfigs(columnConfigs)
+	lt.SetColumnConfigs(listingColumnConfigs)
 
-	style, _ := GetStyle(s)
-	lt.SetStyle(style)
+	if p {
+		lt.SetStyle(table.StyleColoredBright)
+	}
+	log.WithFields(log.Fields{
+		"is_pretty": p,
+	}).Debug("set rendering style")
 
 	return lt.Render()
 }
