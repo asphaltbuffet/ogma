@@ -129,7 +129,7 @@ func initDatastoreManager() (*datastore.Manager, string, error) {
 		return nil, "", err
 	}
 
-	_, err = cmd.Import(testFile, manager)
+	_, err = cmd.ImportListings(testFile, manager)
 	if err != nil {
 		return nil, "", err
 	}

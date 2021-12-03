@@ -24,6 +24,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/asdine/storm/v3"
@@ -42,69 +43,72 @@ func NewSearchCmd() *cobra.Command {
 		Use:   "search",
 		Short: "Returns all listing information based on search criteria.",
 		// Long:  `TODO: Add longer description about 'search'.`,
-		Args: cobra.ExactArgs(1),
-		RunE: RunSearchCmd,
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return errors.New("requires a single member number")
+			}
+
+			if _, err := strconv.Atoi(args[0]); err != nil {
+				return fmt.Errorf("invalid member number: %w", err)
+			}
+
+			return nil
+		},
+		Run: RunSearchCmd,
 	}
+
+	cmd.Flags().BoolP("pretty", "p", false, "Show prettier results.")
 
 	return cmd
 }
 
 // RunSearchCmd performs action associated with listings application command.
-func RunSearchCmd(c *cobra.Command, args []string) error {
+func RunSearchCmd(cmd *cobra.Command, args []string) {
+	// member number is already validated but check before using anyway.
 	member, err := strconv.Atoi(args[0])
 	if err != nil {
-		log.WithFields(log.Fields{
-			"arg": args[0],
-		}).Error("Invalid argument.")
-		return errors.New("argument must be an integer")
+		log.WithField("arg", args[0]).Errorf("invalid member number: %v", err)
+
+		cmd.PrintErrf("invalid member number: %v\n", err)
+		return
 	}
 
-	log.WithFields(log.Fields{
-		"cmd":    "search",
-		"member": member,
-	}).Info("Searching listings.")
+	log.WithField("member", member).Debug("searching by member number")
 
 	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
 	if err != nil {
-		log.Error("Datastore manager failure.")
-		return err
+		log.Errorf("failed to access datastore: %v", err)
+
+		cmd.PrintErrf("failed to access datastore: %v\n", err)
+		return
 	}
 	defer dsManager.Stop()
 
 	ll, err := SearchListings(member, dsManager)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"member": member,
-		}).Error("Unable to get search results.")
-		return err
+		log.WithField("member", member).Errorf("failed to search listings: %v", err)
+
+		cmd.PrintErrf("failed to search listings: %v\n", err)
+		return
 	}
 
 	mm, err := SearchMail(member, dsManager)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"member": member,
-		}).Error("Unable to get search results.")
-		return err
+		log.WithField("member", member).Errorf("failed to search mail: %v", err)
+
+		cmd.PrintErrf("failed to search mail: %v", err)
+		return
 	}
 
-	// c.Printf("Found %d listings.\n", len(ll))
-	var lret string
-	var mret string
-	if len(ll) == 0 {
-		lret = "No LEX listings found."
-	} else {
-		lret = lstg.RenderListings(ll, false)
+	p, err := cmd.Flags().GetBool("pretty")
+	if err != nil {
+		log.Errorf("unable to read 'pretty' flag: %v", err)
+		p = false
 	}
 
-	if len(mm) == 0 {
-		mret = "No correspondences found."
-	} else {
-		mret = RenderMail(mm, false)
-	}
+	cmd.Printf("\n%s\n", lstg.RenderListings(ll, p))
 
-	c.Printf("\n%s\n\n%s\n", lret, mret)
-
-	return nil
+	cmd.Printf("\n%s\n", RenderMail(mm, p))
 }
 
 // SearchListings returns all records with a matching member number (ignores member extensions).
@@ -113,22 +117,11 @@ func SearchListings(member int, ds storm.Finder) ([]lstg.Listing, error) {
 	err := ds.Find("IndexedMemberNumber", member, &searchResults)
 	if err != nil {
 		if !errors.Is(err, storm.ErrNotFound) {
-			return nil, errors.New("listing search: query failed")
+			log.WithField("member", member).Errorf("failed to query database for listings: %v", err)
+			return nil, fmt.Errorf("failure to query database for listings: %w", err)
 		}
 
-		log.WithFields(log.Fields{
-			"cmd":    "search",
-			"member": member,
-		}).Debug("no listings found")
-	}
-
-	if len(searchResults) > viper.GetInt("search.max_results") {
-		log.WithFields(log.Fields{
-			"cmd":          "search",
-			"resultsCount": len(searchResults),
-			"maxResults":   viper.GetInt("search.max_results"),
-		}).Warn("Query return too large.")
-		return nil, errors.New("too many results")
+		log.WithField("member", member).Debug("no listings found")
 	}
 
 	return searchResults, nil
@@ -137,27 +130,26 @@ func SearchListings(member int, ds storm.Finder) ([]lstg.Listing, error) {
 // SearchMail returns all mail records with a matching member number.
 func SearchMail(member int, ds storm.Finder) ([]Mail, error) {
 	var senderResults []Mail
+
 	err := ds.Find("Sender", member, &senderResults)
 	if err != nil {
 		if !errors.Is(err, storm.ErrNotFound) {
-			return nil, errors.New("search query failure")
+			log.WithField("member", member).Errorf("failed to query database for mail by sender: %v", err)
+			return nil, fmt.Errorf("failure to query database for mail by sender: %w", err)
 		}
 
-		log.WithFields(log.Fields{
-			"sender": member,
-		}).Debug("no sender correspondence found")
+		log.WithField("sender", member).Debug("no sender correspondence found")
 	}
 
 	var receiverResults []Mail
 	err = ds.Find("Receiver", member, &receiverResults)
 	if err != nil {
 		if !errors.Is(err, storm.ErrNotFound) {
-			return nil, errors.New("search query failure")
+			log.WithField("member", member).Errorf("failed to query database for mail by receiver: %v", err)
+			return nil, fmt.Errorf("failure to query database for mail by receiver: %w", err)
 		}
 
-		log.WithFields(log.Fields{
-			"receiver": member,
-		}).Debug("no receiver correspondence found")
+		log.WithField("receiver", member).Debug("no receiver correspondence found")
 	}
 
 	return append(senderResults, receiverResults...), nil
@@ -165,14 +157,4 @@ func SearchMail(member int, ds storm.Finder) ([]Mail, error) {
 
 func init() {
 	rootCmd.AddCommand(NewSearchCmd())
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// searchCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// searchCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
