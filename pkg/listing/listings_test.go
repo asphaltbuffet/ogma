@@ -44,7 +44,7 @@ func TestRenderListings(t *testing.T) {
 			args: args{
 				[]lstg.Listing{},
 			},
-			want: ``,
+			want: `No LEX listings found.`,
 		},
 		{
 			name: "single listing",

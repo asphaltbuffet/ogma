@@ -87,7 +87,7 @@ var listingColumnConfigs = []table.ColumnConfig{
 func RenderListings(ll []Listing, p bool) string {
 	// empty string if there are no listings to render
 	if len(ll) == 0 {
-		return ""
+		return "No LEX listings found."
 	}
 
 	lt := table.NewWriter()
