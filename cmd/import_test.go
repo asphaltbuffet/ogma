@@ -24,271 +24,154 @@ package cmd_test
 
 import (
 	"bytes"
-	"io/ioutil"
-	"reflect"
+	"fmt"
 	"testing"
+	"time"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 
 	"github.com/asphaltbuffet/ogma/cmd"
-	"github.com/asphaltbuffet/ogma/mocks"
-	lstg "github.com/asphaltbuffet/ogma/pkg/listing"
+	"github.com/asphaltbuffet/ogma/pkg/datastore"
 )
 
-func TestRunImport(t *testing.T) {
-	tests := []struct {
-		name      string
-		filepath  string
-		want      string
-		assertion assert.ErrorAssertionFunc
-	}{
-		{
-			name:      "no file",
-			filepath:  "",
-			want:      "",
-			assertion: assert.Error,
-		},
-		{
-			name:      "single entry",
-			filepath:  "test/s.json",
-			want:      "Imported 1 record.\n",
-			assertion: assert.NoError,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			appFS := afero.NewMemMapFs()
+func TestNewImportCmd(t *testing.T) {
+	got := cmd.NewImportCmd()
 
-			// create test files and directories
-			err := appFS.MkdirAll("test", 0o755)
-			assert.NoError(t, err)
-			if tt.filepath != "" {
-				err = afero.WriteFile(appFS, tt.filepath, []byte(`{
-					"listings": [
-					{
-					"volume": 2,
-					"issue": 55,
-					"year": 2021,
-					"season": "Spring",
-					"page": 1,
-					"category": "Art & Photography",
-					"member": 2989,
-					"alt": "B",
-					"international": false,
-					"review": false,
-					"text": "Fingerpainting exchange.",
-					"art": false,
-					"flag": false
-					}
-					]
-					}`), 0o644)
-				assert.NoError(t, err)
-			}
-
-			testFile, err := appFS.Open(tt.filepath)
-			assert.NoError(t, err)
-
-			mockDatastore := &mocks.Writer{}
-			mockDatastore.On("Save", mock.Anything).Return(nil)
-
-			got, err := cmd.Import(testFile, mockDatastore)
-			tt.assertion(t, err)
-
-			if err == nil {
-				assert.Equal(t, tt.want, got)
-			}
-		})
-	}
+	assert.Equal(t, "import", got.Name())
+	assert.Equal(t, "Bulk import records.", got.Short)
+	assert.False(t, got.Runnable())
 }
 
-func TestImportInput(t *testing.T) {
-	type args struct {
-		fp string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    []lstg.Listing
-		wantErr bool
-	}{
+func Setup(t *testing.T) (*datastore.Manager, string, afero.Fs) {
+	t.Helper()
+
+	appFS := afero.NewOsFs()
+
+	// create test files and directories
+	assert.NoError(t, appFS.MkdirAll("test", 0o755))
+
+	currentTime := time.Now()
+	filename := fmt.Sprintf("test/test_%d.db", currentTime.Unix())
+	manager, err := datastore.New(filename)
+	assert.NoError(t, err)
+
+	err = afero.WriteFile(appFS, "test/invalid.json", []byte(`{
+		"listings": [
+			{
+				"volume": 2,
+				"issue": 55,
+				"year": 2021,
+				"season": "Spring",
+				"page": 1,
+				"category": "Art & Photography",
+				"member": 2989,
+				"alt": "",
+		]
+		}`), 0o644)
+	assert.NoError(t, err)
+
+	err = afero.WriteFile(appFS, "test/listing.json", []byte(`{
+		"listings": [
 		{
-			name: "no file",
-			args: args{
-				fp: "test/b.json",
+		"volume": 2,
+		"issue": 55,
+		"year": 2021,
+		"season": "Spring",
+		"page": 1,
+		"category": "Art & Photography",
+		"member": 2989,
+		"alt": "B",
+		"international": false,
+		"review": false,
+		"text": "Fingerpainting exchange.",
+		"art": false,
+		"flag": false
+		}
+		]
+		}`), 0o644)
+	assert.NoError(t, err)
+
+	err = afero.WriteFile(appFS, "test/listings.json", []byte(`{
+		"listings": [
+			{
+				"volume": 1,
+				"issue": 1,
+				"year": 1986,
+				"season": "Mollit",
+				"page": 1,
+				"category": "Pariatur",
+				"member": 1234,
+				"alt": "",
+				"international": false,
+				"review": false,
+				"text": "Esse Lorem do nulla sunt mollit nulla in.",
+				"art": false,
+				"flag": true
 			},
-			want:    []lstg.Listing{},
-			wantErr: true,
-		},
-		{
-			name: "single entry",
-			args: args{
-				fp: "test/s.json",
+			{
+				"volume": 1,
+				"issue": 1,
+				"year": 1986,
+				"season": "Eiusmod",
+				"page": 2,
+				"category": "Commodo",
+				"member": 1234,
+				"alt": "B",
+				"international": false,
+				"review": false,
+				"text": "Magna officia anim dolore enim.",
+				"art": false,
+				"flag": true
 			},
-			want: []lstg.Listing{
-				{Volume: 2, IssueNumber: 55, Year: 2021, Season: "Spring", PageNumber: 1, IndexedCategory: "Art & Photography", IndexedMemberNumber: 2989, MemberExtension: "", IsInternational: false, IsReview: false, ListingText: "Fingerpainting exchange.", IsArt: false, IsFlagged: false},
-			},
-			wantErr: false,
-		},
-		{
-			name: "invalid json",
-			args: args{
-				fp: "test/invalid.json",
-			},
-			want:    []lstg.Listing{},
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			appFS := afero.NewMemMapFs()
-
-			// create test files and directories
-			err := appFS.MkdirAll("test", 0o755)
-			assert.NoError(t, err)
-
-			err = afero.WriteFile(appFS, "test/s.json", []byte(`{
-				"listings": [
-					{
-						"volume": 2,
-						"issue": 55,
-						"year": 2021,
-						"season": "Spring",
-						"page": 1,
-						"category": "Art & Photography",
-						"member": 2989,
-						"alt": "",
-						"international": false,
-						"review": false,
-						"text": "Fingerpainting exchange.",
-						"art": false,
-						"flag": false
-					}
-				]
-				}`), 0o644)
-			assert.NoError(t, err)
-
-			err = afero.WriteFile(appFS, "test/invalid.json", []byte(`{
-				"listings": [
-					{
-						"volume": 2,
-						"issue": 55,
-						"year": 2021,
-						"season": "Spring",
-						"page": 1,
-						"category": "Art & Photography",
-						"member": 2989,
-						"alt": "",
-				]
-				}`), 0o644)
-			assert.NoError(t, err)
-
-			testFile, _ := appFS.Open(tt.args.fp)
-
-			got, err := cmd.ParseImportInput(testFile)
-			if err != nil {
-				assert.Truef(t, tt.wantErr, "ImportListings() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			{
+				"volume": 1,
+				"issue": 1,
+				"year": 1986,
+				"season": "Id",
+				"page": 3,
+				"category": "Pariatur",
+				"member": 5678,
+				"alt": "",
+				"international": false,
+				"review": false,
+				"text": "Velit cillum cillum ea officia nulla enim.",
+				"art": false,
+				"flag": true
 			}
+		]
+		}`), 0o644)
+	assert.NoError(t, err)
 
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ImportListings() = %v, want %v", got, tt.want)
+	err = afero.WriteFile(appFS, "test/mails.json", []byte(`{
+		"mails": [
+			{
+				"reference": "123d5f",
+				"sender": 55,
+				"receiver": 1234,
+				"date": "1986-04-01",
+				"link": "L1"
+			},
+			{
+				"reference": "b12cd3",
+				"sender": 1234,
+				"receiver": 55,
+				"date": "1986-05-16",
+				"link": "M123d5f"
+			},
+			{
+				"reference": "6beef9",
+				"sender": 1234,
+				"receiver": 666,
+				"date": "2021-03-15",
+				"link": ""
 			}
-		})
-	}
-}
+		]
+		}`), 0o644)
+	assert.NoError(t, err)
 
-func TestUniqueListings(t *testing.T) {
-	type args struct {
-		ll []lstg.Listing
-	}
-	tests := []struct {
-		name string
-		args args
-		want []lstg.Listing
-	}{
-		{
-			name: "empty",
-			args: args{
-				ll: []lstg.Listing{},
-			},
-			want: []lstg.Listing{},
-		},
-		{
-			name: "no duplicates",
-			args: args{
-				ll: []lstg.Listing{
-					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 2, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-				},
-			},
-			want: []lstg.Listing{
-				{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-				{Volume: 2, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-			},
-		},
-		{
-			name: "only duplicates",
-			args: args{
-				ll: []lstg.Listing{
-					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-				},
-			},
-			want: []lstg.Listing{
-				{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-			},
-		},
-		{
-			name: "duplicates with unique",
-			args: args{
-				ll: []lstg.Listing{
-					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 2, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-				},
-			},
-			want: []lstg.Listing{
-				{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-				{Volume: 2, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-			},
-		},
-		{
-			name: "multiple duplicates with unique",
-			args: args{
-				ll: []lstg.Listing{
-					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 2, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 3, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 2, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 3, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 3, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 2, IssueNumber: 2, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 4, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-				},
-			},
-			want: []lstg.Listing{
-				{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-				{Volume: 2, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-				{Volume: 3, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-				{Volume: 2, IssueNumber: 2, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-				{Volume: 4, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := cmd.UniqueListings(tt.args.ll); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("UniqueListings() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	return manager, filename, appFS
 }
 
 func ExecuteCommandC(t *testing.T, root *cobra.Command, args ...string) (c *cobra.Command, output string, err error) {
@@ -302,15 +185,4 @@ func ExecuteCommandC(t *testing.T, root *cobra.Command, args ...string) (c *cobr
 	c, err = root.ExecuteC()
 
 	return c, buf.String(), err
-}
-
-func init() {
-	log.SetOutput(ioutil.Discard)
-
-	// Search config in application directory with name ".ogma" (without extension).
-	viper.AddConfigPath("../")
-	viper.SetConfigType("yaml")
-	viper.SetConfigName(".ogma")
-
-	viper.AutomaticEnv() // read in environment variables that match
 }
