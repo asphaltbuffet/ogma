@@ -95,7 +95,7 @@ func TestMailHash(t *testing.T) {
 			mail: cmd.Mail{
 				Sender:   1234,
 				Receiver: 5678,
-				Date:     time.Date(2021, time.November, 15, 0, 0, 0, 0, time.Local),
+				Date:     "2021-11-15",
 			},
 			length: 6,
 			want:   "f2165e",
@@ -105,7 +105,7 @@ func TestMailHash(t *testing.T) {
 			mail: cmd.Mail{
 				Sender:   123,
 				Receiver: 45678,
-				Date:     time.Date(2021, time.November, 15, 0, 0, 0, 0, time.Local),
+				Date:     "2021-11-15",
 			},
 			length: 6,
 			want:   "650e0a",
@@ -115,7 +115,7 @@ func TestMailHash(t *testing.T) {
 			mail: cmd.Mail{
 				Sender:   1234,
 				Receiver: 5678,
-				Date:     time.Date(2021, time.November, 15, 0, 0, 0, 0, time.Local),
+				Date:     "2021-11-15",
 			},
 			length: 0,
 			want:   "",
@@ -125,7 +125,7 @@ func TestMailHash(t *testing.T) {
 			mail: cmd.Mail{
 				Sender:   1234,
 				Receiver: 5678,
-				Date:     time.Date(2021, time.November, 15, 0, 0, 0, 0, time.Local),
+				Date:     "2021-11-15",
 			},
 			length: 32,
 			want:   "28bf0b58528e41181e13d0f789f2165e",
@@ -135,7 +135,7 @@ func TestMailHash(t *testing.T) {
 			mail: cmd.Mail{
 				Sender:   1234,
 				Receiver: 5678,
-				Date:     time.Date(2021, time.November, 15, 0, 0, 0, 0, time.Local),
+				Date:     "2021-11-15",
 			},
 			length: 33,
 			want:   "28bf0b58528e41181e13d0f789f2165e",
@@ -145,7 +145,7 @@ func TestMailHash(t *testing.T) {
 			mail: cmd.Mail{
 				Sender:   1234,
 				Receiver: 5678,
-				Date:     time.Date(2021, time.November, 15, 0, 0, 0, 0, time.Local),
+				Date:     "2021-11-15",
 			},
 			length: -1,
 			want:   "",
@@ -164,19 +164,19 @@ func TestValidateDate(t *testing.T) {
 	tests := []struct {
 		name      string
 		date      string
-		want      time.Time
+		want      string
 		assertion assert.ErrorAssertionFunc
 	}{
 		{
 			name:      "good date",
 			date:      "2021-11-15",
-			want:      time.Date(2021, time.November, 15, 0, 0, 0, 0, time.Local),
+			want:      "2021-11-15",
 			assertion: assert.NoError,
 		},
 		{
 			name:      "bad date",
 			date:      "Nov 15 2021",
-			want:      time.Date(2021, time.November, 15, 0, 0, 0, 0, time.Local),
+			want:      "2021-11-15",
 			assertion: assert.Error,
 		},
 	}
@@ -185,7 +185,7 @@ func TestValidateDate(t *testing.T) {
 			got, err := cmd.ValidateDate(tt.date)
 			tt.assertion(t, err)
 			if err == nil {
-				assert.Truef(t, got.Equal(tt.want), "Times are not equal: got = %v, want %v", got, tt.want)
+				assert.Equal(t, tt.want, got)
 			}
 		})
 	}
