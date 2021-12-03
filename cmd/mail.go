@@ -41,14 +41,19 @@ import (
 	"github.com/asphaltbuffet/ogma/pkg/datastore"
 )
 
+// Mails is a container for multiple mail objects.
+type Mails struct {
+	Mails []Mail `json:"mails"`
+}
+
 // Mail contains relevant information for correspondence.
 type Mail struct {
-	ID       int `storm:"id,increment"`
-	Ref      string
-	Sender   int
-	Receiver int
-	Date     time.Time
-	Link     string
+	ID       int    `storm:"id,increment"`
+	Ref      string `json:"reference"`
+	Sender   int    `json:"sender"`
+	Receiver int    `json:"receiver"`
+	Date     string `json:"date"`
+	Link     string `json:"link"`
 }
 
 const (
@@ -138,7 +143,7 @@ func RunMailCmd(cmd *cobra.Command, args []string) error {
 		"ref":      m.Ref,
 		"sender":   m.Sender,
 		"receiver": m.Receiver,
-		"date":     m.Date.Local().Format("2006-01-02"),
+		"date":     m.Date,
 		"link":     m.Link,
 	}).Info("added mail entry")
 
@@ -177,7 +182,7 @@ func MailFromArgs(cmd *cobra.Command) (Mail, error) {
 		}).Warn("failed to get date argument")
 	}
 
-	d, err := ValidateDate(date)
+	m.Date, err = ValidateDate(date)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"command": cmd.Name(),
@@ -185,9 +190,8 @@ func MailFromArgs(cmd *cobra.Command) (Mail, error) {
 		}).Error("failed to validate date")
 		return Mail{}, errors.New("date: failed to add correspondence")
 	}
-	m.Date = d
 
-	link, err := cmd.Flags().GetString("link")
+	m.Link, err = cmd.Flags().GetString("link")
 	if err != nil {
 		log.WithFields(log.Fields{
 			"command": cmd.Name(),
@@ -195,7 +199,6 @@ func MailFromArgs(cmd *cobra.Command) (Mail, error) {
 		}).Warn("failed to get link argument")
 	}
 	// TODO: validate link is valid
-	m.Link = link
 
 	m.Ref = MailHash(m, RefLength)
 
@@ -212,7 +215,7 @@ func MailHash(m Mail, l int) string {
 
 	h := md5.New() //nolint:gosec // not using this for security purposes
 	padding := "qwertyuiopasdfghjklzxcvbnm1234567890"
-	hSrc := fmt.Sprint(m.Sender, m.Receiver, m.Date.Local().Format("2006-01-02"))
+	hSrc := fmt.Sprint(m.Sender, m.Receiver, m.Date)
 	if _, err := io.WriteString(h, padding); err != nil {
 		log.WithFields(log.Fields{
 			"pre-hash": hSrc,
@@ -230,14 +233,14 @@ func MailHash(m Mail, l int) string {
 }
 
 // ValidateDate checks date string format and parses with local time location.
-func ValidateDate(dd string) (time.Time, error) {
+func ValidateDate(dd string) (string, error) {
 	// hardcoded location for now. could be a configuration later.
 	location := "Local"
 	loc, err := time.LoadLocation(location)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"time_location": location,
-		}).Warn(`failed to load time location`)
+		}).Warnf("unable to load local time location (using UTC): %v", err)
 
 		// set to UTC if cannot get local location
 		loc = time.UTC
@@ -249,17 +252,17 @@ func ValidateDate(dd string) (time.Time, error) {
 			"date":          dd,
 			"time_location": location,
 		}).Error("invalid date argument")
-		return time.Time{}, err
+		return "", fmt.Errorf("date format must be 'yyyy-mm-dd': %w", err)
 	}
 
-	return d, nil
+	return d.Local().Format("2006-01-02"), nil
 }
 
 // RenderMail returns a pretty formatted listing as table.
 func RenderMail(mm []Mail, p bool) string {
 	// empty string if there are no listings to render
 	if len(mm) == 0 {
-		return ""
+		return "No correspondences found."
 	}
 
 	mt := table.NewWriter()
@@ -279,7 +282,7 @@ func RenderMail(mm []Mail, p bool) string {
 			m.Ref,
 			m.Sender,
 			m.Receiver,
-			m.Date.Local().Format("2006-01-02"),
+			m.Date,
 			m.Link,
 		})
 	}
