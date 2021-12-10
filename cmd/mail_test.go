@@ -24,16 +24,14 @@ package cmd_test
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
 	"testing"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/asphaltbuffet/ogma/cmd"
 )
@@ -47,23 +45,26 @@ func TestNewMailCmd(t *testing.T) {
 }
 
 func TestRunMailCmd(t *testing.T) {
-	currentTime := time.Now()
-	filename := fmt.Sprintf("test_%d.db", currentTime.Unix())
+	m, dbfilename, fs := Setup(t)
+	m.Stop()
 
 	defer func() {
-		assert.NoError(t, os.Remove(filename))
+		// assert.NoError(t, os.Remove(dbfilename))
+		require.NoError(t, fs.RemoveAll("test/"))
 	}()
 
-	viper.Set("datastore.filename", filename)
+	viper.Set("datastore.filename", dbfilename)
 	tests := []struct {
 		name      string
 		args      []string
+		config    string
 		assertion assert.ErrorAssertionFunc
 		want      string
 	}{
 		{
 			name:      "valid",
 			args:      []string{"-d2021-11-15", "-s1234", "-r5678"},
+			config:    "/test/.tconfig",
 			assertion: assert.NoError,
 			want:      "Added mail. Reference: f2165e\n",
 		},
@@ -71,11 +72,13 @@ func TestRunMailCmd(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cmd := cmd.NewMailCmd()
+			// cmd.NewRootCmd()
+			c := cmd.NewMailCmd()
 			b := bytes.NewBufferString("")
-			cmd.SetOut(b)
-			cmd.SetArgs(tt.args)
-			tt.assertion(t, cmd.Execute())
+			cmd.InitConfig(fs, tt.config)
+			c.SetOut(b)
+			c.SetArgs(tt.args)
+			tt.assertion(t, c.Execute())
 			out, err := io.ReadAll(b)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.want, string(out))

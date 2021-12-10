@@ -24,17 +24,40 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"errors"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
+
+// default const values for application.
+const (
+	DefaultMaxSearchResults  = 10
+	DefaultMemberNumber      = 13401
+	DefaultConfigFilename    = ".ogma"
+	DefaultLoggingLevel      = "info"
+	DefaultDatastoreFilename = "ogma.db"
+)
+
+var appFS afero.Fs
 
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:               "ogma",
-	Version:           "1.0.1",
+	Version:           "1.1.0",
 	Short:             "A LEX listing database and letter tracking application.",
 	Long:              `Ogma is a go application that tracks LEX listings as entered from LEX magazine. It provides member-focused metrics, basic stats, and tracking of letters sent and received.`,
 	Args:              cobra.NoArgs,
 	CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: true},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// providing a run for root so that the PersistentPreRun will kick off to initialize config.
+		return errors.New("no arguments provided")
+	},
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		InitConfig(appFS, DefaultConfigFilename)
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -43,11 +66,42 @@ func Execute() {
 	cobra.CheckErr(rootCmd.Execute())
 }
 
-func init() {
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ogma.yaml)")
+// InitConfig sets up Viper and Logging.
+func InitConfig(fs afero.Fs, cfg string) {
+	log.Trace("initializing configuration and logging")
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
+	appFS = afero.NewOsFs()
+
+	viper.SetFs(appFS)
+
+	// Search config in application directory with name ".ogma" (without extension).
+	viper.AddConfigPath("./")
+	viper.AddConfigPath("$HOME/")
+	viper.SetConfigType("yaml")
+	viper.SetConfigName(cfg)
+
+	viper.SetEnvPrefix("OGMA")
+	viper.AutomaticEnv() // read in environment variables that match
+
+	viper.SetDefault("logging.level", DefaultLoggingLevel)
+	viper.SetDefault("datastore.filename", DefaultDatastoreFilename)
+	viper.SetDefault("search:max_results", DefaultMaxSearchResults)
+	viper.SetDefault("member", DefaultMemberNumber)
+
+	// If a config file is found, read it in.
+	if err := viper.ReadInConfig(); err != nil {
+		log.Warn("unable to read config file: ", err)
+	}
+
+	loggingLevel, err := log.ParseLevel(viper.GetString("logging.level"))
+	if err != nil {
+		log.Warn("error parsing logging level: ", err)
+	}
+
+	log.SetLevel(loggingLevel)
+	log.WithFields(log.Fields{"level": loggingLevel}).Debug("set log level")
+}
+
+func init() {
+	// rootCmd.PersistentFlags().String("config", ".ogma", "Configuration file to use for application.")
 }
