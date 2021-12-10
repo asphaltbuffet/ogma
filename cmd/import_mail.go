@@ -41,21 +41,21 @@ import (
 func NewImportMailCmd() *cobra.Command {
 	// cmd represents the import command.
 	cmd := &cobra.Command{
-		Use:     "import",
-		Short:   "Bulk import records.",
+		Use:     "mail",
+		Short:   "Bulk import mail records.",
 		Example: "ogma import somefile.json",
-		Run:     RunImportCmd,
+		Run:     RunImportMailCmd,
 	}
 
 	return cmd
 }
 
-// RunImportCmd performs action associated with listings-import application command.
-func RunImportCmd(cmd *cobra.Command, args []string) {
+// RunImportMailCmd performs action associated with mail-import application command.
+func RunImportMailCmd(cmd *cobra.Command, args []string) {
 	jsonFile, err := os.Open(args[0])
 	if err != nil {
-		log.Errorf("failed to open import file: %v", err)
-		cmd.PrintErrf("failed to open import file: %v", err)
+		log.Error("failed to open import file: ", err)
+		cmd.PrintErr("failed to open import file: ", err)
 		return
 	}
 
@@ -65,23 +65,25 @@ func RunImportCmd(cmd *cobra.Command, args []string) {
 	defer func() {
 		err = jsonFile.Close()
 		if err != nil {
-			cmd.PrintErrf("failed to close import file: %v", err)
-			log.Errorf("failed to close import file: %v", err)
+			log.Error("failed to close import file: ", err)
+			cmd.PrintErr("failed to close import file: ", err)
 			return
 		}
 	}()
 
 	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
 	if err != nil {
-		cmd.PrintErrf("failed to access datastore: %v", err)
-		log.Errorf("failed to access datastore: %v", err)
+		cmd.PrintErr("failed to access datastore: ", err)
+		log.Error("failed to access datastore: ", err)
 		return
 	}
 	defer dsManager.Stop()
 
-	mailOut, err := ImportMail(jsonFile, dsManager)
+	mailOut, err := importMail(jsonFile, dsManager)
 	if err != nil {
-		log.Errorf("failed to import mail records: %v", err)
+		log.Error("failed to import mail records: ", err)
+		cmd.PrintErr("failed to import mail records: ", err)
+		return
 	}
 
 	if mailOut != "" {
@@ -89,10 +91,10 @@ func RunImportCmd(cmd *cobra.Command, args []string) {
 	}
 }
 
-// ImportMail adds one to many mail to the datastore from a file.
-func ImportMail(f io.Reader, d datastore.Writer) (string, error) {
+// importMail adds one to many mail to the datastore from a file.
+func importMail(f io.Reader, d datastore.Writer) (string, error) {
 	// convert import file into a mails struct
-	rawMail, err := ParseMail(f)
+	rawMail, err := parseMail(f)
 	if err != nil {
 		log.WithFields(log.Fields{"cmd": "import"}).Error("failed to parse input file: ", err)
 		return "", fmt.Errorf("failed to parse input file: %w", err)
@@ -100,7 +102,7 @@ func ImportMail(f io.Reader, d datastore.Writer) (string, error) {
 
 	if len(rawMail) == 0 {
 		log.Debug("no mail entries found to import")
-		return "", nil
+		return "", errors.New("no mail entries in import file")
 	}
 
 	mails := UniqueMails(rawMail)
@@ -134,8 +136,8 @@ func ImportMail(f io.Reader, d datastore.Writer) (string, error) {
 	return fmt.Sprintf("Imported %d/%d mail records.", importCount, len(rawMail)), nil
 }
 
-// ParseMail unmarshalls json into a Mails struct.
-func ParseMail(j io.Reader) ([]Mail, error) {
+// parseMail unmarshalls json into a Mails struct.
+func parseMail(j io.Reader) ([]Mail, error) {
 	if j == nil {
 		return []Mail{}, errors.New("argument cannot be nil")
 	}
