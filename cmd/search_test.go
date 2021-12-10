@@ -34,6 +34,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/asphaltbuffet/ogma/cmd"
 	"github.com/asphaltbuffet/ogma/pkg/datastore"
@@ -50,11 +51,11 @@ func TestNewSearchCmd(t *testing.T) {
 
 func TestRunSearchCmd(t *testing.T) {
 	m, dbFilePath, err := initDatastoreManager()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	m.Stop()
 
 	defer func() {
-		assert.NoError(t, os.Remove(dbFilePath))
+		require.NoError(t, os.Remove(dbFilePath))
 	}()
 
 	viper.Set("datastore.filename", dbFilePath)
@@ -64,6 +65,18 @@ func TestRunSearchCmd(t *testing.T) {
 		assertion assert.ErrorAssertionFunc
 		want      string
 	}{
+		{
+			name:      "invalid search - too many parameters",
+			args:      []string{"1234", "5678"},
+			assertion: assert.Error,
+			want:      "Error: requires a single member number\nUsage:\n  search [flags]\n\nFlags:\n  -h, --help     help for search\n  -p, --pretty   Show prettier results.\n\n",
+		},
+		{
+			name:      "invalid search - alphanumeric",
+			args:      []string{"1234a"},
+			assertion: assert.Error,
+			want:      "Error: invalid member number: strconv.Atoi: parsing \"1234a\": invalid syntax\nUsage:\n  search [flags]\n\nFlags:\n  -h, --help     help for search\n  -p, --pretty   Show prettier results.\n\n",
+		},
 		{
 			name:      "with listings, no correspondence",
 			args:      []string{"1234"},
@@ -89,11 +102,16 @@ func TestRunSearchCmd(t *testing.T) {
 			cmd := cmd.NewSearchCmd()
 			b := bytes.NewBufferString("")
 			cmd.SetOut(b)
+			cmd.SetErr(b)
 			cmd.SetArgs(tt.args)
-			tt.assertion(t, cmd.Execute())
-			out, err := io.ReadAll(b)
-			assert.NoError(t, err)
-			assert.Equal(t, tt.want, string(out))
+
+			err := cmd.Execute()
+			tt.assertion(t, err)
+			if err != nil {
+				out, err := io.ReadAll(b)
+				assert.NoError(t, err)
+				assert.Equal(t, tt.want, string(out))
+			}
 		})
 	}
 }
