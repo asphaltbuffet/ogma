@@ -46,7 +46,7 @@ func TestNewImportListingCmd(t *testing.T) {
 }
 
 func TestRunImportListingsCmd(t *testing.T) {
-	m, dbFilePath, appFS := Setup(t)
+	m, dbFilePath, appFS := setup(t)
 	m.Stop()
 
 	defer func() {
@@ -84,7 +84,7 @@ func TestRunImportListingsCmd(t *testing.T) {
 }
 
 func TestImportListings(t *testing.T) {
-	m, _, appFS := Setup(t)
+	m, _, appFS := setup(t)
 	m.Stop()
 
 	defer func() {
@@ -123,7 +123,7 @@ func TestImportListings(t *testing.T) {
 }
 
 func TestParseListings(t *testing.T) {
-	m, _, appFS := Setup(t)
+	m, _, appFS := setup(t)
 	m.Stop()
 
 	defer func() {

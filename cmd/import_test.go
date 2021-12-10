@@ -30,32 +30,39 @@ import (
 
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/assert"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/require"
 
-	"github.com/asphaltbuffet/ogma/cmd"
 	"github.com/asphaltbuffet/ogma/pkg/datastore"
 )
 
-func TestNewImportCmd(t *testing.T) {
-	got := cmd.NewImportCmd()
-
-	assert.Equal(t, "import", got.Name())
-	assert.Equal(t, "Bulk import records.", got.Short)
-	assert.False(t, got.Runnable())
-}
-
-func Setup(t *testing.T) (*datastore.Manager, string, afero.Fs) {
+func setup(t *testing.T) (*datastore.Manager, string, afero.Fs) {
 	t.Helper()
 
 	appFS := afero.NewOsFs()
 
 	// create test files and directories
-	assert.NoError(t, appFS.MkdirAll("test", 0o755))
+	require.NoError(t, appFS.MkdirAll("test", 0o755))
+
+	// create testing config
+	viper.AddConfigPath("test")
+
+	err := afero.WriteFile(appFS, "test/.ogma", []byte("logging:\n"+
+		"  level: info\n"+
+		"search:\n"+
+		"  max_results: 10\n"+
+		"datastore:\n"+
+		"  filename: \"ogma.db\"\n"+
+		"defaults:\n"+
+		"  issue: 56\n"+
+		"  max_column: 40\n"+
+		"member: 13401\n"), 0o644)
+	require.NoError(t, err)
 
 	currentTime := time.Now()
 	filename := fmt.Sprintf("test/test_%d.db", currentTime.Unix())
 	manager, err := datastore.New(filename)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = afero.WriteFile(appFS, "test/invalid.json", []byte(`{
 		"listings": [
@@ -70,7 +77,7 @@ func Setup(t *testing.T) (*datastore.Manager, string, afero.Fs) {
 				"alt": "",
 		]
 		}`), 0o644)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = afero.WriteFile(appFS, "test/listing.json", []byte(`{
 		"listings": [
@@ -91,7 +98,7 @@ func Setup(t *testing.T) (*datastore.Manager, string, afero.Fs) {
 		}
 		]
 		}`), 0o644)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = afero.WriteFile(appFS, "test/listings.json", []byte(`{
 		"listings": [
@@ -142,7 +149,7 @@ func Setup(t *testing.T) (*datastore.Manager, string, afero.Fs) {
 			}
 		]
 		}`), 0o644)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = afero.WriteFile(appFS, "test/mails.json", []byte(`{
 		"mails": [
@@ -169,7 +176,7 @@ func Setup(t *testing.T) (*datastore.Manager, string, afero.Fs) {
 			}
 		]
 		}`), 0o644)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	return manager, filename, appFS
 }

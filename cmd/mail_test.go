@@ -45,7 +45,7 @@ func TestNewMailCmd(t *testing.T) {
 }
 
 func TestRunMailCmd(t *testing.T) {
-	m, dbfilename, fs := Setup(t)
+	m, dbfilename, fs := setup(t)
 	m.Stop()
 
 	defer func() {

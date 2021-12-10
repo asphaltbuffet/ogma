@@ -27,20 +27,7 @@ import (
 )
 
 // importCmd represents the base command when called without any subcommands.
-var importCmd *cobra.Command
-
-// NewImportCmd sets up an import subcommand.
-func NewImportCmd() *cobra.Command {
-	// cmd represents the import command.
-	cmd := &cobra.Command{
-		Use:   "import",
-		Short: "Bulk import records.",
-	}
-
-	return cmd
-}
-
-func init() {
-	importCmd = NewImportCmd()
-	rootCmd.AddCommand(importCmd)
+var importCmd = &cobra.Command{
+	Use:   "import",
+	Short: "Bulk import mailrecords.",
 }
