@@ -34,7 +34,6 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -96,7 +95,7 @@ func NewMailCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "mail",
 		Short: "Tracks letters sent to/from penpals",
-		RunE:  RunMailCmd,
+		Run:   RunMailCmd,
 	}
 
 	dm := viper.GetInt("member")
@@ -110,35 +109,42 @@ func NewMailCmd() *cobra.Command {
 }
 
 // RunMailCmd implements functionality of a mail command.
-func RunMailCmd(cmd *cobra.Command, args []string) error {
-	m, err := MailFromArgs(cmd)
+func RunMailCmd(cmd *cobra.Command, args []string) {
+	fmt.Println("Running mail command. Config is: ", viper.ConfigFileUsed())
+	m, err := mailFromArgs(cmd)
 	if err != nil {
 		log.WithFields(log.Fields{
+			// "parent":  cmd.Parent().Name(),
 			"command": cmd.Name(),
 			"args":    args,
-			"err":     err,
-		}).Error("failed to parse arguments")
-		return err
+		}).Error("failed to parse arguments: ", err)
+		cmd.PrintErrln("invalid input: ", err)
+		return
 	}
 
 	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
 	if err != nil {
 		log.WithFields(log.Fields{
+			// "parent":  cmd.Parent().Name(),
 			"command": cmd.Name(),
-		}).Error("failed to open datastore")
-		return errors.New("datastore: failed to add correspondence")
+		}).Error("failed to open datastore: ", err)
+		cmd.PrintErrln("Failed to access datastore: ", err)
+		return
 	}
 	defer dsManager.Stop()
 
 	err = dsManager.Save(&m)
 	if err != nil {
 		log.WithFields(log.Fields{
+			// "parent":  cmd.Parent().Name(),
 			"command": cmd.Name(),
-		}).Error("failed to save correspondence")
-		return errors.New("save: failed to add correspondence")
+		}).Error("unable to save mail: ", err)
+		cmd.PrintErrln("Failed to save entry: ", err)
+		return
 	}
 
 	log.WithFields(log.Fields{
+		// "parent":   cmd.Parent().Name(),
 		"command":  cmd.Name(),
 		"ref":      m.Ref,
 		"sender":   m.Sender,
@@ -148,14 +154,14 @@ func RunMailCmd(cmd *cobra.Command, args []string) error {
 	}).Info("added mail entry")
 
 	cmd.Printf("Added mail. Reference: %s\n", m.Ref)
-	return nil
 }
 
-// MailFromArgs creates a new mail object from command arguments.
-func MailFromArgs(cmd *cobra.Command) (Mail, error) {
+// mailFromArgs creates a new mail object from command arguments.
+func mailFromArgs(cmd *cobra.Command) (Mail, error) {
 	s, err := cmd.Flags().GetInt("sender")
 	if err != nil {
 		log.WithFields(log.Fields{
+			// "parent":  cmd.Parent().Name(),
 			"command": cmd.Name(),
 			"args":    cmd.Args,
 		}).Warn("failed to get sender argument")
@@ -164,6 +170,7 @@ func MailFromArgs(cmd *cobra.Command) (Mail, error) {
 	r, err := cmd.Flags().GetInt("receiver")
 	if err != nil {
 		log.WithFields(log.Fields{
+			// "parent":  cmd.Parent().Name(),
 			"command": cmd.Name(),
 			"args":    cmd.Args,
 		}).Warn("failed to get receiver argument")
@@ -177,6 +184,7 @@ func MailFromArgs(cmd *cobra.Command) (Mail, error) {
 	date, err := cmd.Flags().GetString("date")
 	if err != nil {
 		log.WithFields(log.Fields{
+			// "parent":  cmd.Parent().Name(),
 			"command": cmd.Name(),
 			"args":    cmd.Args,
 		}).Warn("failed to get date argument")
@@ -185,6 +193,7 @@ func MailFromArgs(cmd *cobra.Command) (Mail, error) {
 	m.Date, err = ValidateDate(date)
 	if err != nil {
 		log.WithFields(log.Fields{
+			// "parent":  cmd.Parent().Name(),
 			"command": cmd.Name(),
 			"date":    date,
 		}).Error("failed to validate date")
@@ -194,6 +203,7 @@ func MailFromArgs(cmd *cobra.Command) (Mail, error) {
 	m.Link, err = cmd.Flags().GetString("link")
 	if err != nil {
 		log.WithFields(log.Fields{
+			// "parent":  cmd.Parent().Name(),
 			"command": cmd.Name(),
 			"args":    cmd.Args,
 		}).Warn("failed to get link argument")
@@ -305,23 +315,5 @@ func RenderMail(mm []Mail, p bool) string {
 }
 
 func init() {
-	// Search config in application directory with name ".ogma" (without extension).
-	appFS := afero.NewOsFs()
-	viper.SetFs(appFS)
-	viper.AddConfigPath("./")
-	viper.AddConfigPath("$HOME/")
-	viper.SetConfigType("yaml")
-	viper.SetConfigName(".ogma")
-
-	viper.AutomaticEnv() // read in environment variables that match
-
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err != nil {
-		log.WithFields(log.Fields{
-			"configFile": "ogma",
-			"err":        err,
-		}).Warn("no config file found")
-	}
-
 	rootCmd.AddCommand(NewMailCmd())
 }
