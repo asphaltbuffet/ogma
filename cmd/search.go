@@ -64,14 +64,8 @@ func NewSearchCmd() *cobra.Command {
 
 // RunSearchCmd performs action associated with listings application command.
 func RunSearchCmd(cmd *cobra.Command, args []string) {
-	// member number is already validated but check before using anyway.
-	member, err := strconv.Atoi(args[0])
-	if err != nil {
-		log.WithField("arg", args[0]).Errorf("invalid member number: %v", err)
-
-		cmd.PrintErrf("invalid member number: %v\n", err)
-		return
-	}
+	// member number is already validated by cobra
+	member, _ := strconv.Atoi(args[0])
 
 	log.WithField("member", member).Debug("searching by member number")
 
