@@ -63,7 +63,7 @@ func TestRunImportListingsCmd(t *testing.T) {
 		{
 			name:      "single entry",
 			args:      []string{"test/listing.json"},
-			want:      "Imported 1/1 listing records.",
+			want:      "Imported 1/1 listing records.\n",
 			assertion: assert.NoError,
 		},
 		{
