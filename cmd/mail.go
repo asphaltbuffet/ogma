@@ -114,7 +114,6 @@ func RunMailCmd(cmd *cobra.Command, args []string) {
 	m, err := mailFromArgs(cmd)
 	if err != nil {
 		log.WithFields(log.Fields{
-			// "parent":  cmd.Parent().Name(),
 			"command": cmd.Name(),
 			"args":    args,
 		}).Error("failed to parse arguments: ", err)
@@ -125,7 +124,6 @@ func RunMailCmd(cmd *cobra.Command, args []string) {
 	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
 	if err != nil {
 		log.WithFields(log.Fields{
-			// "parent":  cmd.Parent().Name(),
 			"command": cmd.Name(),
 		}).Error("failed to open datastore: ", err)
 		cmd.PrintErrln("Failed to access datastore: ", err)
@@ -136,7 +134,6 @@ func RunMailCmd(cmd *cobra.Command, args []string) {
 	err = dsManager.Save(&m)
 	if err != nil {
 		log.WithFields(log.Fields{
-			// "parent":  cmd.Parent().Name(),
 			"command": cmd.Name(),
 		}).Error("unable to save mail: ", err)
 		cmd.PrintErrln("Failed to save entry: ", err)
@@ -144,7 +141,6 @@ func RunMailCmd(cmd *cobra.Command, args []string) {
 	}
 
 	log.WithFields(log.Fields{
-		// "parent":   cmd.Parent().Name(),
 		"command":  cmd.Name(),
 		"ref":      m.Ref,
 		"sender":   m.Sender,
@@ -161,7 +157,6 @@ func mailFromArgs(cmd *cobra.Command) (Mail, error) {
 	s, err := cmd.Flags().GetInt("sender")
 	if err != nil {
 		log.WithFields(log.Fields{
-			// "parent":  cmd.Parent().Name(),
 			"command": cmd.Name(),
 			"args":    cmd.Args,
 		}).Warn("failed to get sender argument")
@@ -170,7 +165,6 @@ func mailFromArgs(cmd *cobra.Command) (Mail, error) {
 	r, err := cmd.Flags().GetInt("receiver")
 	if err != nil {
 		log.WithFields(log.Fields{
-			// "parent":  cmd.Parent().Name(),
 			"command": cmd.Name(),
 			"args":    cmd.Args,
 		}).Warn("failed to get receiver argument")
@@ -184,7 +178,6 @@ func mailFromArgs(cmd *cobra.Command) (Mail, error) {
 	date, err := cmd.Flags().GetString("date")
 	if err != nil {
 		log.WithFields(log.Fields{
-			// "parent":  cmd.Parent().Name(),
 			"command": cmd.Name(),
 			"args":    cmd.Args,
 		}).Warn("failed to get date argument")
@@ -193,7 +186,6 @@ func mailFromArgs(cmd *cobra.Command) (Mail, error) {
 	m.Date, err = ValidateDate(date)
 	if err != nil {
 		log.WithFields(log.Fields{
-			// "parent":  cmd.Parent().Name(),
 			"command": cmd.Name(),
 			"date":    date,
 		}).Error("failed to validate date")
@@ -203,7 +195,6 @@ func mailFromArgs(cmd *cobra.Command) (Mail, error) {
 	m.Link, err = cmd.Flags().GetString("link")
 	if err != nil {
 		log.WithFields(log.Fields{
-			// "parent":  cmd.Parent().Name(),
 			"command": cmd.Name(),
 			"args":    cmd.Args,
 		}).Warn("failed to get link argument")

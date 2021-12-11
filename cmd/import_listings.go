@@ -94,7 +94,7 @@ func RunImportListingsCmd(cmd *cobra.Command, args []string) {
 // ImportListings adds one to many listings to the datastore from a file.
 func ImportListings(f io.Reader, d datastore.Writer) (string, error) {
 	// convert import file into a listings struct
-	rawListings, err := ParseListings(f)
+	rawListings, err := parseListings(f)
 	if err != nil {
 		log.WithFields(log.Fields{"cmd": "import"}).Error("failed to parse input file: ", err)
 		return "", fmt.Errorf("failed to parse input file: %w", err)
@@ -131,8 +131,8 @@ func ImportListings(f io.Reader, d datastore.Writer) (string, error) {
 	return fmt.Sprintf("Imported %d/%d listing records.", importCount, len(rawListings)), nil
 }
 
-// ParseListings unmarshalls json into a Listings struct.
-func ParseListings(j io.Reader) ([]lstg.Listing, error) {
+// parseListings unmarshalls json into a Listings struct.
+func parseListings(j io.Reader) ([]lstg.Listing, error) {
 	if j == nil {
 		return []lstg.Listing{}, errors.New("argument cannot be nil")
 	}
