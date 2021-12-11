@@ -16,6 +16,7 @@ func main() {
 }
 
 func init() {
+	// syslog hook doesn't work in windows.
 	if runtime.GOOS != "windows" {
 		hook, err := lSyslog.NewSyslogHook("", "", syslog.LOG_INFO, "")
 		if err != nil {

@@ -3,6 +3,7 @@ package datastore
 
 import (
 	"fmt"
+	"os"
 
 	storm "github.com/asdine/storm/v3"
 	"github.com/asdine/storm/v3/index"
@@ -29,21 +30,31 @@ type Manager struct {
 
 // New returns a new datastore Manager.
 func New(filePath string) (*Manager, error) {
-	// TODO: can this be converted to use afero? 2021-11-07 BL
 	storm, err := storm.Open(filePath)
 	if err != nil {
-		fmt.Println("Failed to open db: ", err)
 		log.WithFields(log.Fields{
 			"filePath": filePath,
-		}).Error("Failed to open db.")
+		}).Error("error opening datastore file")
 
-		return nil, err
+		return nil, fmt.Errorf("error opening datastore file: %w", err)
 	}
 
 	return &Manager{
 		Store:    storm,
 		filePath: filePath,
 	}, nil
+}
+
+// Open returns a datastore Manager. Error if datastore file does not exist.
+func Open(fp string) (*Manager, error) {
+	if _, err := os.Stat(fp); err != nil {
+		log.WithFields(log.Fields{
+			"filePath": fp,
+		}).Error("error accessing datastore file: ", err)
+		return nil, fmt.Errorf("error accessing datastore file: %w", err)
+	}
+
+	return New(fp)
 }
 
 // GetPath returns the filepath to db file.
@@ -54,14 +65,17 @@ func (m *Manager) GetPath() string {
 // Stop stops database and any associated goroutines.
 func (m *Manager) Stop() {
 	if err := m.Store.Close(); err != nil {
-		fmt.Println("Failed to close store: ", err)
+		log.Error("Failed to close store: ", err)
 	}
 }
 
 // Save saves data into the datastore.
 func (m *Manager) Save(data interface{}) error {
 	if err := m.Store.Save(data); err != nil {
-		return err
+		log.WithFields(log.Fields{
+			"record": data,
+		}).Error("error saving record: ", err)
+		return fmt.Errorf("error saving record=%+v: %w", data, err)
 	}
 
 	return nil
@@ -105,6 +119,5 @@ func (m *Manager) Prefix(fieldName string, prefix string, to interface{}, option
 
 // Count counts all the records of a bucket.
 func (m *Manager) Count(data interface{}) (int, error) {
-	c, err := m.Store.Count(data)
-	return c, err
+	return m.Store.Count(data)
 }
