@@ -11,6 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/asphaltbuffet/ogma/cmd"
 	"github.com/asphaltbuffet/ogma/pkg/datastore"
@@ -18,58 +19,80 @@ import (
 )
 
 func TestManagerNew(t *testing.T) {
-	manager, dbFilePath, err := initDatastoreManager()
+	manager, dbFilePath := initDatastoreManager(t)
+
 	defer func() {
 		manager.Stop()
-		err = os.Remove(dbFilePath)
-		assert.NoError(t, err)
+		err := os.Remove(dbFilePath)
+		require.NoError(t, err)
 	}()
 
-	assert.NoError(t, err)
-
-	_, err = os.Stat(dbFilePath)
-
+	_, err := os.Stat(dbFilePath)
 	assert.NotErrorIs(t, err, os.ErrNotExist)
 }
 
-func TestManagerNewFail(t *testing.T) {
-	manager, dbFilePath, err := initDatastoreManager()
+func TestManagerOpen(t *testing.T) {
+	manager, dbFilePath := initDatastoreManager(t)
+
+	manager.Stop()
 	defer func() {
-		manager.Stop()
-		err = os.Remove(dbFilePath)
-		assert.NoError(t, err)
+		err := os.Remove(dbFilePath)
+		require.NoError(t, err)
 	}()
 
-	_, err = datastore.New(dbFilePath)
+	_, err := datastore.Open(dbFilePath)
+	assert.NoError(t, err, "should be able to open datastore that was just created")
+
+	_, err = datastore.Open("foo.db")
+	assert.Error(t, err, "should fail to open datastore that doesn't exist")
+}
+
+func TestManagerNewFail(t *testing.T) {
+	manager, dbFilePath := initDatastoreManager(t)
+	defer func() {
+		manager.Stop()
+		err := os.Remove(dbFilePath)
+		require.NoError(t, err)
+	}()
+
+	_, err := datastore.New(dbFilePath)
 	assert.Error(t, err, "datastore manager should fail to open duplicate db file")
 }
 
+func TestManagerStop(t *testing.T) {
+	manager, dbFilePath := initDatastoreManager(t)
+
+	// verify that stopping it multiple times doesn't cause any issues
+	manager.Stop()
+	err := os.Remove(dbFilePath)
+	require.NoError(t, err)
+	manager.Stop()
+}
+
 func TestManagerGetPath(t *testing.T) {
-	manager, dbFilePath, err := initDatastoreManager()
+	manager, dbFilePath := initDatastoreManager(t)
 	defer func() {
 		manager.Stop()
-		err = os.Remove(dbFilePath)
-		assert.NoError(t, err)
+		err := os.Remove(dbFilePath)
+		require.NoError(t, err)
 	}()
 
 	assert.Equal(t, dbFilePath, manager.GetPath())
 }
 
-func initDatastoreManager() (*datastore.Manager, string, error) {
+func initDatastoreManager(t *testing.T) (*datastore.Manager, string) {
+	t.Helper()
+
 	currentTime := time.Now()
 	filename := fmt.Sprintf("test_%d.db", currentTime.Unix())
 	manager, err := datastore.New(filename)
-	if err != nil {
-		return nil, "", err
-	}
+	require.NoError(t, err)
 
 	appFS := afero.NewMemMapFs()
 
 	// create test files and directories
 	err = appFS.MkdirAll("test", 0o755)
-	if err != nil {
-		return nil, "", err
-	}
+	require.NoError(t, err)
 
 	err = afero.WriteFile(appFS, "test/search.json", []byte(`{
 				"listings": [
@@ -120,21 +143,15 @@ func initDatastoreManager() (*datastore.Manager, string, error) {
 					}
 				]
 				}`), 0o644)
-	if err != nil {
-		return nil, "", err
-	}
+	require.NoError(t, err)
 
 	testFile, err := appFS.Open("test/search.json")
-	if err != nil {
-		return nil, "", err
-	}
+	require.NoError(t, err)
 
 	_, err = cmd.ImportListings(testFile, manager)
-	if err != nil {
-		return nil, "", err
-	}
+	require.NoError(t, err)
 
-	return manager, filename, nil
+	return manager, filename
 }
 
 func init() {
@@ -142,13 +159,11 @@ func init() {
 }
 
 func TestManager_Save(t *testing.T) {
-	manager, dbFilePath, err := initDatastoreManager()
-	assert.NoError(t, err)
+	manager, dbFilePath := initDatastoreManager(t)
 
 	defer func() {
-		manager.Stop()
-		err = os.Remove(dbFilePath)
-		assert.NoError(t, err)
+		err := os.Remove(dbFilePath)
+		require.NoError(t, err)
 	}()
 
 	type testData struct {
@@ -157,18 +172,22 @@ func TestManager_Save(t *testing.T) {
 	}
 
 	td := testData{ID: 1, TestNum: 5}
-	err = manager.Save(&td)
+	err := manager.Save(&td)
 	assert.NoError(t, err)
+
+	manager.Stop()
+	td = testData{ID: 2, TestNum: 42}
+	err = manager.Save(&td)
+	assert.Error(t, err)
 }
 
 func TestManager_One(t *testing.T) {
-	m, dbFilePath, err := initDatastoreManager()
-	assert.NoError(t, err)
+	m, dbFilePath := initDatastoreManager(t)
 
 	defer func() {
 		m.Stop()
-		err = os.Remove(dbFilePath)
-		assert.NoError(t, err)
+		err := os.Remove(dbFilePath)
+		require.NoError(t, err)
 	}()
 
 	type args struct {
@@ -217,13 +236,12 @@ func TestManager_One(t *testing.T) {
 }
 
 func TestManager_Find(t *testing.T) {
-	m, dbFilePath, err := initDatastoreManager()
-	assert.NoError(t, err)
+	m, dbFilePath := initDatastoreManager(t)
 
 	defer func() {
 		m.Stop()
-		err = os.Remove(dbFilePath)
-		assert.NoError(t, err)
+		err := os.Remove(dbFilePath)
+		require.NoError(t, err)
 	}()
 
 	type args struct {
@@ -278,13 +296,12 @@ func TestManager_Find(t *testing.T) {
 }
 
 func TestManager_AllByIndex(t *testing.T) {
-	m, dbFilePath, err := initDatastoreManager()
-	assert.NoError(t, err)
+	m, dbFilePath := initDatastoreManager(t)
 
 	defer func() {
 		m.Stop()
-		err = os.Remove(dbFilePath)
-		assert.NoError(t, err)
+		err := os.Remove(dbFilePath)
+		require.NoError(t, err)
 	}()
 
 	type args struct {
@@ -320,13 +337,12 @@ func TestManager_AllByIndex(t *testing.T) {
 }
 
 func TestManager_All(t *testing.T) {
-	m, dbFilePath, err := initDatastoreManager()
-	assert.NoError(t, err)
+	m, dbFilePath := initDatastoreManager(t)
 
 	defer func() {
 		m.Stop()
-		err = os.Remove(dbFilePath)
-		assert.NoError(t, err)
+		err := os.Remove(dbFilePath)
+		require.NoError(t, err)
 	}()
 
 	tests := []struct {
@@ -355,13 +371,12 @@ func TestManager_All(t *testing.T) {
 }
 
 func TestManager_Select(t *testing.T) {
-	m, dbFilePath, err := initDatastoreManager()
-	assert.NoError(t, err)
+	m, dbFilePath := initDatastoreManager(t)
 
 	defer func() {
 		m.Stop()
-		err = os.Remove(dbFilePath)
-		assert.NoError(t, err)
+		err := os.Remove(dbFilePath)
+		require.NoError(t, err)
 	}()
 
 	type args struct {
@@ -405,13 +420,12 @@ func TestManager_Select(t *testing.T) {
 }
 
 func TestManager_Range(t *testing.T) {
-	m, dbFilePath, err := initDatastoreManager()
-	assert.NoError(t, err)
+	m, dbFilePath := initDatastoreManager(t)
 
 	defer func() {
 		m.Stop()
-		err = os.Remove(dbFilePath)
-		assert.NoError(t, err)
+		err := os.Remove(dbFilePath)
+		require.NoError(t, err)
 	}()
 
 	type args struct {
@@ -480,13 +494,12 @@ func TestManager_Range(t *testing.T) {
 }
 
 func TestManager_Prefix(t *testing.T) {
-	m, dbFilePath, err := initDatastoreManager()
-	assert.NoError(t, err)
+	m, dbFilePath := initDatastoreManager(t)
 
 	defer func() {
 		m.Stop()
-		err = os.Remove(dbFilePath)
-		assert.NoError(t, err)
+		err := os.Remove(dbFilePath)
+		require.NoError(t, err)
 	}()
 
 	type args struct {
@@ -532,12 +545,11 @@ func TestManager_Prefix(t *testing.T) {
 }
 
 func TestManager_Count(t *testing.T) {
-	m, dbFilePath, err := initDatastoreManager()
-	assert.NoError(t, err)
+	m, dbFilePath := initDatastoreManager(t)
 
 	defer func() {
 		m.Stop()
-		err = os.Remove(dbFilePath)
+		err := os.Remove(dbFilePath)
 		assert.NoError(t, err)
 	}()
 
