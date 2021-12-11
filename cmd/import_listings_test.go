@@ -30,11 +30,9 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/asphaltbuffet/ogma/cmd"
-	"github.com/asphaltbuffet/ogma/mocks"
 	lstg "github.com/asphaltbuffet/ogma/pkg/listing"
 )
 
@@ -51,7 +49,7 @@ func TestRunImportListingsCmd(t *testing.T) {
 	m.Stop()
 
 	defer func() {
-		assert.NoError(t, appFS.RemoveAll("test/"))
+		require.NoError(t, appFS.RemoveAll("test/"))
 	}()
 
 	viper.Set("datastore.filename", dbFilePath)
@@ -62,6 +60,12 @@ func TestRunImportListingsCmd(t *testing.T) {
 		assertion assert.ErrorAssertionFunc
 		want      string
 	}{
+		{
+			name:      "single entry",
+			args:      []string{"test/listing.json"},
+			want:      "Imported 1/1 listing records.",
+			assertion: assert.NoError,
+		},
 		{
 			name:      "listing import",
 			args:      []string{"test/listings.json"},
@@ -78,112 +82,8 @@ func TestRunImportListingsCmd(t *testing.T) {
 			cmd.SetArgs(tt.args)
 			tt.assertion(t, cmd.Execute())
 			out, err := io.ReadAll(b)
-			assert.NoError(t, err)
-			assert.Equal(t, tt.want, string(out))
-		})
-	}
-}
-
-func TestImportListings(t *testing.T) {
-	m, _, appFS := setup(t)
-	m.Stop()
-
-	defer func() {
-		assert.NoError(t, appFS.RemoveAll("test/"))
-	}()
-
-	tests := []struct {
-		name      string
-		filepath  string
-		want      string
-		assertion assert.ErrorAssertionFunc
-	}{
-		{
-			name:      "single entry",
-			filepath:  "test/listing.json",
-			want:      "Imported 1/1 listing records.",
-			assertion: assert.NoError,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			testFile, err := appFS.Open(tt.filepath)
 			require.NoError(t, err)
-
-			mockDatastore := &mocks.Writer{}
-			mockDatastore.On("Save", mock.Anything).Return(nil)
-
-			got, err := cmd.ImportListings(testFile, mockDatastore)
-			tt.assertion(t, err)
-
-			if err == nil {
-				assert.Equal(t, tt.want, got)
-			}
-
-			require.NoError(t, testFile.Close())
-		})
-	}
-}
-
-func TestParseListings(t *testing.T) {
-	m, _, appFS := setup(t)
-	m.Stop()
-
-	defer func() {
-		assert.NoError(t, appFS.RemoveAll("test/"))
-	}()
-
-	type args struct {
-		fp string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    []lstg.Listing
-		wantErr bool
-	}{
-		{
-			name: "no file",
-			args: args{
-				fp: "test/b.json",
-			},
-			want:    []lstg.Listing{},
-			wantErr: true,
-		},
-		{
-			name: "single entry",
-			args: args{
-				fp: "test/listing.json",
-			},
-			want: []lstg.Listing{
-				{Volume: 2, IssueNumber: 55, Year: 2021, Season: "Spring", PageNumber: 1, IndexedCategory: "Art & Photography", IndexedMemberNumber: 2989, MemberExtension: "B", IsInternational: false, IsReview: false, ListingText: "Fingerpainting exchange.", IsArt: false, IsFlagged: false},
-			},
-			wantErr: false,
-		},
-		{
-			name: "invalid json",
-			args: args{
-				fp: "test/invalid.json",
-			},
-			want:    []lstg.Listing{},
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			testFile, _ := appFS.Open(tt.args.fp)
-
-			got, err := cmd.ParseListings(testFile)
-			if err != nil {
-				assert.Truef(t, tt.wantErr, "ImportListings() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ImportListings() = %v, want %v", got, tt.want)
-			}
-
-			require.NoError(t, testFile.Close())
+			assert.Equal(t, tt.want, string(out))
 		})
 	}
 }

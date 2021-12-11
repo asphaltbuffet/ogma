@@ -13,10 +13,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/asphaltbuffet/ogma/cmd"
 	"github.com/asphaltbuffet/ogma/pkg/datastore"
-	lstg "github.com/asphaltbuffet/ogma/pkg/listing"
 )
+
+type testEntry struct {
+	ID    int `storm:"id,increment"`
+	Key   int `storm:"index"`
+	Value string
+}
 
 func TestManagerNew(t *testing.T) {
 	manager, dbFilePath := initDatastoreManager(t)
@@ -83,9 +87,9 @@ func TestManagerGetPath(t *testing.T) {
 func initDatastoreManager(t *testing.T) (*datastore.Manager, string) {
 	t.Helper()
 
-	currentTime := time.Now()
-	filename := fmt.Sprintf("test_%d.db", currentTime.Unix())
-	manager, err := datastore.New(filename)
+	ct := time.Now()
+	fn := fmt.Sprintf("test_%d.db", ct.Unix())
+	m, err := datastore.New(fn)
 	require.NoError(t, err)
 
 	appFS := afero.NewMemMapFs()
@@ -94,64 +98,27 @@ func initDatastoreManager(t *testing.T) (*datastore.Manager, string) {
 	err = appFS.MkdirAll("test", 0o755)
 	require.NoError(t, err)
 
-	err = afero.WriteFile(appFS, "test/search.json", []byte(`{
-				"listings": [
-					{
-						"volume": 1,
-						"issue": 1,
-						"year": 1986,
-						"season": "Mollit",
-						"page": 1,
-						"category": "Pariatur",
-						"member": 1234,
-						"alt": "",
-						"international": false,
-						"review": false,
-						"text": "Esse Lorem do nulla sunt mollit nulla in.",
-						"art": false,
-						"flag": true
-					},
-					{
-						"volume": 1,
-						"issue": 1,
-						"year": 1986,
-						"season": "Eiusmod",
-						"page": 2,
-						"category": "Commodo",
-						"member": 1234,
-						"alt": "B",
-						"international": false,
-						"review": false,
-						"text": "Magna officia anim dolore enim.",
-						"art": false,
-						"flag": true
-					},
-					{
-						"volume": 1,
-						"issue": 1,
-						"year": 1986,
-						"season": "Id",
-						"page": 3,
-						"category": "Conisere",
-						"member": 5678,
-						"alt": "",
-						"international": false,
-						"review": false,
-						"text": "Velit cillum cillum ea officia nulla enim.",
-						"art": false,
-						"flag": true
-					}
-				]
-				}`), 0o644)
-	require.NoError(t, err)
+	testValues := []testEntry{
+		{
+			Key:   1234,
+			Value: "Mollit",
+		},
+		{
+			Key:   1234,
+			Value: "Comodo",
+		},
+		{
+			Key:   5678,
+			Value: "Conisere",
+		},
+	}
 
-	testFile, err := appFS.Open("test/search.json")
-	require.NoError(t, err)
+	for _, tv := range testValues {
+		tv := tv // set value so we can pass to Save
+		require.NoError(t, m.Save(&tv))
+	}
 
-	_, err = cmd.ImportListings(testFile, manager)
-	require.NoError(t, err)
-
-	return manager, filename
+	return m, fn
 }
 
 func init() {
@@ -210,7 +177,7 @@ func TestManager_One(t *testing.T) {
 		{
 			name: "good - with results",
 			args: args{
-				fieldName: "IndexedMemberNumber",
+				fieldName: "Key",
 				value:     1234,
 			},
 			wantErr: false,
@@ -218,7 +185,7 @@ func TestManager_One(t *testing.T) {
 		{
 			name: "good - no results", // check for specific error "not found"
 			args: args{
-				fieldName: "IndexedMemberNumber",
+				fieldName: "Key",
 				value:     5678,
 			},
 			wantErr: false,
@@ -226,7 +193,7 @@ func TestManager_One(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var got lstg.Listing
+			var got testEntry
 
 			if err := m.One(tt.args.fieldName, tt.args.value, &got); (err != nil) != tt.wantErr {
 				t.Errorf("Manager.One() error = %v, wantErr %v", err, tt.wantErr)
@@ -266,7 +233,7 @@ func TestManager_Find(t *testing.T) {
 		{
 			name: "good - with results",
 			args: args{
-				fieldName: "IndexedMemberNumber",
+				fieldName: "Key",
 				value:     1234,
 			},
 			wantCount: 2,
@@ -275,7 +242,7 @@ func TestManager_Find(t *testing.T) {
 		{
 			name: "good - no results", // check for specific error "not found"
 			args: args{
-				fieldName: "IndexedMemberNumber",
+				fieldName: "Key",
 				value:     1,
 			},
 			wantCount: 0,
@@ -284,7 +251,7 @@ func TestManager_Find(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var got []lstg.Listing
+			var got []testEntry
 
 			if err := m.Find(tt.args.fieldName, tt.args.value, &got); (err != nil) != tt.wantErr {
 				t.Errorf("Manager.Find() error = %v, wantErr %v", err, tt.wantErr)
@@ -317,7 +284,7 @@ func TestManager_AllByIndex(t *testing.T) {
 		{
 			name: "good - with results",
 			args: args{
-				fieldName: "IndexedMemberNumber",
+				fieldName: "Key",
 			},
 			wantCount: 3,
 			wantErr:   false,
@@ -325,7 +292,7 @@ func TestManager_AllByIndex(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var got []lstg.Listing
+			var got []testEntry
 
 			if err := m.AllByIndex(tt.args.fieldName, &got); (err != nil) != tt.wantErr {
 				t.Errorf("Manager.AllByIndex() error = %v, wantErr %v", err, tt.wantErr)
@@ -359,7 +326,7 @@ func TestManager_All(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var got []lstg.Listing
+			var got []testEntry
 
 			if err := m.All(&got); (err != nil) != tt.wantErr {
 				t.Errorf("Manager.All() error = %v, wantErr %v", err, tt.wantErr)
@@ -391,7 +358,7 @@ func TestManager_Select(t *testing.T) {
 		{
 			name: "good - with results",
 			args: args{
-				matcher: q.Eq("IndexedMemberNumber", 1234),
+				matcher: q.Eq("Key", 1234),
 			},
 			wantCount: 2,
 			wantErr:   false,
@@ -399,7 +366,7 @@ func TestManager_Select(t *testing.T) {
 		{
 			name: "good - no results", // check for specific error "not found"
 			args: args{
-				matcher: q.Eq("IndexedMemberNumber", 1),
+				matcher: q.Eq("Key", 1),
 			},
 			wantCount: 0,
 			wantErr:   true,
@@ -407,7 +374,7 @@ func TestManager_Select(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var got []lstg.Listing
+			var got []testEntry
 
 			q := m.Select(tt.args.matcher)
 			if err := q.Find(&got); (err != nil) != tt.wantErr {
@@ -452,7 +419,7 @@ func TestManager_Range(t *testing.T) {
 		{
 			name: "good - subset results",
 			args: args{
-				fieldName: "IndexedMemberNumber",
+				fieldName: "Key",
 				min:       1235,
 				max:       5679,
 			},
@@ -462,7 +429,7 @@ func TestManager_Range(t *testing.T) {
 		{
 			name: "good - full results", // check for specific error "not found"
 			args: args{
-				fieldName: "IndexedMemberNumber",
+				fieldName: "Key",
 				min:       1,
 				max:       9999,
 			},
@@ -472,7 +439,7 @@ func TestManager_Range(t *testing.T) {
 		{
 			name: "good - no results", // check for specific error "not found"
 			args: args{
-				fieldName: "IndexedMemberNumber",
+				fieldName: "Key",
 				min:       nil,
 				max:       nil,
 			},
@@ -482,8 +449,7 @@ func TestManager_Range(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var got []lstg.Listing
-
+			var got []testEntry
 			if err := m.Range(tt.args.fieldName, tt.args.min, tt.args.max, &got); (err != nil) != tt.wantErr {
 				t.Errorf("Manager.Range() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -515,7 +481,7 @@ func TestManager_Prefix(t *testing.T) {
 		{
 			name: "good - with results",
 			args: args{
-				fieldName: "IndexedCategory",
+				fieldName: "Value",
 				prefix:    "Co",
 			},
 			wantCount: 2,
@@ -524,7 +490,7 @@ func TestManager_Prefix(t *testing.T) {
 		{
 			name: "good - no results", // check for specific error "not found"
 			args: args{
-				fieldName: "IndexedCategory",
+				fieldName: "Value",
 				prefix:    "Zzz",
 			},
 			wantCount: 0,
@@ -533,7 +499,7 @@ func TestManager_Prefix(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var got []lstg.Listing
+			var got []testEntry
 
 			if err := m.Prefix(tt.args.fieldName, tt.args.prefix, &got); (err != nil) != tt.wantErr {
 				t.Errorf("Manager.Prefix() error = %v, wantErr %v", err, tt.wantErr)
@@ -566,7 +532,7 @@ func TestManager_Count(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var got lstg.Listing
+			var got testEntry
 
 			c, err := m.Count(&got)
 			if (err != nil) != tt.wantErr {
