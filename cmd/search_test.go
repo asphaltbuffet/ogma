@@ -50,8 +50,7 @@ func TestNewSearchCmd(t *testing.T) {
 }
 
 func TestRunSearchCmd(t *testing.T) {
-	m, dbFilePath, err := initDatastoreManager()
-	require.NoError(t, err)
+	m, dbFilePath := initDatastoreManager(t)
 	m.Stop()
 
 	defer func() {
@@ -109,7 +108,7 @@ func TestRunSearchCmd(t *testing.T) {
 			tt.assertion(t, err)
 			if err != nil {
 				out, err := io.ReadAll(b)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, tt.want, string(out))
 			}
 		})
@@ -117,12 +116,11 @@ func TestRunSearchCmd(t *testing.T) {
 }
 
 func TestSearchListings(t *testing.T) {
-	m, dbFilePath, err := initDatastoreManager()
-	assert.NoError(t, err)
+	m, dbFilePath := initDatastoreManager(t)
 
 	defer func() {
 		m.Stop()
-		assert.NoError(t, os.Remove(dbFilePath))
+		require.NoError(t, os.Remove(dbFilePath))
 	}()
 
 	type args struct {
@@ -199,21 +197,19 @@ func TestSearchListings(t *testing.T) {
 	}
 }
 
-func initDatastoreManager() (*datastore.Manager, string, error) {
+func initDatastoreManager(t *testing.T) (*datastore.Manager, string) {
+	t.Helper()
+
 	currentTime := time.Now()
 	filename := fmt.Sprintf("test_%d.db", currentTime.Unix())
 	manager, err := datastore.New(filename)
-	if err != nil {
-		return nil, "", err
-	}
+	require.NoError(t, err)
 
 	appFS := afero.NewMemMapFs()
 
 	// create test files and directories
 	err = appFS.MkdirAll("test", 0o755)
-	if err != nil {
-		return nil, "", err
-	}
+	require.NoError(t, err)
 
 	ltest := []lstg.Listing{
 		{
@@ -297,7 +293,7 @@ func initDatastoreManager() (*datastore.Manager, string, error) {
 		_ = manager.Save(&r)
 	}
 
-	return manager, filename, nil
+	return manager, filename
 }
 
 func init() {

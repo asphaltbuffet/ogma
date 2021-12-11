@@ -31,6 +31,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
 	"github.com/asphaltbuffet/ogma/cmd"
 	"github.com/asphaltbuffet/ogma/mocks"
@@ -107,7 +108,7 @@ func TestImportListings(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testFile, err := appFS.Open(tt.filepath)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			mockDatastore := &mocks.Writer{}
 			mockDatastore.On("Save", mock.Anything).Return(nil)
@@ -118,6 +119,8 @@ func TestImportListings(t *testing.T) {
 			if err == nil {
 				assert.Equal(t, tt.want, got)
 			}
+
+			require.NoError(t, testFile.Close())
 		})
 	}
 }
@@ -179,6 +182,8 @@ func TestParseListings(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ImportListings() = %v, want %v", got, tt.want)
 			}
+
+			require.NoError(t, testFile.Close())
 		})
 	}
 }
