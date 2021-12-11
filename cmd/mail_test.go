@@ -80,7 +80,7 @@ func TestRunMailCmd(t *testing.T) {
 			c.SetArgs(tt.args)
 			tt.assertion(t, c.Execute())
 			out, err := io.ReadAll(b)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tt.want, string(out))
 		})
 	}
