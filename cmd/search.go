@@ -28,6 +28,7 @@ import (
 	"strconv"
 
 	"github.com/asdine/storm/v3"
+	"github.com/asdine/storm/v3/q"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -69,34 +70,34 @@ func RunSearchCmd(cmd *cobra.Command, args []string) {
 
 	log.WithField("member", member).Debug("searching by member number")
 
-	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
+	dsManager, err := datastore.Open(viper.GetString("datastore.filename"))
 	if err != nil {
-		log.Errorf("failed to access datastore: %v", err)
+		log.Error("error opening datastore: ", err)
 
-		cmd.PrintErrf("failed to access datastore: %v\n", err)
+		cmd.Println("error opening datastore: ", err)
 		return
 	}
 	defer dsManager.Stop()
 
-	ll, err := SearchListings(member, dsManager)
+	ll, err := searchListings(member, dsManager)
 	if err != nil {
-		log.WithField("member", member).Errorf("failed to search listings: %v", err)
+		log.WithField("member", member).Error("failed to search listings: ", err)
 
-		cmd.PrintErrf("failed to search listings: %v\n", err)
+		cmd.PrintErrln("failed to search listings: ", err)
 		return
 	}
 
 	mm, err := SearchMail(member, dsManager)
 	if err != nil {
-		log.WithField("member", member).Errorf("failed to search mail: %v", err)
+		log.WithField("member", member).Error("failed to search mail: ", err)
 
-		cmd.PrintErrf("failed to search mail: %v", err)
+		cmd.PrintErrln("failed to search mail: ", err)
 		return
 	}
 
 	p, err := cmd.Flags().GetBool("pretty")
 	if err != nil {
-		log.Errorf("unable to read 'pretty' flag: %v", err)
+		log.Error("unable to read 'pretty' flag: ", err)
 		p = false
 	}
 
@@ -105,17 +106,19 @@ func RunSearchCmd(cmd *cobra.Command, args []string) {
 	cmd.Printf("\n%s\n", RenderMail(mm, p))
 }
 
-// SearchListings returns all records with a matching member number (ignores member extensions).
-func SearchListings(member int, ds storm.Finder) ([]lstg.Listing, error) {
+// searchListings returns all records with a matching member number (ignores member extensions).
+func searchListings(member int, ds storm.Finder) ([]lstg.Listing, error) {
 	searchResults := []lstg.Listing{}
+
 	err := ds.Find("IndexedMemberNumber", member, &searchResults)
 	if err != nil {
-		if !errors.Is(err, storm.ErrNotFound) {
-			log.WithField("member", member).Errorf("failed to query database for listings: %v", err)
+		switch err {
+		case storm.ErrNotFound:
+			log.WithField("member", member).Debug("no listings found")
+		default:
+			log.WithField("member", member).Error("failed to query database for listings: ", err)
 			return nil, fmt.Errorf("failure to query database for listings: %w", err)
 		}
-
-		log.WithField("member", member).Debug("no listings found")
 	}
 
 	return searchResults, nil
@@ -123,30 +126,22 @@ func SearchListings(member int, ds storm.Finder) ([]lstg.Listing, error) {
 
 // SearchMail returns all mail records with a matching member number.
 func SearchMail(member int, ds storm.Finder) ([]Mail, error) {
-	var senderResults []Mail
+	var searchResults []Mail
 
-	err := ds.Find("Sender", member, &senderResults)
+	mailQuery := ds.Select(q.Or(q.Eq("Sender", member), q.Eq("Receiver", member)))
+
+	err := mailQuery.Find(&searchResults)
 	if err != nil {
-		if !errors.Is(err, storm.ErrNotFound) {
-			log.WithField("member", member).Errorf("failed to query database for mail by sender: %v", err)
-			return nil, fmt.Errorf("failure to query database for mail by sender: %w", err)
+		switch err {
+		case storm.ErrNotFound:
+			log.WithField("sender", member).Debug("no sender correspondence found")
+		default:
+			log.WithField("member", member).Error("failed to query database for mail by sender: ", err)
+			return nil, fmt.Errorf("failure to query database for mail by sender=%d: %w", member, err)
 		}
-
-		log.WithField("sender", member).Debug("no sender correspondence found")
 	}
 
-	var receiverResults []Mail
-	err = ds.Find("Receiver", member, &receiverResults)
-	if err != nil {
-		if !errors.Is(err, storm.ErrNotFound) {
-			log.WithField("member", member).Errorf("failed to query database for mail by receiver: %v", err)
-			return nil, fmt.Errorf("failure to query database for mail by receiver: %w", err)
-		}
-
-		log.WithField("receiver", member).Debug("no receiver correspondence found")
-	}
-
-	return append(senderResults, receiverResults...), nil
+	return searchResults, nil
 }
 
 func init() {
