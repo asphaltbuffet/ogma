@@ -52,23 +52,24 @@ func TestRunImportListingsCmd(t *testing.T) {
 		require.NoError(t, appFS.RemoveAll("test/"))
 	}()
 
-	viper.Set("datastore.filename", dbFilePath)
-
 	tests := []struct {
 		name      string
 		args      []string
+		datastore string
 		assertion assert.ErrorAssertionFunc
 		want      string
 	}{
 		{
 			name:      "single entry",
 			args:      []string{"test/listing.json"},
+			datastore: dbFilePath,
 			want:      "Imported 1/1 listing records.\n",
 			assertion: assert.NoError,
 		},
 		{
 			name:      "listing import",
 			args:      []string{"test/listings.json"},
+			datastore: dbFilePath,
 			assertion: assert.NoError,
 			want:      "Imported 3/3 listing records.\n",
 		},
@@ -76,6 +77,8 @@ func TestRunImportListingsCmd(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			viper.Set("datastore.filename", dbFilePath)
+
 			cmd := cmd.NewImportListingCmd()
 			b := bytes.NewBufferString("")
 			cmd.SetOut(b)
