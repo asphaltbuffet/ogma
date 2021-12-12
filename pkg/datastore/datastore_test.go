@@ -49,6 +49,8 @@ func TestManagerOpen(t *testing.T) {
 
 	_, err = datastore.Open("foo.db")
 	assert.Error(t, err, "should fail to open datastore that doesn't exist")
+
+	manager.Stop()
 }
 
 func TestManagerNewFail(t *testing.T) {
