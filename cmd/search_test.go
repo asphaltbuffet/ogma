@@ -25,9 +25,7 @@ package cmd_test
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"os"
-	"reflect"
 	"testing"
 	"time"
 
@@ -50,47 +48,59 @@ func TestNewSearchCmd(t *testing.T) {
 }
 
 func TestRunSearchCmd(t *testing.T) {
-	m, dbFilePath := initDatastoreManager(t)
+	m, dsFile := initDatastoreManager(t)
 	m.Stop()
 
 	defer func() {
-		require.NoError(t, os.Remove(dbFilePath))
+		require.NoError(t, os.Remove(dsFile))
 	}()
 
-	viper.Set("datastore.filename", dbFilePath)
 	tests := []struct {
 		name      string
 		args      []string
+		datastore string
 		assertion assert.ErrorAssertionFunc
 		want      string
 	}{
 		{
+			name:      "invalid datastore",
+			args:      []string{"1234"},
+			datastore: "notafile.db",
+			assertion: assert.NoError,
+			want:      "error opening datastore:  error accessing datastore file: stat notafile.db: no such file or directory\n",
+		},
+		{
 			name:      "invalid search - too many parameters",
 			args:      []string{"1234", "5678"},
+			datastore: dsFile,
 			assertion: assert.Error,
 			want:      "Error: requires a single member number\nUsage:\n  search [flags]\n\nFlags:\n  -h, --help     help for search\n  -p, --pretty   Show prettier results.\n\n",
 		},
 		{
 			name:      "invalid search - alphanumeric",
 			args:      []string{"1234a"},
+			datastore: dsFile,
 			assertion: assert.Error,
 			want:      "Error: invalid member number: strconv.Atoi: parsing \"1234a\": invalid syntax\nUsage:\n  search [flags]\n\nFlags:\n  -h, --help     help for search\n  -p, --pretty   Show prettier results.\n\n",
 		},
 		{
 			name:      "with listings, no correspondence",
 			args:      []string{"1234"},
+			datastore: dsFile,
 			assertion: assert.NoError,
 			want:      "\n+---------------------------------------------------------------------------------------------------------------------------------------------------------+\n| LEX Issue Matches:                                                                                                                                      |\n+----+--------+-------+------+---------+------+----------+--------+---------------+--------+-------------------------------------------+--------+---------+\n| ID | VOLUME | ISSUE | YEAR | SEASON  | PAGE | CATEGORY | MEMBER | INTERNATIONAL | REVIEW | TEXT                                      | SKETCH | FLAGGED |\n+----+--------+-------+------+---------+------+----------+--------+---------------+--------+-------------------------------------------+--------+---------+\n|  1 |      1 |     1 | 1986 | Mollit  |    1 | Pariatur |   1234 |               |        | Esse Lorem do nulla sunt mollit nulla in. |        |    ✔    |\n|  2 |      1 |     1 | 1986 | Eiusmod |    2 | Commodo  |  1234B |               |        | Magna officia anim dolore enim.           |        |    ✔    |\n+----+--------+-------+------+---------+------+----------+--------+---------------+--------+-------------------------------------------+--------+---------+\n\n+------------------------------------------------------+\n| Correspondence Matches:                              |\n+-----------+--------+----------+------------+---------+\n| REFERENCE | SENDER | RECEIVER | DATE       | LINK    |\n+-----------+--------+----------+------------+---------+\n| 123d5f    |     55 |     1234 | 1986-04-01 |    L1   |\n| b12cd3    |   1234 |       55 | 1986-05-16 | M123d5f |\n| 6beef9    |   1234 |      666 | 2021-03-15 |         |\n+-----------+--------+----------+------------+---------+\n",
 		},
 		{
 			name:      "no listings, with correspondence",
 			args:      []string{"1234"},
+			datastore: dsFile,
 			assertion: assert.NoError,
 			want:      "\n+---------------------------------------------------------------------------------------------------------------------------------------------------------+\n| LEX Issue Matches:                                                                                                                                      |\n+----+--------+-------+------+---------+------+----------+--------+---------------+--------+-------------------------------------------+--------+---------+\n| ID | VOLUME | ISSUE | YEAR | SEASON  | PAGE | CATEGORY | MEMBER | INTERNATIONAL | REVIEW | TEXT                                      | SKETCH | FLAGGED |\n+----+--------+-------+------+---------+------+----------+--------+---------------+--------+-------------------------------------------+--------+---------+\n|  1 |      1 |     1 | 1986 | Mollit  |    1 | Pariatur |   1234 |               |        | Esse Lorem do nulla sunt mollit nulla in. |        |    ✔    |\n|  2 |      1 |     1 | 1986 | Eiusmod |    2 | Commodo  |  1234B |               |        | Magna officia anim dolore enim.           |        |    ✔    |\n+----+--------+-------+------+---------+------+----------+--------+---------------+--------+-------------------------------------------+--------+---------+\n\n+------------------------------------------------------+\n| Correspondence Matches:                              |\n+-----------+--------+----------+------------+---------+\n| REFERENCE | SENDER | RECEIVER | DATE       | LINK    |\n+-----------+--------+----------+------------+---------+\n| 123d5f    |     55 |     1234 | 1986-04-01 |    L1   |\n| b12cd3    |   1234 |       55 | 1986-05-16 | M123d5f |\n| 6beef9    |   1234 |      666 | 2021-03-15 |         |\n+-----------+--------+----------+------------+---------+\n",
 		},
 		{
 			name:      "no listings, no correspondence",
 			args:      []string{"42"},
+			datastore: dsFile,
 			assertion: assert.NoError,
 			want:      "\nNo LEX listings found.\n\nNo correspondences found.\n",
 		},
@@ -98,101 +108,26 @@ func TestRunSearchCmd(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			viper.Set("datastore.filename", tt.datastore)
+
 			cmd := cmd.NewSearchCmd()
 			b := bytes.NewBufferString("")
+			// e := bytes.NewBufferString("")
 			cmd.SetOut(b)
 			cmd.SetErr(b)
 			cmd.SetArgs(tt.args)
 
 			err := cmd.Execute()
 			tt.assertion(t, err)
-			if err != nil {
-				out, err := io.ReadAll(b)
-				require.NoError(t, err)
-				assert.Equal(t, tt.want, string(out))
-			}
-		})
-	}
-}
+			// cOut, err := io.ReadAll(b)
+			// require.NoError(t, err)
 
-func TestSearchListings(t *testing.T) {
-	m, dbFilePath := initDatastoreManager(t)
+			assert.Equal(t, tt.want, b.String(), "unexpected output")
 
-	defer func() {
-		m.Stop()
-		require.NoError(t, os.Remove(dbFilePath))
-	}()
+			// eOut, err := io.ReadAll(e)
+			// require.NoError(t, err)
 
-	type args struct {
-		member int
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    []lstg.Listing
-		wantErr bool
-	}{
-		{
-			name: "find multiple",
-			args: args{
-				member: 1234,
-			},
-			want: []lstg.Listing{
-				{
-					ID:                  1,
-					Volume:              1,
-					IssueNumber:         1,
-					Year:                1986,
-					Season:              "Mollit",
-					PageNumber:          1,
-					IndexedCategory:     "Pariatur",
-					IndexedMemberNumber: 1234,
-					MemberExtension:     "",
-					IsInternational:     false,
-					IsReview:            false,
-					ListingText:         "Esse Lorem do nulla sunt mollit nulla in.",
-					IsArt:               false,
-					IsFlagged:           true,
-				},
-				{
-					ID:                  2,
-					Volume:              1,
-					IssueNumber:         1,
-					Year:                1986,
-					Season:              "Eiusmod",
-					PageNumber:          2,
-					IndexedCategory:     "Commodo",
-					IndexedMemberNumber: 1234,
-					MemberExtension:     "B",
-					IsInternational:     false,
-					IsReview:            false,
-					ListingText:         "Magna officia anim dolore enim.",
-					IsArt:               false,
-					IsFlagged:           true,
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name: "no results",
-			args: args{
-				member: 1,
-			},
-			want:    []lstg.Listing{},
-			wantErr: false,
-		},
-		// TODO: checked against max_results in config
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := cmd.SearchListings(tt.args.member, m)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Search() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Search() = %+v, want %+v", got, tt.want)
-			}
+			// assert.Equal(t, tt.errOut, e.String(), "unexpect error output")
 		})
 	}
 }
