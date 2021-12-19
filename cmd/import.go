@@ -23,11 +23,39 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
+	"github.com/asphaltbuffet/ogma/pkg/datastore"
 )
 
 // importCmd represents the base command when called without any subcommands.
 var importCmd = &cobra.Command{
 	Use:   "import",
 	Short: "Bulk import mailrecords.",
+}
+
+func initImportFile(f string) (io.ReadCloser, datastore.WriteCloser, error) {
+	jsonFile, err := os.Open(filepath.Clean(f))
+	if err != nil {
+		log.Error("failed to open import file: ", err)
+
+		return nil, nil, fmt.Errorf("failed to open import file: %w", err)
+	}
+
+	log.Debug("Successfully opened import file.")
+
+	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
+	if err != nil {
+		log.Error("failed to access datastore: ", err)
+		return nil, nil, fmt.Errorf("failed to access datastore: %w", err)
+	}
+
+	return jsonFile, dsManager, nil
 }

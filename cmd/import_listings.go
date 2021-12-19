@@ -27,12 +27,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/asphaltbuffet/ogma/pkg/datastore"
 	lstg "github.com/asphaltbuffet/ogma/pkg/listing"
@@ -53,42 +51,30 @@ func NewImportListingCmd() *cobra.Command {
 
 // RunImportListingsCmd performs action associated with listings-import application command.
 func RunImportListingsCmd(cmd *cobra.Command, args []string) {
-	jsonFile, err := os.Open(args[0])
+	jsonFile, dsManager, err := initImportFile(args[0])
 	if err != nil {
-		log.Errorf("failed to open import file: %v", err)
-		cmd.PrintErrf("failed to open import file: %v", err)
+		log.Error("error initializing listings import: ", err)
+		cmd.PrintErrln("error initializing listings import: ", err)
 		return
 	}
-
-	log.Debug("Successfully opened import file.")
 
 	// defer closing the import file until after we're done with it
 	defer func() {
+		dsManager.Stop()
 		err = jsonFile.Close()
 		if err != nil {
-			cmd.PrintErrf("failed to close import file: %v", err)
 			log.Errorf("failed to close import file: %v", err)
-			return
 		}
 	}()
 
-	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
-	if err != nil {
-		cmd.PrintErrf("failed to access datastore: %v", err)
-		log.Errorf("failed to access datastore: %v", err)
-		return
-	}
-	defer dsManager.Stop()
-
 	listOut, err := ImportListings(jsonFile, dsManager)
 	if err != nil {
-		log.Errorf("failed to import listing records: %v", err)
-		cmd.PrintErrf("failed to import listing records: %v", err)
+		log.Error("failed to import listing records: ", err)
+		cmd.PrintErrln("failed to import listing records: ", err)
+		return
 	}
 
-	if listOut != "" {
-		cmd.Println(listOut)
-	}
+	cmd.Println(listOut)
 }
 
 // ImportListings adds one to many listings to the datastore from a file.

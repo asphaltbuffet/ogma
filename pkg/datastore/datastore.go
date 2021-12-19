@@ -17,6 +17,13 @@ type Writer interface {
 	Save(data interface{}) error
 }
 
+//go:generate mockery --output=../../mocks --log-level=warn --name=WriteCloser
+// A WriteCloser can write to or close a datastore.
+type WriteCloser interface {
+	Save(data interface{}) error
+	Stop()
+}
+
 // A Finder can fetch types from BoltDB.
 type Finder interface {
 	storm.Finder

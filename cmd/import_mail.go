@@ -27,12 +27,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/asphaltbuffet/ogma/pkg/datastore"
 )
@@ -52,32 +50,21 @@ func NewImportMailCmd() *cobra.Command {
 
 // RunImportMailCmd performs action associated with mail-import application command.
 func RunImportMailCmd(cmd *cobra.Command, args []string) {
-	jsonFile, err := os.Open(args[0])
+	jsonFile, dsManager, err := initImportFile(args[0])
 	if err != nil {
-		log.Error("failed to open import file: ", err)
-		cmd.PrintErr("failed to open import file: ", err)
+		log.Error("error initializing listings import: ", err)
+		cmd.PrintErrln("error initializing listings import: ", err)
 		return
 	}
-
-	log.Debug("Successfully opened import file.")
 
 	// defer closing the import file until after we're done with it
 	defer func() {
+		dsManager.Stop()
 		err = jsonFile.Close()
 		if err != nil {
-			log.Error("failed to close import file: ", err)
-			cmd.PrintErr("failed to close import file: ", err)
-			return
+			log.Errorf("failed to close import file: %v", err)
 		}
 	}()
-
-	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
-	if err != nil {
-		cmd.PrintErr("failed to access datastore: ", err)
-		log.Error("failed to access datastore: ", err)
-		return
-	}
-	defer dsManager.Stop()
 
 	mailOut, err := importMail(jsonFile, dsManager)
 	if err != nil {
@@ -86,9 +73,7 @@ func RunImportMailCmd(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	if mailOut != "" {
-		cmd.Println(mailOut)
-	}
+	cmd.Println(mailOut)
 }
 
 // importMail adds one to many mail to the datastore from a file.
