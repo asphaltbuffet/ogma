@@ -52,20 +52,19 @@ func NewImportListingCmd() *cobra.Command {
 // RunImportListingsCmd performs action associated with listings-import application command.
 func RunImportListingsCmd(cmd *cobra.Command, args []string) {
 	jsonFile, dsManager, err := initImportFile(args[0])
+	// defer closing the import file until after we're done with it
+	defer func() {
+		dsManager.Stop()
+
+		if closeErr := jsonFile.Close(); closeErr != nil {
+			log.Error("failed to close import file: ", closeErr)
+		}
+	}()
 	if err != nil {
 		log.Error("error initializing listings import: ", err)
 		cmd.PrintErrln("error initializing listings import: ", err)
 		return
 	}
-
-	// defer closing the import file until after we're done with it
-	defer func() {
-		dsManager.Stop()
-		err = jsonFile.Close()
-		if err != nil {
-			log.Errorf("failed to close import file: %v", err)
-		}
-	}()
 
 	listOut, err := ImportListings(jsonFile, dsManager)
 	if err != nil {
