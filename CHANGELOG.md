@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2021-12-19
+
 ### Added
 
 - Add mail subcommand for tracking correspondence
@@ -21,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - version information updated [#38](https://github.com/asphaltbuffet/ogma/issues/38)
 - significant internal refactoring
 - mocks are now automatically generated
+- search command returns correspondence information
+- import now has subcommands for mail or listing sources
+- syslogging only available for Darwin and Linux builds
+- datastore testing better isolated from rest of application
 
 ### Removed
 
@@ -32,6 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - base root command no longer returns an error [#35](https://github.com/asphaltbuffet/ogma/issues/35)
 - default config file now included as part of packaging [#36](https://github.com/asphaltbuffet/ogma/issues/36)
+- json files are properly closed after being processed
+- searching does not create a blank datastore if one didn't exist before
 
 ## [1.0.0] - 2021-11-15
 
@@ -81,7 +89,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-[Unreleased]: https://github.com/asphaltbuffet/ogma/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/asphaltbuffet/ogma/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/asphaltbuffet/ogma/releases/tag/v1.1.0
 [1.0.0]: https://github.com/asphaltbuffet/ogma/releases/tag/v1.0.0
 [0.0.2]: https://github.com/asphaltbuffet/ogma/releases/tag/v0.0.2
 [0.0.1]: https://github.com/asphaltbuffet/ogma/releases/tag/v0.0.1

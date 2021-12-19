@@ -33,37 +33,37 @@ Application usage details can be found via the `-h` or `--help` flag in the base
 The mail command tracks correspondence and provides the ability to link with LEX listings, members, and/or other correspondence.
 
 ```bash
-ogma mail -s<member> -r<member> -d<date> -l<member or mail ref>
+ogma mail --sender=<member> --receiver=<member> --date=<date> -link<member or mail ref>
 ```
 
-By default, the member numbers are set to the configured member number in the application configuration.
+By default, the member numbers are set to the configured member number in the application configuration. They must be entered as integers. Any extended member number (those with a letter) should be entered without any text characters.
 
-On success, a reference number is returned for use in physically marking correspondence artifacts.
+On success, a reference number is returned for use in tracking correspondence artifacts.
 
 ```bash
-ogma mail -s 1234 -r 5678 -d2021-11-15
+ogma mail -s1234 -r5678 -d2021-11-15
 Added mail. Reference: f8427e
 ```
 
 ### Import Command
 
-The import command takes the filename (for now) of a json file that contains listing entries.
+The import command takes the filename (for now) of a json file that contains listing or mail entries.
 
 **There is no checking for duplicates already in the application database. Careful!**
 
 ```bash
-ogma import <filename>
+ogma import [listing|mail] <filename.json>
 ```
 
-By default, the import command will only output the number of listings saved to the db ([#33](https://github.com/asphaltbuffet/ogma/issues/33)). No, there's no way to check this right now other than doing manual searches for entries to figure out what made it in.
+By default, the import command will only output the number of entries saved to the db ([#33](https://github.com/asphaltbuffet/ogma/issues/33)). No, there's no way to check this right now other than doing manual searches for entries to figure out what made it in.
 
 If you want to see everything that has been imported, use the verbose flag (`-v` or `--verbose`) to see all entries printed to screen. This may be a lot of stuff on your screen...
 
 ```bash
-ogma import <filename> -v
+ogma import listing <filename> -v
 ```
 
-#### Example import file
+#### Example listing import file
 
 ```json
 {
@@ -103,12 +103,13 @@ Currently the output defaults to something pretty, with colors (results on windo
 
 ```yaml
 logging:
-    level: warn
+  level: info
 search:
-    max_results: 10
+  max_results: 10
 datastore:
-    filename: "ogma.db"
+  filename: "ogma.db"
 defaults:
-    issue: 56
-    max_column: 40
+  issue: 56
+  max_column: 40
+member: 13401
 ```
