@@ -112,22 +112,14 @@ func TestRunSearchCmd(t *testing.T) {
 
 			cmd := cmd.NewSearchCmd()
 			b := bytes.NewBufferString("")
-			// e := bytes.NewBufferString("")
 			cmd.SetOut(b)
 			cmd.SetErr(b)
 			cmd.SetArgs(tt.args)
 
 			err := cmd.Execute()
 			tt.assertion(t, err)
-			// cOut, err := io.ReadAll(b)
-			// require.NoError(t, err)
 
 			assert.Equal(t, tt.want, b.String(), "unexpected output")
-
-			// eOut, err := io.ReadAll(e)
-			// require.NoError(t, err)
-
-			// assert.Equal(t, tt.errOut, e.String(), "unexpect error output")
 		})
 	}
 }
