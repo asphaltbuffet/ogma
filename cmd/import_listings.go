@@ -54,10 +54,14 @@ func RunImportListingsCmd(cmd *cobra.Command, args []string) {
 	jsonFile, dsManager, err := initImportFile(args[0])
 	// defer closing the import file until after we're done with it
 	defer func() {
-		dsManager.Stop()
+		if dsManager != nil {
+			dsManager.Stop()
+		}
 
-		if closeErr := jsonFile.Close(); closeErr != nil {
-			log.Error("failed to close import file: ", closeErr)
+		if jsonFile != nil {
+			if closeErr := jsonFile.Close(); closeErr != nil {
+				log.Error("failed to close import file: ", closeErr)
+			}
 		}
 	}()
 	if err != nil {
