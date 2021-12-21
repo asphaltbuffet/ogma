@@ -66,6 +66,11 @@ const (
 	RefLength = 6
 )
 
+const mailCommandLongDesc = "The mail command supports entering correspondence details and getting a reference number\n" +
+	"back that can be used for tracking physical artifacts.\n\n" +
+	"'Date' must be in the 'yyyy-mm-dd' format.\n" +
+	"'Link' is optional. It must start with 'L' to link with an ad (using ID field from ad output) or 'M' to link to a correspondence reference."
+
 var mailColumnConfigs = []table.ColumnConfig{
 	{
 		Name:  "Sender",
@@ -93,9 +98,11 @@ var mailColumnConfigs = []table.ColumnConfig{
 func NewMailCmd() *cobra.Command {
 	// cmd represents the mail command
 	cmd := &cobra.Command{
-		Use:   "mail",
-		Short: "Tracks letters sent to/from penpals",
-		Run:   RunMailCmd,
+		Use:     "mail",
+		Short:   "Tracks letters sent to/from penpals",
+		Long:    mailCommandLongDesc,
+		Example: `ogma mail --sender=1234 --receiver=5678 --date=2021-11-02`,
+		Run:     RunMailCmd,
 	}
 
 	dm := viper.GetInt("member")

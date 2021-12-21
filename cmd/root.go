@@ -43,12 +43,16 @@ const (
 
 var appFS afero.Fs
 
+const rootCommandLongDesc = "Ogma is a tracking application for penpals using LEX magazine.\n" +
+	"It stores a digital record of LEX magazine ads and allows the user to track letters\n" +
+	"sent and received. Correspondence may also be linked to previous letters or LEX ads."
+
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:               "ogma",
-	Version:           "1.1.0",
-	Short:             "A LEX listing database and letter tracking application.",
-	Long:              `Ogma is a go application that tracks LEX listings as entered from LEX magazine. It provides member-focused metrics, basic stats, and tracking of letters sent and received.`,
+	Version:           "1.1.1",
+	Short:             "Ogma is a pen-pal tracking application.",
+	Long:              rootCommandLongDesc,
 	Args:              cobra.NoArgs,
 	CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: true},
 	RunE: func(cmd *cobra.Command, args []string) error {

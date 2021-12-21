@@ -37,13 +37,17 @@ import (
 	lstg "github.com/asphaltbuffet/ogma/pkg/listing"
 )
 
+const searchCommandLongDesc = "The search command queries all LEX ads by the member who placed the ad. It" +
+	"also searches any mail records by sender and receiver for matches with provided member number.\n\n" +
+	"By default, it displays results in a colored table output. This can be changed with the '--pretty=false' flag."
+
 // NewSearchCmd creates a mail command.
 func NewSearchCmd() *cobra.Command {
 	// cmd represents the mail command
 	cmd := &cobra.Command{
-		Use:   "search",
-		Short: "Returns all listing information based on search criteria.",
-		// Long:  `TODO: Add longer description about 'search'.`,
+		Use:   "search [member number]",
+		Short: "Search records by member number.",
+		Long:  searchCommandLongDesc,
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return errors.New("requires a single member number")
