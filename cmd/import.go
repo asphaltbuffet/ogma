@@ -59,3 +59,7 @@ func initImportFile(f string) (io.ReadCloser, datastore.WriteCloser, error) {
 
 	return jsonFile, dsManager, nil
 }
+
+func init() {
+	rootCmd.AddCommand(importCmd)
+}
