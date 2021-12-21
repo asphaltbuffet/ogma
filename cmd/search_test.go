@@ -67,7 +67,7 @@ func TestRunSearchCmd(t *testing.T) {
 			args:      []string{"1234"},
 			datastore: "notafile.db",
 			assertion: assert.NoError,
-			want:      "error opening datastore:  error accessing datastore file: stat notafile.db: no such file or directory\n",
+			want:      "error opening datastore:  error accessing datastore file:",
 		},
 		{
 			name:      "invalid search - too many parameters",
@@ -119,7 +119,7 @@ func TestRunSearchCmd(t *testing.T) {
 			err := cmd.Execute()
 			tt.assertion(t, err)
 
-			assert.Equal(t, tt.want, b.String(), "unexpected output")
+			assert.Equal(t, tt.want, b.String()[:len(tt.want)], "unexpected output")
 		})
 	}
 }

@@ -38,7 +38,7 @@ import (
 // importCmd represents the base command when called without any subcommands.
 var importCmd = &cobra.Command{
 	Use:   "import",
-	Short: "Bulk import mailrecords.",
+	Short: "Bulk import mail records.",
 }
 
 func initImportFile(f string) (io.ReadCloser, datastore.WriteCloser, error) {
@@ -53,7 +53,12 @@ func initImportFile(f string) (io.ReadCloser, datastore.WriteCloser, error) {
 
 	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
 	if err != nil {
+		if closeErr := jsonFile.Close(); closeErr != nil {
+			log.Error("failed to close import file: ", closeErr)
+		}
+
 		log.Error("failed to access datastore: ", err)
+
 		return nil, nil, fmt.Errorf("failed to access datastore: %w", err)
 	}
 

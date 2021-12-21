@@ -78,14 +78,14 @@ func TestRunImportListingsCmd(t *testing.T) {
 			args:      []string{"test/noFile.json"},
 			datastore: dbFilePath,
 			assertion: assert.NoError,
-			want:      "error initializing listings import:  failed to open import file: open test/noFile.json: no such file or directory\n",
+			want:      "error initializing listings import:  failed to open import file:",
 		},
 		{
 			name:      "datastore failure",
 			args:      []string{"test/invalid.json"},
 			datastore: "",
 			assertion: assert.NoError,
-			want:      "error initializing listings import:  failed to access datastore: error opening datastore file: open : no such file or directory\n",
+			want:      "error initializing listings import:  failed to access datastore: ",
 		},
 		{
 			name:      "invalid import file",
@@ -108,7 +108,7 @@ func TestRunImportListingsCmd(t *testing.T) {
 			tt.assertion(t, cmd.Execute())
 			out, err := io.ReadAll(b)
 			require.NoError(t, err)
-			assert.Equal(t, tt.want, string(out))
+			assert.Equal(t, tt.want, string(out)[:len(tt.want)])
 		})
 	}
 }

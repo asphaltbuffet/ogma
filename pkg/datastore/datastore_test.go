@@ -44,8 +44,10 @@ func TestManagerOpen(t *testing.T) {
 		require.NoError(t, err)
 	}()
 
-	_, err := datastore.Open(dbFilePath)
+	m, err := datastore.Open(dbFilePath)
 	assert.NoError(t, err, "should be able to open datastore that was just created")
+
+	m.Stop()
 
 	_, err = datastore.Open("foo.db")
 	assert.Error(t, err, "should fail to open datastore that doesn't exist")
