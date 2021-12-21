@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Help text for commands has been updated
+
+### Fixes
+- Unit tests updated to pass on windows
+- File closing fixed in multiple locations
+
 ## [1.1.0] - 2021-12-19
 
 ### Added

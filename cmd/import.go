@@ -38,7 +38,7 @@ import (
 // importCmd represents the base command when called without any subcommands.
 var importCmd = &cobra.Command{
 	Use:   "import",
-	Short: "Bulk import mail records.",
+	Short: "Bulk import records.",
 }
 
 func initImportFile(f string) (io.ReadCloser, datastore.WriteCloser, error) {
