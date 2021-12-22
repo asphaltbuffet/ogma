@@ -36,13 +36,17 @@ import (
 	lstg "github.com/asphaltbuffet/ogma/pkg/listing"
 )
 
+const importListingCommandLongDesc = "Imports one-to-many LEX ads from a json file. This json file\n" +
+	"should follow the format provided in the project 'examples' directory."
+
 // NewImportListingCmd sets up an import subcommand.
 func NewImportListingCmd() *cobra.Command {
 	// cmd represents the import listing command.
 	cmd := &cobra.Command{
-		Use:     "listings",
+		Use:     "listings [filename]",
 		Short:   "Bulk import listing records.",
-		Example: "ogma import listings somefile.json",
+		Long:    importListingCommandLongDesc,
+		Example: "ogma import listings listingImport.json",
 		Run:     RunImportListingsCmd,
 	}
 
