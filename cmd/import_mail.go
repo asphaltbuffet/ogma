@@ -35,13 +35,18 @@ import (
 	"github.com/asphaltbuffet/ogma/pkg/datastore"
 )
 
+const importMailCommandLongDesc = "Imports one-to-many correspondence records from a json file. This json\n" +
+	"file should follow the format provided in the project 'examples' directory.\n\n" +
+	"The reference field should be unique for each record. Manually creating this may increase the chance of duplicate values."
+
 // NewImportMailCmd sets up an import subcommand.
 func NewImportMailCmd() *cobra.Command {
 	// cmd represents the import command.
 	cmd := &cobra.Command{
-		Use:     "mail",
+		Use:     "mail [filename]",
 		Short:   "Bulk import mail records.",
-		Example: "ogma import somefile.json",
+		Long:    importMailCommandLongDesc,
+		Example: "ogma import mail mImport.json",
 		Run:     RunImportMailCmd,
 	}
 
