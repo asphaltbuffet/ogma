@@ -9,6 +9,8 @@ confinement: strict # use 'strict' once you have the right plugs and slots
 
 license: MIT
 
+architectures: [amd64]
+
 apps:
   ogma:
     command: bin/ogma
