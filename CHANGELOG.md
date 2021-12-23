@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2021-12-22
+
+### Added
+- Available via snap (candidate-only)
+  - known issue with config file not working
+
 ### Changed
 - Help text for commands has been updated
 
