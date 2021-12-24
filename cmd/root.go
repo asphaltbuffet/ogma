@@ -50,7 +50,7 @@ const rootCommandLongDesc = "Ogma is a tracking application for penpals using LE
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:               "ogma",
-	Version:           "1.1.1",
+	Version:           "1.2.0",
 	Short:             "Ogma is a pen-pal tracking application.",
 	Long:              rootCommandLongDesc,
 	Args:              cobra.NoArgs,
