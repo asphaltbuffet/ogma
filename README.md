@@ -16,8 +16,9 @@ A LEX Magazine DB and letter tracking application.
   - [Usage](#usage)
     - [Mail Command](#mail-command)
     - [Import Command](#import-command)
-      - [Example import file](#example-import-file)
+      - [Example listing import file](#example-listing-import-file)
     - [Search Command](#search-command)
+    - [Delete Command](#delete-command)
   - [Configuration](#configuration)
     - [Default config](#default-config)
 
@@ -97,6 +98,16 @@ ogma search <member number>
 ```
 
 Currently the output defaults to something pretty, with colors (results on windows may vary). Output configuration may be expanded in the future. See [#16](https://github.com/asphaltbuffet/ogma/issues/16)
+
+### Delete Command
+
+Used to remove all data (listings and mail). No backup is created and the action cannot be undone. You have been warned!
+
+```bash
+ogma delete -a
+```
+
+The `-a` flag is there to ensure you didn't accidentally type in the command name trying to get help. It also leaves room for future selective deletion functionality.
 
 ## Configuration
 

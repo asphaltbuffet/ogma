@@ -7,16 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Delete command now available to remove datastore
+
+### Changed
+
+- Taskfile now has `snapshot` that replaces previous `build` task
+- `build` task now uses `go build` to compile a local binary for dev use
+
+### Fixes
+
+- Fixed potential panic areas in unit tests where string length could go out of bounds
+
 ## [1.1.1] - 2021-12-22
 
 ### Added
+
 - Available via snap (candidate-only)
   - known issue with config file not working
 
 ### Changed
+
 - Help text for commands has been updated
 
 ### Fixes
+
 - Unit tests updated to pass on windows
 - File closing fixed in multiple locations
 
@@ -102,8 +118,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-[Unreleased]: https://github.com/asphaltbuffet/ogma/compare/v1.1.1...HEAD
-[1.1.1]: https://github.com/asphaltbuffet/ogma/releases/tag/v1.1.0
+[Unreleased]: https://github.com/asphaltbuffet/ogma/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/asphaltbuffet/ogma/releases/tag/v1.2.0
+[1.1.1]: https://github.com/asphaltbuffet/ogma/releases/tag/v1.1.1
 [1.1.0]: https://github.com/asphaltbuffet/ogma/releases/tag/v1.1.0
 [1.0.0]: https://github.com/asphaltbuffet/ogma/releases/tag/v1.0.0
 [0.0.2]: https://github.com/asphaltbuffet/ogma/releases/tag/v0.0.2
