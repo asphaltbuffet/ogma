@@ -23,9 +23,13 @@ THE SOFTWARE.
 package cmd_test
 
 import (
+	"bytes"
+	"os"
 	"testing"
 
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/asphaltbuffet/ogma/cmd"
 )
@@ -38,4 +42,44 @@ func TestNewDeleteCmd(t *testing.T) {
 }
 
 func TestRunDeleteCmd(t *testing.T) {
+	m, dsFile := initDatastoreManager(t)
+	m.Stop()
+
+	defer func() {
+		require.NoError(t, os.RemoveAll("test/"))
+	}()
+
+	tests := []struct {
+		name      string
+		args      []string
+		datastore string
+		assertion assert.ErrorAssertionFunc
+		want      string
+	}{
+		{
+			name:      "successful deletion",
+			args:      []string{"-a"},
+			datastore: dsFile,
+			assertion: assert.NoError,
+			want:      "all data records have been removed",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			viper.Set("datastore.filename", tt.datastore)
+
+			cmd := cmd.NewDeleteCmd()
+			b := bytes.NewBufferString("")
+			cmd.SetOut(b)
+			cmd.SetErr(b)
+			cmd.SetArgs(tt.args)
+
+			err := cmd.Execute()
+			tt.assertion(t, err)
+
+			// assert.Equal(t, tt.want, b.String()[:len(tt.want)], "unexpected output")
+			assert.Contains(t, b.String(), tt.want)
+		})
+	}
 }
