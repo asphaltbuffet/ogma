@@ -119,7 +119,7 @@ func TestRunSearchCmd(t *testing.T) {
 			err := cmd.Execute()
 			tt.assertion(t, err)
 
-			assert.Equal(t, tt.want, b.String()[:len(tt.want)], "unexpected output")
+			assert.Contains(t, b.String(), tt.want)
 		})
 	}
 }
