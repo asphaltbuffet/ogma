@@ -52,7 +52,7 @@ func TestRunSearchCmd(t *testing.T) {
 	m.Stop()
 
 	defer func() {
-		require.NoError(t, os.Remove(dsFile))
+		require.NoError(t, os.RemoveAll("test/"))
 	}()
 
 	tests := []struct {
@@ -127,15 +127,15 @@ func TestRunSearchCmd(t *testing.T) {
 func initDatastoreManager(t *testing.T) (*datastore.Manager, string) {
 	t.Helper()
 
-	currentTime := time.Now()
-	filename := fmt.Sprintf("test_%d.db", currentTime.Unix())
-	manager, err := datastore.New(filename)
-	require.NoError(t, err)
-
-	appFS := afero.NewMemMapFs()
+	appFS := afero.NewOsFs()
 
 	// create test files and directories
-	err = appFS.MkdirAll("test", 0o755)
+	err := appFS.MkdirAll("test", 0o755)
+	require.NoError(t, err)
+
+	currentTime := time.Now()
+	filename := fmt.Sprintf("test/test_%d.db", currentTime.Unix())
+	manager, err := datastore.New(filename)
 	require.NoError(t, err)
 
 	ltest := []lstg.Listing{
