@@ -33,9 +33,9 @@ import (
 
 const deleteCommandLongDesc = "The delete command removes the datastore file. This action cannot be undone!"
 
-// NewDeleteCmd creates a mail command.
+// NewDeleteCmd creates a delete command.
 func NewDeleteCmd() *cobra.Command {
-	// cmd represents the mail command
+	// cmd represents the delete command
 	cmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete records",
