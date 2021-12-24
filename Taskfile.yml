@@ -79,7 +79,7 @@ tasks:
       - git diff --exit-code
       - sh: RES=$$(git status --porcelain) ; if [ -n "$$RES" ]; then echo $$RES && exit 1 ; fi
   
-  build:
+  snapshot:
     desc: goreleaser --snapshot --skip-publish --rm-dist
     deps: [install, install-build]
     cmds:
@@ -100,3 +100,8 @@ tasks:
     desc: go clean build, test and modules caches
     cmds:
       - go clean -r -i -cache -testcache -modcache
+
+  build:
+    desc: go build
+    cmds:
+      - go build
