@@ -63,6 +63,13 @@ func TestRunDeleteCmd(t *testing.T) {
 			assertion: assert.NoError,
 			want:      "all data records have been removed",
 		},
+		{
+			name:      "no file for deletion",
+			args:      []string{"-a"},
+			datastore: "test/foo.db",
+			assertion: assert.NoError,
+			want:      "error deleting all data:",
+		},
 	}
 
 	for _, tt := range tests {
@@ -78,7 +85,6 @@ func TestRunDeleteCmd(t *testing.T) {
 			err := cmd.Execute()
 			tt.assertion(t, err)
 
-			// assert.Equal(t, tt.want, b.String()[:len(tt.want)], "unexpected output")
 			assert.Contains(t, b.String(), tt.want)
 		})
 	}
