@@ -108,44 +108,44 @@ func TestUniqueMail(t *testing.T) {
 			name: "no duplicates",
 			args: args{
 				mm: []cmd.Mail{
-					{ID: 0, Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
+					{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
 				},
 			},
 			want: []cmd.Mail{
-				{ID: 0, Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
+				{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
 			},
 		},
 		{
 			name: "only duplicates",
 			args: args{
 				mm: []cmd.Mail{
-					{ID: 0, Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
+					{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
 				},
 			},
 			want: []cmd.Mail{
-				{ID: 0, Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
+				{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
 			},
 		},
 		{
 			name: "duplicates with unique",
 			args: args{
 				mm: []cmd.Mail{
-					{ID: 0, Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
+					{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
 				},
 			},
 			want: []cmd.Mail{
-				{ID: 0, Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
+				{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
 			},
 		},
 		{
 			name: "multiple duplicates with unique",
 			args: args{
 				mm: []cmd.Mail{
-					{ID: 0, Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
+					{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
 				},
 			},
 			want: []cmd.Mail{
-				{ID: 0, Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
+				{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
 			},
 		},
 	}
