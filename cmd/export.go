@@ -89,6 +89,7 @@ func exportMail() error {
 	if err != nil {
 		return fmt.Errorf("error accessing datastore: %w", err)
 	}
+	defer ds.Stop()
 
 	var mailRecords Mails
 	err = ds.All(&mailRecords.Mails)
@@ -114,6 +115,7 @@ func exportListing() error {
 	if err != nil {
 		return fmt.Errorf("error accessing datastore: %w", err)
 	}
+	defer ds.Stop()
 
 	var listingRecords lstg.Listings
 	err = ds.All(&listingRecords.Listings)
