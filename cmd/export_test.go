@@ -74,6 +74,14 @@ func TestRunExportCmd(t *testing.T) {
 			want:      "successfully exported data",
 		},
 		{
+			name:      "all export",
+			args:      []string{"-r=all", "-o=test/export.json"},
+			datastore: dsFile,
+			export:    "test/export.json",
+			assertion: assert.NoError,
+			want:      "successfully exported data",
+		},
+		{
 			name:      "invalid path for export file",
 			args:      []string{"-r=mail", "-o=test/test/export.json"},
 			datastore: dsFile,
