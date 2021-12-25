@@ -130,7 +130,7 @@ func exportListing() error {
 
 	err = os.WriteFile(exportFile, listingData, 0o600)
 	if err != nil {
-		return fmt.Errorf("error writing mail data export: %w", err)
+		return fmt.Errorf("error writing listing data export: %w", err)
 	}
 
 	return nil
