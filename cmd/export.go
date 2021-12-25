@@ -96,9 +96,6 @@ func exportMail() error {
 		return fmt.Errorf("error getting mail records: %w", err)
 	}
 
-	// TODO: need to edit all IDs to be '0' so that reimporting doesn't
-	// overwrite datastore values OR change import to have an overwrite
-	// flag to provide edit functionality
 	mailData, err := json.Marshal(mailRecords)
 	if err != nil {
 		return fmt.Errorf("error marshaling mail records: %w", err)
@@ -124,9 +121,6 @@ func exportListing() error {
 		return fmt.Errorf("error getting listing records: %w", err)
 	}
 
-	// TODO: need to edit all IDs to be '0' so that reimporting doesn't
-	// overwrite datastore values OR change import to have an overwrite
-	// flag to provide edit functionality
 	listingData, err := json.Marshal(listingRecords)
 	if err != nil {
 		return fmt.Errorf("error marshaling listing records: %w", err)
