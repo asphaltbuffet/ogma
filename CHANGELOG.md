@@ -10,11 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Delete command now available to remove datastore
+- Export command now available for mail/listings
+  - Importing this file will have no effect unless changes are made to the json file. Then it serves as an editing method.
 
 ### Changed
 
 - Taskfile now has `snapshot` that replaces previous `build` task
 - `build` task now uses `go build` to compile a local binary for dev use
+- Additional linting rules and settings update
 
 ### Fixes
 
