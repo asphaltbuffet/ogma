@@ -25,6 +25,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -103,8 +104,10 @@ func exportMail() error {
 		return fmt.Errorf("error marshaling mail records: %w", err)
 	}
 
-	// TODO: write to file instead of stdout
-	fmt.Println(string(mailData))
+	err = os.WriteFile(exportFile, mailData, 0o600)
+	if err != nil {
+		return fmt.Errorf("error writing mail data export: %w", err)
+	}
 
 	return nil
 }
