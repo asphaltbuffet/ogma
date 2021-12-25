@@ -206,7 +206,6 @@ func mailFromArgs(cmd *cobra.Command) (Mail, error) {
 			"args":    cmd.Args,
 		}).Warn("failed to get link argument")
 	}
-	// TODO: validate link is valid
 
 	m.Ref = MailHash(m, RefLength)
 
