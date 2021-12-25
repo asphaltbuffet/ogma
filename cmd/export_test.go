@@ -105,6 +105,14 @@ func TestRunExportCmd(t *testing.T) {
 			assertion: assert.Error,
 			want:      "error exporting all data:",
 		},
+		{
+			name:      "invalid record type",
+			args:      []string{"-r=foo", "-o=test/export.json"},
+			datastore: dsFile,
+			export:    "test/test/export.json",
+			assertion: assert.Error,
+			want:      "invalid option:",
+		},
 	}
 
 	for _, tt := range tests {
