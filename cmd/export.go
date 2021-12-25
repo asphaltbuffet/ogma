@@ -132,8 +132,10 @@ func exportListing() error {
 		return fmt.Errorf("error marshaling listing records: %w", err)
 	}
 
-	// TODO: write to file instead of stdout
-	fmt.Println(string(listingData))
+	err = os.WriteFile(exportFile, listingData, 0o600)
+	if err != nil {
+		return fmt.Errorf("error writing mail data export: %w", err)
+	}
 
 	return nil
 }
