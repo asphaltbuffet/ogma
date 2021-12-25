@@ -36,7 +36,10 @@ import (
 
 const exportCommandLongDesc = "The export command exports records from the datastore to json format. These files can be reimported."
 
-var exportType string
+var (
+	exportType string
+	exportFile string
+)
 
 // NewExportCmd creates an export command.
 func NewExportCmd() *cobra.Command {
@@ -49,6 +52,7 @@ func NewExportCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&exportType, "record", "r", "all", "type of record to export ('mail', 'listing', or 'all')")
+	cmd.Flags().StringVarP(&exportFile, "outfile", "o", "export.json", "file to export records to")
 
 	return cmd
 }
