@@ -19,6 +19,7 @@ A LEX Magazine DB and letter tracking application.
       - [Example listing import file](#example-listing-import-file)
     - [Search Command](#search-command)
     - [Delete Command](#delete-command)
+    - [Export Command](#export-command)
   - [Configuration](#configuration)
     - [Default config](#default-config)
 
@@ -108,6 +109,14 @@ ogma delete -a
 ```
 
 The `-a` flag is there to ensure you didn't accidentally type in the command name trying to get help. It also leaves room for future selective deletion functionality.
+
+### Export Command
+
+Used to write the mail/listing data out to json file(s) for backup. If the json file is changed, and reimported, it will overwrite application data. This can be used for editing functionality.
+
+```bash
+ogma export -records=mail -outfile=mailExport.json
+```
 
 ## Configuration
 
