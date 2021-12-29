@@ -24,12 +24,16 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"errors"
+	"os"
 
+	"github.com/jedib0t/go-pretty/v6/table"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/asphaltbuffet/ogma/pkg/datastore"
+	lstg "github.com/asphaltbuffet/ogma/pkg/listing"
 )
 
 // default const values for application.
@@ -41,7 +45,10 @@ const (
 	DefaultDatastoreFilename = "ogma.db"
 )
 
-var appFS afero.Fs
+var (
+	appFS  afero.Fs
+	pretty bool
+)
 
 const rootCommandLongDesc = "Ogma is a tracking application for penpals using LEX magazine.\n" +
 	"It stores a digital record of LEX magazine ads and allows the user to track letters\n" +
@@ -55,13 +62,48 @@ var rootCmd = &cobra.Command{
 	Long:              rootCommandLongDesc,
 	Args:              cobra.NoArgs,
 	CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: true},
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// providing a run for root so that the PersistentPreRun will kick off to initialize config.
-		return errors.New("no arguments provided")
+	Run: func(cmd *cobra.Command, args []string) {
+		getDataSummary(cmd, pretty)
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		InitConfig(appFS, DefaultConfigFilename)
 	},
+}
+
+func getDataSummary(cmd *cobra.Command, p bool) {
+	if _, err := os.Stat(viper.GetString("datastore.filename")); err != nil {
+		cmd.Println("No datastore file is available.")
+	}
+
+	dsManager, err := datastore.Open(viper.GetString("datastore.filename"))
+	if err != nil {
+		cmd.PrintErrln("error opening datastore: ", err)
+	}
+
+	var m Mail
+	tMail, _ := dsManager.Count(&m)
+	var l lstg.Listing
+	tListings, _ := dsManager.Count(&l)
+
+	mt := table.NewWriter()
+
+	mt.SetTitle("Data Records:")
+
+	mt.AppendRow([]interface{}{
+		"Mail",
+		tMail,
+	})
+
+	mt.AppendRow([]interface{}{
+		"Listings",
+		tListings,
+	})
+
+	if p {
+		mt.SetStyle(table.StyleColoredBright)
+	}
+
+	cmd.Println(mt.Render())
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -108,4 +150,5 @@ func InitConfig(fs afero.Fs, cfg string) {
 
 func init() {
 	// rootCmd.PersistentFlags().String("config", ".ogma", "Configuration file to use for application.")
+	rootCmd.Flags().BoolVarP(&pretty, "pretty", "p", true, "pretty print info")
 }
