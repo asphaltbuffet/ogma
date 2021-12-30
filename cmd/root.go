@@ -84,6 +84,7 @@ func getDataSummary(cmd *cobra.Command, isPretty bool) {
 	if err != nil {
 		cmd.PrintErrln("error opening datastore: ", err)
 	}
+	defer dsManager.Stop()
 
 	var m Mail
 	tMail, _ := dsManager.Count(&m)
