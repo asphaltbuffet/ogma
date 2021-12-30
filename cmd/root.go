@@ -70,7 +70,12 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func getDataSummary(cmd *cobra.Command, p bool) {
+// GetRootCmd gets the application root command.
+func GetRootCmd() *cobra.Command {
+	return rootCmd
+}
+
+func getDataSummary(cmd *cobra.Command, isPretty bool) {
 	if _, err := os.Stat(viper.GetString("datastore.filename")); err != nil {
 		cmd.Println("No datastore file is available.")
 	}
@@ -99,7 +104,7 @@ func getDataSummary(cmd *cobra.Command, p bool) {
 		tListings,
 	})
 
-	if p {
+	if isPretty {
 		mt.SetStyle(table.StyleColoredBright)
 	}
 
