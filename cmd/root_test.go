@@ -24,7 +24,9 @@ THE SOFTWARE.
 package cmd_test
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"testing"
 
 	log "github.com/sirupsen/logrus"
@@ -35,6 +37,48 @@ import (
 
 	"github.com/asphaltbuffet/ogma/cmd"
 )
+
+func TestGenerateInfo(t *testing.T) {
+	m, dbfilename, fs := setup(t)
+	m.Stop()
+
+	defer func() {
+		require.NoError(t, fs.RemoveAll("test/"))
+	}()
+
+	tests := []struct {
+		name      string
+		args      []string
+		assertion assert.ErrorAssertionFunc
+		want      string
+	}{
+		{
+			name:      "valid - empty db",
+			args:      []string{"-p=false"},
+			assertion: assert.NoError,
+			want:      "+--------------+\n| Data Records |\n| :            |\n+----------+---+\n| Mail     | 0 |\n| Listings | 0 |\n+----------+---+\n",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			viper.Set("datastore.filename", dbfilename)
+
+			c := cmd.GetRootCmd()
+
+			b := bytes.NewBufferString("")
+			c.SetOut(b)
+			c.SetArgs(tt.args)
+
+			tt.assertion(t, c.Execute())
+
+			out, err := io.ReadAll(b)
+			require.NoError(t, err)
+
+			assert.Contains(t, string(out), tt.want)
+		})
+	}
+}
 
 func TestInitConfig(t *testing.T) {
 	var err error
