@@ -78,6 +78,7 @@ func GetRootCmd() *cobra.Command {
 func getDataSummary(cmd *cobra.Command, isPretty bool) {
 	if _, err := os.Stat(viper.GetString("datastore.filename")); err != nil {
 		cmd.Println("No datastore file is available.")
+		return
 	}
 
 	dsManager, err := datastore.Open(viper.GetString("datastore.filename"))
