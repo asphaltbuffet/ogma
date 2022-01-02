@@ -125,7 +125,7 @@ func InitConfig(fs afero.Fs, cfg string) {
 
 	appFS = afero.NewOsFs()
 
-	viper.SetFs(appFS)
+	// viper.SetFs(appFS)
 
 	// Search config in application directory with name ".ogma" (without extension).
 	viper.AddConfigPath("./")
