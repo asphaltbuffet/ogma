@@ -117,7 +117,7 @@ func NewMailCmd() *cobra.Command {
 
 // RunMailCmd implements functionality of a mail command.
 func RunMailCmd(cmd *cobra.Command, args []string) {
-	fmt.Println("Running mail command. Config is: ", viper.ConfigFileUsed())
+	log.Debug("Running mail command. Config is: ", viper.ConfigFileUsed())
 	m, err := mailFromArgs(cmd)
 	if err != nil {
 		log.WithFields(log.Fields{
