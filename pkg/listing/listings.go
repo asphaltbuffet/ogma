@@ -120,11 +120,11 @@ func RenderListings(ll []Listing, p bool) string {
 			l.PageNumber,
 			l.IndexedCategory,
 			fmt.Sprint(l.IndexedMemberNumber) + l.MemberExtension,
-			ConvertBool(l.IsInternational),
-			ConvertBool(l.IsReview),
+			convertBool(l.IsInternational),
+			convertBool(l.IsReview),
 			l.ListingText,
-			ConvertBool(l.IsArt),
-			ConvertBool(l.IsFlagged),
+			convertBool(l.IsArt),
+			convertBool(l.IsFlagged),
 		})
 		// lt.AppendSeparator() // disabling for now, it makes it look messy - may want it configurable at run-time
 	}
@@ -141,8 +141,8 @@ func RenderListings(ll []Listing, p bool) string {
 	return lt.Render()
 }
 
-// ConvertBool strips out 'false' values for easier reading.
-func ConvertBool(b bool) string {
+// convertBool strips out 'false' values for easier reading.
+func convertBool(b bool) string {
 	if b {
 		return "✔"
 	}
