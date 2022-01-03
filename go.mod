@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/asdine/storm/v3 v3.2.1
 	github.com/jedib0t/go-pretty/v6 v6.2.4
+	github.com/jonreiter/govader v0.0.0-20210224072402-ab79f4c25a36
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/afero v1.6.0
 	github.com/spf13/cobra v1.3.0
@@ -32,6 +33,7 @@ require (
 	golang.org/x/net v0.0.0-20210825183410-e898025ed96a // indirect
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	golang.org/x/text v0.3.7 // indirect
+	gonum.org/v1/gonum v0.8.2 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/ini.v1 v1.66.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

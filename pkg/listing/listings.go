@@ -28,6 +28,7 @@ import (
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
+	"github.com/jonreiter/govader"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -53,6 +54,8 @@ type Listing struct {
 	IsArt               bool   `json:"art"`
 	IsFlagged           bool   `json:"flag"`
 }
+
+var analyzer = govader.NewSentimentIntensityAnalyzer()
 
 var listingColumnConfigs = []table.ColumnConfig{
 	{
@@ -108,6 +111,7 @@ func RenderListings(ll []Listing, p bool) string {
 		"Text",
 		"Sketch",
 		"Flagged",
+		"Sentiment",
 	})
 
 	for _, l := range ll {
@@ -125,6 +129,7 @@ func RenderListings(ll []Listing, p bool) string {
 			l.ListingText,
 			convertBool(l.IsArt),
 			convertBool(l.IsFlagged),
+			fmt.Sprintf("%.2f", l.calcSentiment()),
 		})
 		// lt.AppendSeparator() // disabling for now, it makes it look messy - may want it configurable at run-time
 	}
@@ -147,4 +152,17 @@ func convertBool(b bool) string {
 		return "✔"
 	}
 	return ""
+}
+
+func (l *Listing) calcSentiment() float64 {
+	sentiment := analyzer.PolarityScores(l.ListingText)
+
+	log.WithFields(log.Fields{
+		"positive": sentiment.Positive,
+		"negative": sentiment.Negative,
+		"neutral":  sentiment.Neutral,
+		"compound": sentiment.Compound,
+	}).Debugf("sentiment analysis of listing id: %d", l.ID)
+
+	return sentiment.Compound
 }
