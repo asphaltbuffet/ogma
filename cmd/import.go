@@ -45,6 +45,8 @@ func init() {
 	rootCmd.AddCommand(importCmd)
 }
 
+// initImportFile is shared initialization for all import types and datastore.
+func initImportFile(f string) (io.ReadCloser, datastore.SaveStopper, error) {
 	jsonFile, err := os.Open(filepath.Clean(f))
 	if err != nil {
 		log.Error("failed to open import file: ", err)
