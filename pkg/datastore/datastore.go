@@ -11,19 +11,20 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//go:generate mockery --output=../../mocks --log-level=warn --name=Writer
-// A Writer can write to a datastore.
-type Writer interface {
+//go:generate mockery --output=../../mocks --log-level=warn --name=Saver
+// A Saver can write to a datastore.
+type Saver interface {
 	Save(data interface{}) error
 }
 
-//go:generate mockery --output=../../mocks --log-level=warn --name=WriteCloser
-// A WriteCloser can write to or close a datastore.
-type WriteCloser interface {
+//go:generate mockery --output=../../mocks --log-level=warn --name=SaveStopper
+// A SaveStopper can write to or close a datastore.
+type SaveStopper interface {
 	Save(data interface{}) error
 	Stop()
 }
 
+//go:generate mockery --output=../../mocks --log-level=warn --name=Finder
 // A Finder can fetch types from BoltDB.
 type Finder interface {
 	storm.Finder
