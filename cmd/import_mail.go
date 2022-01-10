@@ -39,6 +39,10 @@ const importMailCommandLongDesc = "Imports one-to-many correspondence records fr
 	"file should follow the format provided in the project 'examples' directory.\n\n" +
 	"The reference field should be unique for each record. Manually creating this may increase the chance of duplicate values."
 
+func init() {
+	importCmd.AddCommand(NewImportMailCmd())
+}
+
 // NewImportMailCmd sets up an import subcommand.
 func NewImportMailCmd() *cobra.Command {
 	// cmd represents the import command.
@@ -190,8 +194,4 @@ func UniqueMails(rawMails []Mail) []Mail {
 	}).Debug("deduplication complete")
 
 	return cleanMails
-}
-
-func init() {
-	importCmd.AddCommand(NewImportMailCmd())
 }

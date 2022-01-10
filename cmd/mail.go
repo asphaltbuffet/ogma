@@ -94,6 +94,10 @@ var mailColumnConfigs = []table.ColumnConfig{
 	},
 }
 
+func init() {
+	rootCmd.AddCommand(NewMailCmd())
+}
+
 // NewMailCmd creates a mail command.
 func NewMailCmd() *cobra.Command {
 	// cmd represents the mail command
@@ -309,8 +313,4 @@ func RenderMail(mm []Mail, p bool) string {
 	}).Debug("set rendering style")
 
 	return mt.Render()
-}
-
-func init() {
-	rootCmd.AddCommand(NewMailCmd())
 }

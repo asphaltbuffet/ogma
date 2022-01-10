@@ -42,6 +42,10 @@ var (
 	exportFile string
 )
 
+func init() {
+	rootCmd.AddCommand(NewExportCmd())
+}
+
 // NewExportCmd creates an export command.
 func NewExportCmd() *cobra.Command {
 	// cmd represents the export command
@@ -146,8 +150,4 @@ func exportAll() error {
 	}
 
 	return nil
-}
-
-func init() {
-	rootCmd.AddCommand(NewExportCmd())
 }

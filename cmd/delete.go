@@ -48,6 +48,10 @@ func NewDeleteCmd() *cobra.Command {
 	return cmd
 }
 
+func init() {
+	rootCmd.AddCommand(NewDeleteCmd())
+}
+
 // RunDeleteCmd performs action associated with delete command.
 func RunDeleteCmd(cmd *cobra.Command, args []string) {
 	isAll, err := cmd.Flags().GetBool("all")
@@ -79,8 +83,4 @@ func clearData() error {
 	}
 
 	return nil
-}
-
-func init() {
-	rootCmd.AddCommand(NewDeleteCmd())
 }

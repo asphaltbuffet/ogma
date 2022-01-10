@@ -70,6 +70,11 @@ var rootCmd = &cobra.Command{
 	},
 }
 
+func init() {
+	// rootCmd.PersistentFlags().String("config", ".ogma", "Configuration file to use for application.")
+	rootCmd.Flags().BoolVarP(&pretty, "pretty", "p", true, "pretty print info")
+}
+
 // GetRootCmd gets the application root command.
 func GetRootCmd() *cobra.Command {
 	return rootCmd
@@ -153,9 +158,4 @@ func InitConfig(fs afero.Fs, cfg string) {
 
 	log.SetLevel(loggingLevel)
 	log.WithFields(log.Fields{"level": loggingLevel}).Debug("set log level")
-}
-
-func init() {
-	// rootCmd.PersistentFlags().String("config", ".ogma", "Configuration file to use for application.")
-	rootCmd.Flags().BoolVarP(&pretty, "pretty", "p", true, "pretty print info")
 }

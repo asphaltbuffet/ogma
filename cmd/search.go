@@ -41,6 +41,10 @@ const searchCommandLongDesc = "The search command queries all LEX ads by the mem
 	"also searches any mail records by sender and receiver for matches with provided member number.\n\n" +
 	"By default, it displays results in a colored table output. This can be changed with the '--pretty=false' flag."
 
+func init() {
+	rootCmd.AddCommand(NewSearchCmd())
+}
+
 // NewSearchCmd creates a mail command.
 func NewSearchCmd() *cobra.Command {
 	// cmd represents the mail command
@@ -146,8 +150,4 @@ func SearchMail(member int, ds storm.Finder) ([]Mail, error) {
 	}
 
 	return searchResults, nil
-}
-
-func init() {
-	rootCmd.AddCommand(NewSearchCmd())
 }

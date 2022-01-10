@@ -39,6 +39,10 @@ import (
 const importListingCommandLongDesc = "Imports one-to-many LEX ads from a json file. This json file\n" +
 	"should follow the format provided in the project 'examples' directory."
 
+func init() {
+	importCmd.AddCommand(NewImportListingCmd())
+}
+
 // NewImportListingCmd sets up an import subcommand.
 func NewImportListingCmd() *cobra.Command {
 	// cmd represents the import listing command.
@@ -185,8 +189,4 @@ func UniqueListings(rawListings []lstg.Listing) []lstg.Listing {
 	}).Debug("deduplication complete")
 
 	return cleanListings
-}
-
-func init() {
-	importCmd.AddCommand(NewImportListingCmd())
 }
