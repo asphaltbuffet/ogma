@@ -41,7 +41,10 @@ var importCmd = &cobra.Command{
 	Short: "Bulk import records.",
 }
 
-func initImportFile(f string) (io.ReadCloser, datastore.WriteCloser, error) {
+func init() {
+	rootCmd.AddCommand(importCmd)
+}
+
 	jsonFile, err := os.Open(filepath.Clean(f))
 	if err != nil {
 		log.Error("failed to open import file: ", err)
@@ -65,6 +68,6 @@ func initImportFile(f string) (io.ReadCloser, datastore.WriteCloser, error) {
 	return jsonFile, dsManager, nil
 }
 
-func init() {
-	rootCmd.AddCommand(importCmd)
+// parseFromFile unmarshalls json into a Listings struct.
+func parseFromFile(j io.Reader, value interface{}) error {
 }
