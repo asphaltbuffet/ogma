@@ -23,13 +23,11 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
 	"github.com/asphaltbuffet/ogma/pkg/datastore"
@@ -89,20 +87,22 @@ func RunImportMailCmd(cmd *cobra.Command, args []string) {
 }
 
 // importMail adds one to many mail to the datastore from a file.
-func importMail(f io.Reader, d datastore.Writer) (string, error) {
+func importMail(f io.Reader, d datastore.Saver) (string, error) {
+	var rawMail Mails
+
 	// convert import file into a mails struct
-	rawMail, err := parseMail(f)
+	err := parseFromFile(f, &rawMail)
 	if err != nil {
 		log.WithFields(log.Fields{"cmd": "import"}).Error("failed to parse input file: ", err)
 		return "", fmt.Errorf("failed to parse input file: %w", err)
 	}
 
-	if len(rawMail) == 0 {
+	if len(rawMail.Mails) == 0 {
 		log.Debug("no mail entries found to import")
 		return "", errors.New("no mail entries in import file")
 	}
 
-	mails := UniqueMails(rawMail)
+	mails := UniqueMails(rawMail.Mails)
 	importCount := len(mails)
 
 	// datastore needs to add one listing at a time, walk through imported listings and save one by one
@@ -126,39 +126,11 @@ func importMail(f io.Reader, d datastore.Writer) (string, error) {
 	log.WithFields(log.Fields{
 		"cmd":          "import",
 		"import_count": importCount,
-		"read_count":   len(rawMail),
+		"read_count":   len(rawMail.Mails),
 	}).Info("completed importing records")
 
 	// In all cases, tell user how many records were imported.
-	return fmt.Sprintf("Imported %d/%d mail records.", importCount, len(rawMail)), nil
-}
-
-// parseMail unmarshalls json into a Mails struct.
-func parseMail(j io.Reader) ([]Mail, error) {
-	if j == nil {
-		return []Mail{}, errors.New("argument cannot be nil")
-	}
-
-	// read our opened jsonFile as a byte array.
-	byteValue, err := afero.ReadAll(j)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"cmd": "import",
-		}).Error("failed to read import file:", err)
-		return []Mail{}, fmt.Errorf("failed to read import file: %w", err)
-	}
-
-	var newMails Mails
-
-	err = json.Unmarshal(byteValue, &newMails)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"cmd": "import",
-		}).Error("failed to unmarshall import file:", err)
-		return []Mail{}, fmt.Errorf("failed to unmarshall import file: %w", err)
-	}
-
-	return newMails.Mails, nil
+	return fmt.Sprintf("Imported %d/%d mail records.", importCount, len(rawMail.Mails)), nil
 }
 
 // UniqueMails returns the passed in slice of mail with at most one of each mail. Mail order is

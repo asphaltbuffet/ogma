@@ -23,13 +23,10 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
 	"github.com/asphaltbuffet/ogma/pkg/datastore"
@@ -89,16 +86,16 @@ func RunImportListingsCmd(cmd *cobra.Command, args []string) {
 }
 
 // ImportListings adds one to many listings to the datastore from a file.
-func ImportListings(f io.Reader, d datastore.Writer) (string, error) {
+func ImportListings(f io.Reader, d datastore.Saver) (string, error) {
 	// convert import file into a listings struct
-	rawListings, err := parseListings(f)
+	var rawListings lstg.Listings
+	err := parseFromFile(f, &rawListings)
 	if err != nil {
-		log.WithFields(log.Fields{"cmd": "import"}).Error("failed to parse input file: ", err)
 		return "", fmt.Errorf("failed to parse input file: %w", err)
 	}
 
-	listings := UniqueListings(rawListings)
-	importCount := len(rawListings)
+	listings := UniqueListings(rawListings.Listings)
+	importCount := len(rawListings.Listings)
 
 	// datastore needs to add one listing at a time, walk through imported listings and save one by one
 	for _, l := range listings {
@@ -121,39 +118,11 @@ func ImportListings(f io.Reader, d datastore.Writer) (string, error) {
 	log.WithFields(log.Fields{
 		"cmd":          "import",
 		"import_count": importCount,
-		"read_count":   len(rawListings),
+		"read_count":   len(rawListings.Listings),
 	}).Info("completed importing records")
 
 	// In all cases, tell user how many records were imported.
-	return fmt.Sprintf("Imported %d/%d listing records.", importCount, len(rawListings)), nil
-}
-
-// parseListings unmarshalls json into a Listings struct.
-func parseListings(j io.Reader) ([]lstg.Listing, error) {
-	if j == nil {
-		return []lstg.Listing{}, errors.New("argument cannot be nil")
-	}
-
-	// read our opened jsonFile as a byte array.
-	byteValue, err := afero.ReadAll(j)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"cmd": "import",
-		}).Error("failed to read import file:", err)
-		return []lstg.Listing{}, fmt.Errorf("failed to read import file: %w", err)
-	}
-
-	var newListings lstg.Listings
-
-	err = json.Unmarshal(byteValue, &newListings)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"cmd": "import",
-		}).Error("failed to unmarshall import file:", err)
-		return []lstg.Listing{}, fmt.Errorf("failed to unmarshall import file: %w", err)
-	}
-
-	return newListings.Listings, nil
+	return fmt.Sprintf("Imported %d/%d listing records.", importCount, len(rawListings.Listings)), nil
 }
 
 // UniqueListings returns the passed in slice of listings with at most one of each listing. Listing order is

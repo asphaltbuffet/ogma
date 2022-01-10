@@ -23,12 +23,15 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -72,4 +75,20 @@ func initImportFile(f string) (io.ReadCloser, datastore.SaveStopper, error) {
 
 // parseFromFile unmarshalls json into a Listings struct.
 func parseFromFile(j io.Reader, value interface{}) error {
+	if j == nil {
+		return errors.New("argument cannot be nil")
+	}
+
+	// read our opened jsonFile as a byte array.
+	byteValue, err := afero.ReadAll(j)
+	if err != nil {
+		return fmt.Errorf("failed to read import file: %w", err)
+	}
+
+	err = json.Unmarshal(byteValue, value)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshall import file: %w", err)
+	}
+
+	return nil
 }
