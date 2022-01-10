@@ -63,7 +63,7 @@ var rootCmd = &cobra.Command{
 	Args:              cobra.NoArgs,
 	CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: true},
 	Run: func(cmd *cobra.Command, args []string) {
-		getDataSummary(cmd, pretty)
+		summarizeDatastore(cmd, pretty)
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		InitConfig(appFS, DefaultConfigFilename)
@@ -80,7 +80,7 @@ func GetRootCmd() *cobra.Command {
 	return rootCmd
 }
 
-func getDataSummary(cmd *cobra.Command, isPretty bool) {
+func summarizeDatastore(cmd *cobra.Command, isPretty bool) {
 	if _, err := os.Stat(viper.GetString("datastore.filename")); err != nil {
 		cmd.Println("No datastore file is available.")
 		return
@@ -93,9 +93,9 @@ func getDataSummary(cmd *cobra.Command, isPretty bool) {
 	defer dsManager.Stop()
 
 	var m Mail
-	tMail, _ := dsManager.Count(&m)
+	countMail, _ := dsManager.Count(&m)
 	var l lstg.Listing
-	tListings, _ := dsManager.Count(&l)
+	countListings, _ := dsManager.Count(&l)
 
 	mt := table.NewWriter()
 
@@ -103,12 +103,12 @@ func getDataSummary(cmd *cobra.Command, isPretty bool) {
 
 	mt.AppendRow([]interface{}{
 		"Mail",
-		tMail,
+		countMail,
 	})
 
 	mt.AppendRow([]interface{}{
 		"Listings",
-		tListings,
+		countListings,
 	})
 
 	if isPretty {
