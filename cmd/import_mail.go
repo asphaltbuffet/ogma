@@ -105,11 +105,22 @@ func importMail(f io.Reader, d datastore.Saver) (string, error) {
 	mails := UniqueMails(rawMail.Mails)
 	importCount := len(mails)
 
+	// conduct import as a transaction
+	tx, err := d.Begin(true)
+	if err != nil {
+		return "", fmt.Errorf("error beginning datastore transaction: %w", err)
+	}
+	defer func() {
+		if errRollback := tx.Rollback(); errRollback != nil {
+			log.Error("failed to rollback datastore transaction: ", errRollback)
+		}
+	}()
+
 	// datastore needs to add one listing at a time, walk through imported listings and save one by one
 	for _, r := range mails {
 		mail := r
 
-		err = d.Save(&mail)
+		err = tx.Save(&mail)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"cmd": "import",
@@ -129,7 +140,11 @@ func importMail(f io.Reader, d datastore.Saver) (string, error) {
 		"read_count":   len(rawMail.Mails),
 	}).Info("completed importing records")
 
-	// In all cases, tell user how many records were imported.
+	if errCommit := tx.Commit(); errCommit != nil {
+		return "", fmt.Errorf("error committing records to datastore: %w", errCommit)
+	}
+
+	// Tell user how many records were imported.
 	return fmt.Sprintf("Imported %d/%d mail records.", importCount, len(rawMail.Mails)), nil
 }
 
