@@ -12,12 +12,13 @@ tasks:
     desc: dev build
     deps: [ clean, install]
     cmds:
+      - task: mod-tidy
       - task: generate
       - task: vet
       - task: fmt
       - task: lint
       - task: test
-      - task: mod-tidy
+
   
   ci:
     desc: CI build
