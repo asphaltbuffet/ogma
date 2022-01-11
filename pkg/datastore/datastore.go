@@ -24,7 +24,6 @@ type SaveStopper interface {
 	Stop()
 }
 
-//go:generate mockery --output=../../mocks --log-level=warn --name=Finder
 // A Finder can fetch types from BoltDB.
 type Finder interface {
 	storm.Finder
