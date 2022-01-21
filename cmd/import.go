@@ -42,10 +42,15 @@ import (
 var importCmd = &cobra.Command{
 	Use:   "import",
 	Short: "Bulk import records.",
+	Run:   RunImportCmd,
 }
 
 func init() {
 	rootCmd.AddCommand(importCmd)
+}
+
+// RunImportCmd performs action associated with listings-import application command.
+func RunImportCmd(cmd *cobra.Command, args []string) {
 }
 
 // initImportFile is shared initialization for all import types and datastore.
