@@ -156,15 +156,6 @@ func UniqueMails(rawMails []Mail) []Mail {
 		"count": len(rawMails),
 	}).Debug("deduplicating records")
 
-	// Nothing to process. Return quickly.
-	if len(rawMails) <= 1 {
-		log.WithFields(log.Fields{
-			"cmd":   "import",
-			"count": 0,
-		}).Debug("deduplication complete")
-		return rawMails
-	}
-
 	keys := make(map[Mail]bool)
 	cleanMails := []Mail{}
 

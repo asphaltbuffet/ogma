@@ -148,15 +148,6 @@ func UniqueListings(rawListings []lstg.Listing) []lstg.Listing {
 		"count": len(rawListings),
 	}).Debug("deduplicating records")
 
-	// Nothing to process. Return quickly.
-	if len(rawListings) <= 1 {
-		log.WithFields(log.Fields{
-			"cmd":   "import",
-			"count": 0,
-		}).Debug("deduplication complete")
-		return rawListings
-	}
-
 	keys := make(map[lstg.Listing]bool)
 	cleanListings := []lstg.Listing{}
 
