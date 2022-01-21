@@ -75,7 +75,7 @@ func RunImportListingsCmd(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	listOut, err := ImportListings(jsonFile, dsManager)
+	listOut, err := importListings(jsonFile, dsManager)
 	if err != nil {
 		log.Error("failed to import listing records: ", err)
 		cmd.PrintErrln("failed to import listing records: ", err)
@@ -85,8 +85,8 @@ func RunImportListingsCmd(cmd *cobra.Command, args []string) {
 	cmd.Println(listOut)
 }
 
-// ImportListings adds one to many listings to the datastore from a file.
-func ImportListings(f io.Reader, d datastore.Saver) (string, error) {
+// importListings adds one to many listings to the datastore from a file.
+func importListings(f io.Reader, d datastore.Saver) (string, error) {
 	// convert import file into a listings struct
 	var rawListings lstg.Listings
 	err := parseFromFile(f, &rawListings)
