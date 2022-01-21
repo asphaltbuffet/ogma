@@ -49,8 +49,44 @@ func init() {
 	rootCmd.AddCommand(importCmd)
 }
 
-// RunImportCmd performs action associated with listings-import application command.
+// RunImportCmd performs action associated with import application command.
 func RunImportCmd(cmd *cobra.Command, args []string) {
+	jsonFile, dsManager, err := initImportFile(args[0])
+	// defer closing the import file until after we're done with it
+	defer func() {
+		if dsManager != nil {
+			dsManager.Stop()
+		}
+
+		if jsonFile != nil {
+			if closeErr := jsonFile.Close(); closeErr != nil {
+				log.Error("failed to close import file: ", closeErr)
+			}
+		}
+	}()
+	if err != nil {
+		log.Error("error initializing import: ", err)
+		cmd.PrintErrln("error initializing import: ", err)
+		return
+	}
+
+	importSummary, err := importListings(jsonFile, dsManager)
+	if err != nil {
+		log.Error("failed to import listing records: ", err)
+		cmd.PrintErrln("failed to import listing records: ", err)
+		return
+	}
+
+	cmd.Println(importSummary)
+
+	importSummary, err = importMail(jsonFile, dsManager)
+	if err != nil {
+		log.Error("failed to import mail records: ", err)
+		cmd.PrintErrln("failed to import mail records: ", err)
+		return
+	}
+
+	cmd.Println(importSummary)
 }
 
 // initImportFile is shared initialization for all import types and datastore.
