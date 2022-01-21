@@ -93,12 +93,10 @@ func importMail(f io.Reader, d datastore.Saver) (string, error) {
 	// convert import file into a mails struct
 	err := parseFromFile(f, &rawMail)
 	if err != nil {
-		log.WithFields(log.Fields{"cmd": "import"}).Error("failed to parse input file: ", err)
 		return "", fmt.Errorf("failed to parse input file: %w", err)
 	}
 
 	if len(rawMail.Mails) == 0 {
-		log.Debug("no mail entries found to import")
 		return "", errors.New("no mail entries in import file")
 	}
 
@@ -111,7 +109,7 @@ func importMail(f io.Reader, d datastore.Saver) (string, error) {
 		return "", fmt.Errorf("error beginning datastore transaction: %w", err)
 	}
 	defer func() {
-		if errRollback := tx.Rollback(); errRollback != nil {
+		if errRollback := tx.Rollback(); err != nil { // only log a rollback error if an error was encountered when saving
 			log.Error("failed to rollback datastore transaction: ", errRollback)
 		}
 	}()
@@ -122,20 +120,15 @@ func importMail(f io.Reader, d datastore.Saver) (string, error) {
 
 		err = tx.Save(&mail)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"cmd": "import",
-				// "mail": fmt.Sprintf("%v", mail),
-			}).Warn("failed to import record:", err)
+			log.Warn("failed to import record:", err)
 			importCount--
 		}
 
 		log.WithFields(log.Fields{
-			"cmd":     "import",
 			"listing": fmt.Sprintf("%+v", mail),
 		}).Debug("imported record")
 	}
 	log.WithFields(log.Fields{
-		"cmd":          "import",
 		"import_count": importCount,
 		"read_count":   len(rawMail.Mails),
 	}).Info("completed importing records")
@@ -151,11 +144,6 @@ func importMail(f io.Reader, d datastore.Saver) (string, error) {
 // UniqueMails returns the passed in slice of mail with at most one of each mail. Mail order is
 // preserved by first occurrence in initial slice.
 func UniqueMails(rawMails []Mail) []Mail {
-	log.WithFields(log.Fields{
-		"cmd":   "import",
-		"count": len(rawMails),
-	}).Debug("deduplicating records")
-
 	keys := make(map[Mail]bool)
 	cleanMails := []Mail{}
 
@@ -165,11 +153,6 @@ func UniqueMails(rawMails []Mail) []Mail {
 			cleanMails = append(cleanMails, mail)
 		}
 	}
-
-	log.WithFields(log.Fields{
-		"cmd":   "import",
-		"count": len(cleanMails),
-	}).Debug("deduplication complete")
 
 	return cleanMails
 }

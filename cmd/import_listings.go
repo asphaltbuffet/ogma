@@ -103,7 +103,7 @@ func importListings(f io.Reader, d datastore.Saver) (string, error) {
 		return "", fmt.Errorf("error beginning datastore transaction: %w", err)
 	}
 	defer func() {
-		if errRollback := tx.Rollback(); errRollback != nil {
+		if errRollback := tx.Rollback(); err != nil { // only log a rollback error if an error was encountered when saving
 			log.Error("failed to rollback datastore transaction: ", errRollback)
 		}
 	}()
@@ -115,19 +115,16 @@ func importListings(f io.Reader, d datastore.Saver) (string, error) {
 		err = tx.Save(&listing)
 		if err != nil {
 			log.WithFields(log.Fields{
-				"cmd":     "import",
 				"listing": fmt.Sprintf("%+v", listing),
 			}).Warn("failed to import record:", err)
 			importCount--
 		}
 
 		log.WithFields(log.Fields{
-			"cmd":     "import",
 			"listing": fmt.Sprintf("%+v", listing),
 		}).Debug("imported record")
 	}
 	log.WithFields(log.Fields{
-		"cmd":          "import",
 		"import_count": importCount,
 		"read_count":   len(rawListings.Listings),
 	}).Info("completed importing records")
@@ -143,11 +140,6 @@ func importListings(f io.Reader, d datastore.Saver) (string, error) {
 // UniqueListings returns the passed in slice of listings with at most one of each listing. Listing order is
 // preserved by first occurrence in initial slice.
 func UniqueListings(rawListings []lstg.Listing) []lstg.Listing {
-	log.WithFields(log.Fields{
-		"cmd":   "import",
-		"count": len(rawListings),
-	}).Debug("deduplicating records")
-
 	keys := make(map[lstg.Listing]bool)
 	cleanListings := []lstg.Listing{}
 
@@ -157,11 +149,6 @@ func UniqueListings(rawListings []lstg.Listing) []lstg.Listing {
 			cleanListings = append(cleanListings, listing)
 		}
 	}
-
-	log.WithFields(log.Fields{
-		"cmd":   "import",
-		"count": len(cleanListings),
-	}).Debug("deduplication complete")
 
 	return cleanListings
 }
