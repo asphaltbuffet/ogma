@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Taskfile now has `snapshot` that replaces previous `build` task
 - `build` task now uses `go build` to compile a local binary for dev use
 - Additional linting rules and settings update
+- Import command now autoimports listings or mail records.
 
 ### Fixes
 
