@@ -52,19 +52,11 @@ Added mail. Reference: f8427e
 
 The import command takes the filename (for now) of a json file that contains listing or mail entries.
 
-**There is no checking for duplicates already in the application database. Careful!**
-
 ```bash
-ogma import [listing|mail] <filename.json>
+ogma import <filename.json>
 ```
 
-By default, the import command will only output the number of entries saved to the db ([#33](https://github.com/asphaltbuffet/ogma/issues/33)). No, there's no way to check this right now other than doing manual searches for entries to figure out what made it in.
-
-If you want to see everything that has been imported, use the verbose flag (`-v` or `--verbose`) to see all entries printed to screen. This may be a lot of stuff on your screen...
-
-```bash
-ogma import listing <filename> -v
-```
+By default, the import command will only output the number of entries saved to the db ([#33](https://github.com/asphaltbuffet/ogma/issues/33)).
 
 #### Example listing import file
 
