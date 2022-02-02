@@ -51,22 +51,25 @@ func init() {
 
 // RunImportCmd performs action associated with import application command.
 func RunImportCmd(cmd *cobra.Command, args []string) {
-	jsonFile, dsManager, err := initImportFile(args[0])
-	// defer closing the import file until after we're done with it
-	defer func() {
-		if dsManager != nil {
-			dsManager.Stop()
+	jsonFile, err := os.Open(filepath.Clean(args[0]))
+	if err != nil {
+		log.Error("failed to open import file: ", err)
+
+		cmd.Println("failed to open import file: ", err)
+		return
+	}
+
+	log.Debug("Successfully opened import file.")
+
+	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
+	if err != nil {
+		if closeErr := jsonFile.Close(); closeErr != nil {
+			log.Error("failed to close import file: ", closeErr)
 		}
 
-		if jsonFile != nil {
-			if closeErr := jsonFile.Close(); closeErr != nil {
-				log.Error("failed to close import file: ", closeErr)
-			}
-		}
-	}()
-	if err != nil {
-		log.Error("error initializing import: ", err)
-		cmd.PrintErrln("error initializing import: ", err)
+		log.Error("failed to access datastore: ", err)
+
+		cmd.Println("failed to access datastore: ", err)
 		return
 	}
 
@@ -87,31 +90,6 @@ func RunImportCmd(cmd *cobra.Command, args []string) {
 	}
 
 	cmd.Println(importSummary)
-}
-
-// initImportFile is shared initialization for all import types and datastore.
-func initImportFile(f string) (io.ReadCloser, datastore.SaveStopper, error) {
-	jsonFile, err := os.Open(filepath.Clean(f))
-	if err != nil {
-		log.Error("failed to open import file: ", err)
-
-		return nil, nil, fmt.Errorf("failed to open import file: %w", err)
-	}
-
-	log.Debug("Successfully opened import file.")
-
-	dsManager, err := datastore.New(viper.GetString("datastore.filename"))
-	if err != nil {
-		if closeErr := jsonFile.Close(); closeErr != nil {
-			log.Error("failed to close import file: ", closeErr)
-		}
-
-		log.Error("failed to access datastore: ", err)
-
-		return nil, nil, fmt.Errorf("failed to access datastore: %w", err)
-	}
-
-	return jsonFile, dsManager, nil
 }
 
 // parseFromFile unmarshalls json into a Listings struct.
