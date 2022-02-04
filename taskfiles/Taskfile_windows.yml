@@ -4,5 +4,6 @@ tasks:
   clean:
     desc: remove files created during build pipeline (windows)
     cmds:
-      - echo "This is the windows command stuff..."
-      # TODO: implement clean for windows
+    # this will return an error if the directory doesn't exist but we'll just ignore that
+      - Powershell.exe Remove-Item -Path dist -Recurse
+    ignore_error: true
