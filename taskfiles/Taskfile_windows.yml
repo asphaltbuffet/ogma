@@ -6,4 +6,5 @@ tasks:
     cmds:
     # this will return an error if the directory doesn't exist but we'll just ignore that
       - Powershell.exe Remove-Item -Path dist -Recurse
+      - Powershell.exe Remove-Item -Path '.\COVERAGE.*'
     ignore_error: true
