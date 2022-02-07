@@ -28,63 +28,62 @@ import (
 	"io"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
 
 	"github.com/asphaltbuffet/ogma/pkg/datastore"
 )
 
-const importMailCommandLongDesc = "Imports one-to-many correspondence records from a json file. This json\n" +
-	"file should follow the format provided in the project 'examples' directory.\n\n" +
-	"The reference field should be unique for each record. Manually creating this may increase the chance of duplicate values."
+// const importMailCommandLongDesc = "Imports one-to-many correspondence records from a json file. This json\n" +
+// 	"file should follow the format provided in the project 'examples' directory.\n\n" +
+// 	"The reference field should be unique for each record. Manually creating this may increase the chance of duplicate values."
 
-func init() {
-	importCmd.AddCommand(NewImportMailCmd())
-}
+// func init() {
+// 	importCmd.AddCommand(NewImportMailCmd())
+// }
 
-// NewImportMailCmd sets up an import subcommand.
-func NewImportMailCmd() *cobra.Command {
-	// cmd represents the import command.
-	cmd := &cobra.Command{
-		Use:     "mail [filename]",
-		Short:   "Bulk import mail records.",
-		Long:    importMailCommandLongDesc,
-		Example: "ogma import mail mImport.json",
-		Run:     RunImportMailCmd,
-	}
+// // NewImportMailCmd sets up an import subcommand.
+// func NewImportMailCmd() *cobra.Command {
+// 	// cmd represents the import command.
+// 	cmd := &cobra.Command{
+// 		Use:     "mail [filename]",
+// 		Short:   "Bulk import mail records.",
+// 		Long:    importMailCommandLongDesc,
+// 		Example: "ogma import mail mImport.json",
+// 		Run:     RunImportMailCmd,
+// 	}
 
-	return cmd
-}
+// 	return cmd
+// }
 
-// RunImportMailCmd performs action associated with mail-import application command.
-func RunImportMailCmd(cmd *cobra.Command, args []string) {
-	jsonFile, dsManager, err := initImportFile(args[0])
-	// defer closing the import file until after we're done with it
-	defer func() {
-		if dsManager != nil {
-			dsManager.Stop()
-		}
+// // RunImportMailCmd performs action associated with mail-import application command.
+// func RunImportMailCmd(cmd *cobra.Command, args []string) {
+// 	jsonFile, dsManager, err := initImportFile(args[0])
+// 	// defer closing the import file until after we're done with it
+// 	defer func() {
+// 		if dsManager != nil {
+// 			dsManager.Stop()
+// 		}
 
-		if jsonFile != nil {
-			if closeErr := jsonFile.Close(); closeErr != nil {
-				log.Error("failed to close import file: ", closeErr)
-			}
-		}
-	}()
-	if err != nil {
-		log.Error("error initializing listings import: ", err)
-		cmd.PrintErrln("error initializing listings import: ", err)
-		return
-	}
+// 		if jsonFile != nil {
+// 			if closeErr := jsonFile.Close(); closeErr != nil {
+// 				log.Error("failed to close import file: ", closeErr)
+// 			}
+// 		}
+// 	}()
+// 	if err != nil {
+// 		log.Error("error initializing listings import: ", err)
+// 		cmd.PrintErrln("error initializing listings import: ", err)
+// 		return
+// 	}
 
-	mailOut, err := importMail(jsonFile, dsManager)
-	if err != nil {
-		log.Error("failed to import mail records: ", err)
-		cmd.PrintErr("failed to import mail records: ", err)
-		return
-	}
+// 	mailOut, err := importMail(jsonFile, dsManager)
+// 	if err != nil {
+// 		log.Error("failed to import mail records: ", err)
+// 		cmd.PrintErr("failed to import mail records: ", err)
+// 		return
+// 	}
 
-	cmd.Println(mailOut)
-}
+// 	cmd.Println(mailOut)
+// }
 
 // importMail adds one to many mail to the datastore from a file.
 func importMail(f io.Reader, d datastore.Saver) (string, error) {

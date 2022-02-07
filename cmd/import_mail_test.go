@@ -22,138 +22,138 @@ THE SOFTWARE.
 
 package cmd_test
 
-import (
-	"bytes"
-	"io"
-	"reflect"
-	"testing"
+// import (
+// 	"bytes"
+// 	"io"
+// 	"reflect"
+// 	"testing"
 
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+// 	"github.com/spf13/viper"
+// 	"github.com/stretchr/testify/assert"
+// 	"github.com/stretchr/testify/require"
 
-	"github.com/asphaltbuffet/ogma/cmd"
-)
+// 	"github.com/asphaltbuffet/ogma/cmd"
+// )
 
-func TestNewImportMailCmd(t *testing.T) {
-	got := cmd.NewImportMailCmd()
+// // func TestNewImportMailCmd(t *testing.T) {
+// // 	got := cmd.NewImportMailCmd()
 
-	assert.Equal(t, "mail", got.Name())
-	assert.Equal(t, "Bulk import mail records.", got.Short)
-	assert.True(t, got.Runnable())
-}
+// // 	assert.Equal(t, "mail", got.Name())
+// // 	assert.Equal(t, "Bulk import mail records.", got.Short)
+// // 	assert.True(t, got.Runnable())
+// // }
 
-func TestRunImportMailCmd(t *testing.T) {
-	m, dbFilePath, appFS := setup(t)
-	m.Stop()
+// func TestRunImportMailCmd(t *testing.T) {
+// 	m, dbFilePath, appFS := setup(t)
+// 	m.Stop()
 
-	defer func() {
-		require.NoError(t, appFS.RemoveAll("test/"))
-	}()
+// 	defer func() {
+// 		require.NoError(t, appFS.RemoveAll("test/"))
+// 	}()
 
-	viper.Set("datastore.filename", dbFilePath)
+// 	viper.Set("datastore.filename", dbFilePath)
 
-	tests := []struct {
-		name      string
-		args      []string
-		assertion assert.ErrorAssertionFunc
-		want      string
-	}{
-		{
-			name:      "mail import",
-			args:      []string{"test/mails.json"},
-			assertion: assert.NoError,
-			want:      "Imported 3/3 mail records.\n",
-		},
-		{
-			name:      "invalid json",
-			args:      []string{"test/invalid.json"},
-			want:      "failed to import mail records: failed to parse input file: failed to unmarshall import file: invalid character ']' looking for beginning of object key string",
-			assertion: assert.NoError,
-		},
-	}
+// 	tests := []struct {
+// 		name      string
+// 		args      []string
+// 		assertion assert.ErrorAssertionFunc
+// 		want      string
+// 	}{
+// 		{
+// 			name:      "mail import",
+// 			args:      []string{"test/mails.json"},
+// 			assertion: assert.NoError,
+// 			want:      "Imported 3/3 mail records.\n",
+// 		},
+// 		{
+// 			name:      "invalid json",
+// 			args:      []string{"test/invalid.json"},
+// 			want:      "failed to import mail records: failed to parse input file: failed to unmarshall import file: invalid character ']' looking for beginning of object key string",
+// 			assertion: assert.NoError,
+// 		},
+// 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			cmd := cmd.NewImportMailCmd()
-			b := bytes.NewBufferString("")
-			cmd.SetOut(b)
-			cmd.SetErr(b)
-			cmd.SetArgs(tt.args)
-			tt.assertion(t, cmd.Execute())
-			out, err := io.ReadAll(b)
-			assert.NoError(t, err)
-			assert.Equal(t, tt.want, string(out))
-		})
-	}
-}
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			cmd := cmd.NewImportMailCmd()
+// 			b := bytes.NewBufferString("")
+// 			cmd.SetOut(b)
+// 			cmd.SetErr(b)
+// 			cmd.SetArgs(tt.args)
+// 			tt.assertion(t, cmd.Execute())
+// 			out, err := io.ReadAll(b)
+// 			assert.NoError(t, err)
+// 			assert.Equal(t, tt.want, string(out))
+// 		})
+// 	}
+// }
 
-func TestUniqueMail(t *testing.T) {
-	type args struct {
-		mm []cmd.Mail
-	}
-	tests := []struct {
-		name string
-		args args
-		want []cmd.Mail
-	}{
-		{
-			name: "empty",
-			args: args{
-				mm: []cmd.Mail{},
-			},
-			want: []cmd.Mail{},
-		},
-		{
-			name: "no duplicates",
-			args: args{
-				mm: []cmd.Mail{
-					{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
-				},
-			},
-			want: []cmd.Mail{
-				{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
-			},
-		},
-		{
-			name: "only duplicates",
-			args: args{
-				mm: []cmd.Mail{
-					{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
-				},
-			},
-			want: []cmd.Mail{
-				{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
-			},
-		},
-		{
-			name: "duplicates with unique",
-			args: args{
-				mm: []cmd.Mail{
-					{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
-				},
-			},
-			want: []cmd.Mail{
-				{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
-			},
-		},
-		{
-			name: "multiple duplicates with unique",
-			args: args{
-				mm: []cmd.Mail{
-					{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
-				},
-			},
-			want: []cmd.Mail{
-				{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := cmd.UniqueMails(tt.args.mm); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("UniqueMails() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+// func TestUniqueMail(t *testing.T) {
+// 	type args struct {
+// 		mm []cmd.Mail
+// 	}
+// 	tests := []struct {
+// 		name string
+// 		args args
+// 		want []cmd.Mail
+// 	}{
+// 		{
+// 			name: "empty",
+// 			args: args{
+// 				mm: []cmd.Mail{},
+// 			},
+// 			want: []cmd.Mail{},
+// 		},
+// 		{
+// 			name: "no duplicates",
+// 			args: args{
+// 				mm: []cmd.Mail{
+// 					{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
+// 				},
+// 			},
+// 			want: []cmd.Mail{
+// 				{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
+// 			},
+// 		},
+// 		{
+// 			name: "only duplicates",
+// 			args: args{
+// 				mm: []cmd.Mail{
+// 					{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
+// 				},
+// 			},
+// 			want: []cmd.Mail{
+// 				{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
+// 			},
+// 		},
+// 		{
+// 			name: "duplicates with unique",
+// 			args: args{
+// 				mm: []cmd.Mail{
+// 					{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
+// 				},
+// 			},
+// 			want: []cmd.Mail{
+// 				{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
+// 			},
+// 		},
+// 		{
+// 			name: "multiple duplicates with unique",
+// 			args: args{
+// 				mm: []cmd.Mail{
+// 					{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
+// 				},
+// 			},
+// 			want: []cmd.Mail{
+// 				{Ref: "", Sender: 0, Receiver: 0, Date: "", Link: ""},
+// 			},
+// 		},
+// 	}
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			if got := cmd.UniqueMails(tt.args.mm); !reflect.DeepEqual(got, tt.want) {
+// 				t.Errorf("UniqueMails() = %v, want %v", got, tt.want)
+// 			}
+// 		})
+// 	}
+// }
