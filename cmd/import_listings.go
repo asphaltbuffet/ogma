@@ -27,63 +27,62 @@ import (
 	"io"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
 
 	"github.com/asphaltbuffet/ogma/pkg/datastore"
 	lstg "github.com/asphaltbuffet/ogma/pkg/listing"
 )
 
-const importListingCommandLongDesc = "Imports one-to-many LEX ads from a json file. This json file\n" +
-	"should follow the format provided in the project 'examples' directory."
+// const importListingCommandLongDesc = "Imports one-to-many LEX ads from a json file. This json file\n" +
+// 	"should follow the format provided in the project 'examples' directory."
 
-func init() {
-	importCmd.AddCommand(NewImportListingCmd())
-}
+// func init() {
+// 	importCmd.AddCommand(NewImportListingCmd())
+// }
 
-// NewImportListingCmd sets up an import subcommand.
-func NewImportListingCmd() *cobra.Command {
-	// cmd represents the import listing command.
-	cmd := &cobra.Command{
-		Use:     "listings [filename]",
-		Short:   "Bulk import listing records.",
-		Long:    importListingCommandLongDesc,
-		Example: "ogma import listings listingImport.json",
-		Run:     RunImportListingsCmd,
-	}
+// // NewImportListingCmd sets up an import subcommand.
+// func NewImportListingCmd() *cobra.Command {
+// 	// cmd represents the import listing command.
+// 	cmd := &cobra.Command{
+// 		Use:     "listings [filename]",
+// 		Short:   "Bulk import listing records.",
+// 		Long:    importListingCommandLongDesc,
+// 		Example: "ogma import listings listingImport.json",
+// 		Run:     RunImportListingsCmd,
+// 	}
 
-	return cmd
-}
+// 	return cmd
+// }
 
-// RunImportListingsCmd performs action associated with listings-import application command.
-func RunImportListingsCmd(cmd *cobra.Command, args []string) {
-	jsonFile, dsManager, err := initImportFile(args[0])
-	// defer closing the import file until after we're done with it
-	defer func() {
-		if dsManager != nil {
-			dsManager.Stop()
-		}
+// // RunImportListingsCmd performs action associated with listings-import application command.
+// func RunImportListingsCmd(cmd *cobra.Command, args []string) {
+// 	jsonFile, dsManager, err := initImportFile(args[0])
+// 	// defer closing the import file until after we're done with it
+// 	defer func() {
+// 		if dsManager != nil {
+// 			dsManager.Stop()
+// 		}
 
-		if jsonFile != nil {
-			if closeErr := jsonFile.Close(); closeErr != nil {
-				log.Error("failed to close import file: ", closeErr)
-			}
-		}
-	}()
-	if err != nil {
-		log.Error("error initializing listings import: ", err)
-		cmd.PrintErrln("error initializing listings import: ", err)
-		return
-	}
+// 		if jsonFile != nil {
+// 			if closeErr := jsonFile.Close(); closeErr != nil {
+// 				log.Error("failed to close import file: ", closeErr)
+// 			}
+// 		}
+// 	}()
+// 	if err != nil {
+// 		log.Error("error initializing listings import: ", err)
+// 		cmd.PrintErrln("error initializing listings import: ", err)
+// 		return
+// 	}
 
-	listOut, err := importListings(jsonFile, dsManager)
-	if err != nil {
-		log.Error("failed to import listing records: ", err)
-		cmd.PrintErrln("failed to import listing records: ", err)
-		return
-	}
+// 	listOut, err := importListings(jsonFile, dsManager)
+// 	if err != nil {
+// 		log.Error("failed to import listing records: ", err)
+// 		cmd.PrintErrln("failed to import listing records: ", err)
+// 		return
+// 	}
 
-	cmd.Println(listOut)
-}
+// 	cmd.Println(listOut)
+// }
 
 // importListings adds one to many listings to the datastore from a file.
 func importListings(f io.Reader, d datastore.Saver) (string, error) {
