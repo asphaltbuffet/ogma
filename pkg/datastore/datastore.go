@@ -15,12 +15,14 @@ import (
 // A Saver can write to a datastore.
 type Saver interface {
 	Save(data interface{}) error
+	Begin(writable bool) (storm.Node, error)
 }
 
 //go:generate mockery --output=../../mocks --log-level=warn --name=SaveStopper
 // A SaveStopper can write to or close a datastore.
 type SaveStopper interface {
 	Save(data interface{}) error
+	Begin(writable bool) (storm.Node, error)
 	Stop()
 }
 
@@ -62,6 +64,11 @@ func Open(fp string) (*Manager, error) {
 	}
 
 	return New(fp)
+}
+
+// Begin starts a transactional datastore instance.
+func (m *Manager) Begin(writable bool) (storm.Node, error) {
+	return m.Store.Begin(writable)
 }
 
 // GetPath returns the filepath to db file.
