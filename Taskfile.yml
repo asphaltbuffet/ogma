@@ -72,7 +72,7 @@ tasks:
   mod-tidy:
     desc: go mod tidy
     cmds:
-      - go mod tidy
+      - go mod tidy -compat=1.17
   
   diff:
     desc: git diff
