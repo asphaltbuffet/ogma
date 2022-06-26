@@ -11,8 +11,7 @@ A LEX Magazine DB and letter tracking application.
 [![Build Status](https://img.shields.io/github/workflow/status/asphaltbuffet/ogma/build)](https://github.com/asphaltbuffet/ogma/actions?query=workflow%3Abuild+branch%3Amain)
 [![Go Report Card](https://goreportcard.com/badge/github.com/asphaltbuffet/ogma)](https://goreportcard.com/report/github.com/asphaltbuffet/ogma)
 [![Codecov](https://codecov.io/gh/asphaltbuffet/ogma/branch/main/graph/badge.svg)](https://codecov.io/gh/asphaltbuffet/ogma)
-[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=asphaltbuffet_ogma)](https://sonarcloud.io/summary/new_code?id=asphaltbuffet_ogma)
-
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=asphaltbuffet_ogma&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=asphaltbuffet_ogma)
 - [OGMA](#ogma)
   - [Usage](#usage)
     - [Mail Command](#mail-command)
