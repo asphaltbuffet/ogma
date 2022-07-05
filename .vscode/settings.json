@@ -3,6 +3,7 @@
     "go.useLanguageServer": true,
     "gopls": {
         "gofumpt": true,
+        "build.buildFlags": ["-tags=tools"]
     },
     "[go]": {
         "editor.formatOnSave": true,
