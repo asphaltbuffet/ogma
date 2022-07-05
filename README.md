@@ -30,7 +30,7 @@ Ogma does not come pre-loaded with any issue information. As the service require
 
 There is one method to add issue listings for later use: [Import](#import-command).
 
-Application usage details can be found via the `-h` or `--help` flag in the base application or with any command. This will show argument details, flag detail, and some examples. In-application documentation always supercedes this documentation.
+Application usage details can be found via the `-h` or `--help` flag in the base application or with any command. This will show argument details, flag detail, and some examples. In-application documentation always supersedes this documentation.
 
 ### Mail Command
 
@@ -40,7 +40,7 @@ The mail command tracks correspondence and provides the ability to link with LEX
 ogma mail --sender=<member> --receiver=<member> --date=<date> -link<member or mail ref>
 ```
 
-By default, the member numbers are set to the configured member number in the application configuration. They must be entered as integers. Any extended member number (those with a letter) should be entered without any text characters.
+By default, the member numbers are set to the configured member number in the application configuration. They must be entered as integers. Any extended member number (those with a letter) should be entered without text characters.
 
 On success, a reference number is returned for use in tracking correspondence artifacts.
 
@@ -51,7 +51,7 @@ Added mail. Reference: f8427e
 
 ### Import Command
 
-The import command takes the filename (for now) of a json file that contains listing or mail entries.
+The import command takes the filename (for now) of a JSON file that contains listing or mail entries.
 
 **There is no checking for duplicates already in the application database. Careful!**
 
@@ -61,7 +61,7 @@ ogma import [listing|mail] <filename.json>
 
 By default, the import command will only output the number of entries saved to the db ([#33](https://github.com/asphaltbuffet/ogma/issues/33)). No, there's no way to check this right now other than doing manual searches for entries to figure out what made it in.
 
-If you want to see everything that has been imported, use the verbose flag (`-v` or `--verbose`) to see all entries printed to screen. This may be a lot of stuff on your screen...
+If you want to see everything that has been imported, use the verbose flag (`-v` or `--verbose`) to see all entries printed on the screen. This may be a lot of stuff on your screen...
 
 ```bash
 ogma import listing <filename> -v
@@ -93,27 +93,27 @@ ogma import listing <filename> -v
 
 ### Search Command
 
-This is the primary use of the application and is simplified at the moment. Only searching by member number is supported, and this must be entered as an integer. Adding in a letter after the member number as seen in some issues is invalid and will fail. All listings with that member number will be found (listings with an alphabetic extension will be included and shown as such).
+This is the primary use of the application and is simplified at the moment. Only searching by member number is supported; this must be entered as an integer. Adding in a letter after the member number, as seen in some issues, is invalid and will fail. All listings with that member number will be found (listings with an alphabetic extension will be included and shown as such).
 
 ```bash
 ogma search <member number>
 ```
 
-Currently the output defaults to something pretty, with colors (results on windows may vary). Output configuration may be expanded in the future. See [#16](https://github.com/asphaltbuffet/ogma/issues/16)
+Currently, the output defaults to something pretty, with colors (results on Windows may vary). Output configuration may be expanded in the future. See [#16](https://github.com/asphaltbuffet/ogma/issues/16)
 
 ### Delete Command
 
-Used to remove all data (listings and mail). No backup is created and the action cannot be undone. You have been warned!
+Used to remove all data (listings and mail). No backup is created, and the action cannot be undone. You have been warned!
 
 ```bash
 ogma delete -a
 ```
 
-The `-a` flag is there to ensure you didn't accidentally type in the command name trying to get help. It also leaves room for future selective deletion functionality.
+The `-a` flag ensures you didn't accidentally type in the command name trying to get help. It also leaves room for future selective deletion functionality.
 
 ### Export Command
 
-Used to write the mail/listing data out to json file(s) for backup. If the json file is changed, and reimported, it will overwrite application data. This can be used for editing functionality.
+Used to write the mail/listing data to JSON file(s) for backup. The JSON file will overwrite application data if it is changed and reimported. This can be used for editing functionality.
 
 ```bash
 ogma export -records=mail -outfile=mailExport.json
