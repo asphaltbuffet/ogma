@@ -2,7 +2,7 @@
 
 .PHONY: dev
 dev: ## dev build
-dev: clean install generate vet fmt lint test mod-tidy
+dev: clean generate vet fmt lint test mod-tidy
 
 .PHONY: ci
 ci: ## CI build
@@ -49,7 +49,6 @@ test: ## go test with race detector and code covarage
 mod-tidy: ## go mod tidy
 	$(call print-target)
 	go mod tidy
-	cd tools && go mod tidy
 
 .PHONY: diff
 diff: ## git diff
@@ -59,15 +58,8 @@ diff: ## git diff
 
 .PHONY: build
 build: ## goreleaser --snapshot --skip-publish --rm-dist
-build: install
 	$(call print-target)
-	goreleaser --snapshot --skip-publish --rm-dist
-
-.PHONY: release
-release: ## goreleaser --rm-dist
-release: install
-	$(call print-target)
-	goreleaser --rm-dist
+	curl -sfL https://goreleaser.com/static/run | bash --snapshot --skip-publish --rm-dist
 
 .PHONY: run
 run: ## go run
