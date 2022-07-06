@@ -2,6 +2,8 @@ run:
   go: '1.17'
 
 linters-settings:
+  gci:
+    sections: ["standard", "default", "prefix(github.com/asphaltbuffet/ogma)"]
   goimports:
     local-prefixes: github.com/asphaltbuffet/ogma
   golint:
@@ -39,6 +41,7 @@ linters:
   # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
   disable-all: true
   enable:
+    - goimports
     - deadcode
     - errcheck
     - gosimple
