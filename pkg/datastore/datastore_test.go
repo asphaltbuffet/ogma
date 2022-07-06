@@ -129,7 +129,7 @@ func init() {
 	log.SetOutput(ioutil.Discard)
 }
 
-func TestManager_Save(t *testing.T) {
+func TestManagerSave(t *testing.T) {
 	manager, dbFilePath := initDatastoreManager(t)
 
 	defer func() {
@@ -152,7 +152,7 @@ func TestManager_Save(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestManager_One(t *testing.T) {
+func TestManagerOne(t *testing.T) {
 	m, dbFilePath := initDatastoreManager(t)
 
 	defer func() {
@@ -206,7 +206,7 @@ func TestManager_One(t *testing.T) {
 	}
 }
 
-func TestManager_Find(t *testing.T) {
+func TestManagerFind(t *testing.T) {
 	m, dbFilePath := initDatastoreManager(t)
 
 	defer func() {
@@ -266,7 +266,7 @@ func TestManager_Find(t *testing.T) {
 	}
 }
 
-func TestManager_AllByIndex(t *testing.T) {
+func TestManagerAllByIndex(t *testing.T) {
 	m, dbFilePath := initDatastoreManager(t)
 
 	defer func() {
@@ -306,7 +306,7 @@ func TestManager_AllByIndex(t *testing.T) {
 	}
 }
 
-func TestManager_All(t *testing.T) {
+func TestManagerAll(t *testing.T) {
 	m, dbFilePath := initDatastoreManager(t)
 
 	defer func() {
@@ -340,7 +340,7 @@ func TestManager_All(t *testing.T) {
 	}
 }
 
-func TestManager_Select(t *testing.T) {
+func TestManagerSelect(t *testing.T) {
 	m, dbFilePath := initDatastoreManager(t)
 
 	defer func() {
@@ -389,7 +389,7 @@ func TestManager_Select(t *testing.T) {
 	}
 }
 
-func TestManager_Range(t *testing.T) {
+func TestManagerRange(t *testing.T) {
 	m, dbFilePath := initDatastoreManager(t)
 
 	defer func() {
@@ -462,7 +462,7 @@ func TestManager_Range(t *testing.T) {
 	}
 }
 
-func TestManager_Prefix(t *testing.T) {
+func TestManagerPrefix(t *testing.T) {
 	m, dbFilePath := initDatastoreManager(t)
 
 	defer func() {
@@ -513,7 +513,7 @@ func TestManager_Prefix(t *testing.T) {
 	}
 }
 
-func TestManager_Count(t *testing.T) {
+func TestManagerCount(t *testing.T) {
 	m, dbFilePath := initDatastoreManager(t)
 
 	defer func() {
