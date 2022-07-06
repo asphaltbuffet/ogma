@@ -63,6 +63,9 @@ const (
 
 	// RefLength is the default reference length.
 	RefLength = 6
+
+	// DateFormat is the date format for mail date.
+	DateFormat = "2006-01-02"
 )
 
 const mailCommandLongDesc = "The mail command supports entering correspondence details and getting a reference number\n" +
@@ -111,7 +114,7 @@ func NewMailCmd() *cobra.Command {
 	dm := viper.GetInt("member")
 	cmd.Flags().IntP("sender", "s", dm, "Correspondence sender.")
 	cmd.Flags().IntP("receiver", "r", dm, "Correspondence receiver.")
-	cmd.Flags().StringP("date", "d", time.Now().Format("2006-01-02"), "Correspondence date.")
+	cmd.Flags().StringP("date", "d", time.Now().Format(DateFormat), "Correspondence date.")
 	cmd.Flags().StringP("link", "l", "", "Link to listing ID or previous correspondence. 'L' prefix for listing entry, 'M' prefix for mail")
 	cmd.Flags().IntP("length", "L", RefLength, "Correspondence receiver.")
 
@@ -256,7 +259,7 @@ func ValidateDate(dd string) (string, error) {
 		loc = time.UTC
 	}
 
-	d, err := time.ParseInLocation("2006-01-02", dd, loc)
+	d, err := time.ParseInLocation(DateFormat, dd, loc)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"date":          dd,
@@ -265,7 +268,7 @@ func ValidateDate(dd string) (string, error) {
 		return "", fmt.Errorf("date format must be 'yyyy-mm-dd': %w", err)
 	}
 
-	return d.Local().Format("2006-01-02"), nil
+	return d.Local().Format(DateFormat), nil
 }
 
 // RenderMail returns a pretty formatted listing as table.

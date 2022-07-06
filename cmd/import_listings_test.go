@@ -117,6 +117,14 @@ func TestUniqueListings(t *testing.T) {
 	type args struct {
 		ll []lstg.Listing
 	}
+
+	const (
+		testSeason      string = "Qui sit"
+		testCategory    string = "Pariatur"
+		testListingText string = "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit."
+		testExtension   string = "A"
+	)
+
 	tests := []struct {
 		name string
 		args args
@@ -133,63 +141,63 @@ func TestUniqueListings(t *testing.T) {
 			name: "no duplicates",
 			args: args{
 				ll: []lstg.Listing{
-					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 2, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
+					{Volume: 1, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
+					{Volume: 2, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
 				},
 			},
 			want: []lstg.Listing{
-				{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-				{Volume: 2, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
+				{Volume: 1, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
+				{Volume: 2, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
 			},
 		},
 		{
 			name: "only duplicates",
 			args: args{
 				ll: []lstg.Listing{
-					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
+					{Volume: 1, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
+					{Volume: 1, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
+					{Volume: 1, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
 				},
 			},
 			want: []lstg.Listing{
-				{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
+				{Volume: 1, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
 			},
 		},
 		{
 			name: "duplicates with unique",
 			args: args{
 				ll: []lstg.Listing{
-					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 2, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
+					{Volume: 1, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
+					{Volume: 2, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
+					{Volume: 1, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
 				},
 			},
 			want: []lstg.Listing{
-				{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-				{Volume: 2, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
+				{Volume: 1, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
+				{Volume: 2, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
 			},
 		},
 		{
 			name: "multiple duplicates with unique",
 			args: args{
 				ll: []lstg.Listing{
-					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 2, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 3, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 2, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 3, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 3, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 2, IssueNumber: 2, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-					{Volume: 4, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
+					{Volume: 1, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
+					{Volume: 2, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
+					{Volume: 1, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
+					{Volume: 3, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
+					{Volume: 2, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
+					{Volume: 3, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
+					{Volume: 3, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
+					{Volume: 2, IssueNumber: 2, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
+					{Volume: 4, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
 				},
 			},
 			want: []lstg.Listing{
-				{Volume: 1, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-				{Volume: 2, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-				{Volume: 3, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-				{Volume: 2, IssueNumber: 2, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
-				{Volume: 4, IssueNumber: 1, Year: 1999, Season: "Qui sit", PageNumber: 1, IndexedCategory: "Pariatur", IndexedMemberNumber: 99999, MemberExtension: "A", IsInternational: false, IsReview: false, ListingText: "Laborum aliquip eiusmod quis Lorem cupidatat nulla magna elit velit.", IsArt: false, IsFlagged: false},
+				{Volume: 1, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
+				{Volume: 2, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
+				{Volume: 3, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
+				{Volume: 2, IssueNumber: 2, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
+				{Volume: 4, IssueNumber: 1, Year: 1999, Season: testSeason, PageNumber: 1, IndexedCategory: testCategory, IndexedMemberNumber: 99999, MemberExtension: testExtension, IsInternational: false, IsReview: false, ListingText: testListingText, IsArt: false, IsFlagged: false},
 			},
 		},
 	}
