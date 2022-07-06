@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
-name: build
+name: Main Workflow
 
 on:
   push: 
@@ -9,19 +9,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  sonarcloud:
-    name: SonarCloud
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
   ci:
+    name: Build and Test
     strategy:
       fail-fast: false
       matrix:
@@ -31,23 +20,26 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v3
+      - name: Clone Repository
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
 
-      - uses: actions/setup-go@v3
+      - name: Set up Go
+        uses: actions/setup-go@v3
         with:
           go-version: 1.18
 
       - name: Build
         run: make ci
-      - name: Upload coverage
+
+      - name: Archive code coverage results
         uses: actions/upload-artifact@v3
         with:
           name: coverage
           path: coverage.*
 
-      - name: Upload dist
+      - name: Archive dist
         uses: actions/upload-artifact@v3
         with:
           name: dist
@@ -59,25 +51,45 @@ jobs:
           file: ./coverage.out
           flags: ${{ runner.os }}
 
-  release-test:
+  sonarCloudTrigger:
+    needs: ci
+    name: SonarCloud Trigger
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Checkout
+      - name: Clone Repository
+        uses: actions/checkout@v3
+
+      - name: Download code coverage results
+        uses: actions/download-artifact@v1
+        with:
+          name: coverage
+          path: coverage
+
+      - name: Analyze with SonarCloud
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  release-test:
+    name: Release Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone Repository
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      -
-        name: Fetch all tags
+
+      - name: Fetch all tags
         run: git fetch --force --tags
-      -
-        name: Set up Go
+
+      - name: Set up Go
         uses: actions/setup-go@v3
         with:
           go-version: 1.18
-      -
-        name: Run GoReleaser - Release Test
-        uses: goreleaser/goreleaser-action@v2
+
+      - name: Run GoReleaser - snapshot
+        uses: goreleaser/goreleaser-action@v3
         with:
           # either 'goreleaser' (default) or 'goreleaser-pro'
           distribution: goreleaser
