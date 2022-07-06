@@ -284,7 +284,6 @@ func TestManager_AllByIndex(t *testing.T) {
 		wantCount int
 		wantErr   bool
 	}{
-
 		{
 			name: "good - with results",
 			args: args{
