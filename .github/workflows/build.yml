@@ -25,15 +25,10 @@ jobs:
 
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.17
-
-      - name: Install Task
-        uses: arduino/setup-task@v1
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          go-version: 1.18
 
       - name: Build
-        run: task ci
+        run: make ci
       - name: Upload coverage
         uses: actions/upload-artifact@v3
         with:
@@ -67,12 +62,7 @@ jobs:
 
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.17
-
-      - name: Install Task
-        uses: arduino/setup-task@v1
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          go-version: 1.18
 
       - name: Release test
-        run: task build
+        run: make build
