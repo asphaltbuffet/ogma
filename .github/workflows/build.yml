@@ -22,8 +22,6 @@ jobs:
     steps:
       - name: Clone Repository
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
 
       - name: Set up Go
         uses: actions/setup-go@v3
@@ -58,6 +56,8 @@ jobs:
     steps:
       - name: Clone Repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
 
       - name: Download code coverage results
         uses: actions/download-artifact@v1
