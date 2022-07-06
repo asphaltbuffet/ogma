@@ -43,6 +43,8 @@ const (
 	DefaultConfigFilename    = ".ogma"
 	DefaultLoggingLevel      = "info"
 	DefaultDatastoreFilename = "ogma.db"
+
+	DatastoreFilenameKey = "datastore.filename"
 )
 
 var (
@@ -81,12 +83,12 @@ func GetRootCmd() *cobra.Command {
 }
 
 func summarizeDatastore(cmd *cobra.Command, isPretty bool) {
-	if _, err := os.Stat(viper.GetString("datastore.filename")); err != nil {
+	if _, err := os.Stat(viper.GetString(DatastoreFilenameKey)); err != nil {
 		cmd.Println("No datastore file is available.")
 		return
 	}
 
-	dsManager, err := datastore.Open(viper.GetString("datastore.filename"))
+	dsManager, err := datastore.Open(viper.GetString(DatastoreFilenameKey))
 	if err != nil {
 		cmd.PrintErrln("error opening datastore: ", err)
 	}
@@ -142,7 +144,7 @@ func InitConfig(fs afero.Fs, cfg string) {
 	viper.AutomaticEnv() // read in environment variables that match
 
 	viper.SetDefault("logging.level", DefaultLoggingLevel)
-	viper.SetDefault("datastore.filename", DefaultDatastoreFilename)
+	viper.SetDefault(DatastoreFilenameKey, DefaultDatastoreFilename)
 	viper.SetDefault("search:max_results", DefaultMaxSearchResults)
 	viper.SetDefault("member", DefaultMemberNumber)
 

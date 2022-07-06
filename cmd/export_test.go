@@ -49,6 +49,13 @@ func TestRunExportCmd(t *testing.T) {
 		require.NoError(t, os.RemoveAll("test/"))
 	}()
 
+	validExportFile := "test/export.json"
+	validExportArg := "-o=" + validExportFile
+	invalidExportFile := "test/test/export.txt"
+	invalidExportArg := "-o=" + invalidExportFile
+	successReturn := "successfully exported"
+	errorReturn := "error exporting"
+
 	tests := []struct {
 		name      string
 		args      []string
@@ -59,55 +66,55 @@ func TestRunExportCmd(t *testing.T) {
 	}{
 		{
 			name:      "mail export",
-			args:      []string{"-r=mail", "-o=test/export.json"},
+			args:      []string{"-r=mail", validExportArg},
 			datastore: dsFile,
 			export:    "test/export.json",
 			assertion: assert.NoError,
-			want:      "successfully exported data",
+			want:      successReturn,
 		},
 		{
 			name:      "listing export",
-			args:      []string{"-r=listing", "-o=test/export.json"},
+			args:      []string{"-r=listing", validExportArg},
 			datastore: dsFile,
 			export:    "test/export.json",
 			assertion: assert.NoError,
-			want:      "successfully exported data",
+			want:      successReturn,
 		},
 		{
 			name:      "all export",
-			args:      []string{"-r=all", "-o=test/export.json"},
+			args:      []string{"-r=all", validExportArg},
 			datastore: dsFile,
 			export:    "test/export.json",
 			assertion: assert.NoError,
-			want:      "successfully exported data",
+			want:      successReturn,
 		},
 		{
 			name:      "mail export - invalid path for export file",
-			args:      []string{"-r=mail", "-o=test/test/export.json"},
+			args:      []string{"-r=mail", invalidExportArg},
 			datastore: dsFile,
 			export:    "test/test/export.json",
 			assertion: assert.Error,
-			want:      "error exporting mail data:",
+			want:      errorReturn,
 		},
 		{
 			name:      "listing export - invalid path for export file",
-			args:      []string{"-r=listing", "-o=test/test/export.json"},
+			args:      []string{"-r=listing", invalidExportArg},
 			datastore: dsFile,
 			export:    "test/test/export.json",
 			assertion: assert.Error,
-			want:      "error exporting listing data:",
+			want:      errorReturn,
 		},
 		{
 			name:      "all export - invalid path for export file",
-			args:      []string{"-r=all", "-o=test/test/export.json"},
+			args:      []string{"-r=all", invalidExportArg},
 			datastore: dsFile,
 			export:    "test/test/export.json",
 			assertion: assert.Error,
-			want:      "error exporting all data:",
+			want:      errorReturn,
 		},
 		{
 			name:      "invalid record type",
-			args:      []string{"-r=foo", "-o=test/export.json"},
+			args:      []string{"-r=foo", validExportArg},
 			datastore: dsFile,
 			export:    "test/test/export.json",
 			assertion: assert.Error,

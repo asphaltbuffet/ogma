@@ -171,7 +171,7 @@ func TestManager_One(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "empty search",
+			name: "one: empty search",
 			args: args{
 				fieldName: "",
 				value:     nil,
@@ -179,7 +179,7 @@ func TestManager_One(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "good - with results",
+			name: "oen: good - with results",
 			args: args{
 				fieldName: "Key",
 				value:     1234,
@@ -226,7 +226,7 @@ func TestManager_Find(t *testing.T) {
 		wantErr   bool
 	}{
 		{
-			name: "empty search",
+			name: "find: empty search",
 			args: args{
 				fieldName: "",
 				value:     nil,
@@ -235,7 +235,7 @@ func TestManager_Find(t *testing.T) {
 			wantErr:   true,
 		},
 		{
-			name: "good - with results",
+			name: "find: good - with results",
 			args: args{
 				fieldName: "Key",
 				value:     1234,
@@ -244,7 +244,7 @@ func TestManager_Find(t *testing.T) {
 			wantErr:   false,
 		},
 		{
-			name: "good - no results", // check for specific error "not found"
+			name: "find: good - no results", // check for specific error "not found"
 			args: args{
 				fieldName: "Key",
 				value:     1,
@@ -285,7 +285,7 @@ func TestManager_AllByIndex(t *testing.T) {
 		wantErr   bool
 	}{
 		{
-			name: "good - with results",
+			name: "search all by index: good - with results",
 			args: args{
 				fieldName: "Key",
 			},
@@ -321,7 +321,7 @@ func TestManager_All(t *testing.T) {
 		wantErr   bool
 	}{
 		{
-			name: "good - with results",
+			name: "search all: good - with results",
 
 			wantCount: 3,
 			wantErr:   false,
@@ -359,7 +359,7 @@ func TestManager_Select(t *testing.T) {
 		wantErr   bool
 	}{
 		{
-			name: "good - with results",
+			name: "select search: good - with results",
 			args: args{
 				matcher: q.Eq("Key", 1234),
 			},
@@ -367,7 +367,7 @@ func TestManager_Select(t *testing.T) {
 			wantErr:   false,
 		},
 		{
-			name: "good - no results", // check for specific error "not found"
+			name: "select search: good - no results", // check for specific error "not found"
 			args: args{
 				matcher: q.Eq("Key", 1),
 			},
@@ -410,7 +410,7 @@ func TestManager_Range(t *testing.T) {
 		wantErr   bool
 	}{
 		{
-			name: "empty search",
+			name: "range search: empty",
 			args: args{
 				fieldName: "",
 				min:       nil,
@@ -420,7 +420,7 @@ func TestManager_Range(t *testing.T) {
 			wantErr:   true,
 		},
 		{
-			name: "good - subset results",
+			name: "range search: good - subset results",
 			args: args{
 				fieldName: "Key",
 				min:       1235,
@@ -430,7 +430,7 @@ func TestManager_Range(t *testing.T) {
 			wantErr:   false,
 		},
 		{
-			name: "good - full results", // check for specific error "not found"
+			name: "range search: good - full results", // check for specific error "not found"
 			args: args{
 				fieldName: "Key",
 				min:       1,
@@ -440,7 +440,7 @@ func TestManager_Range(t *testing.T) {
 			wantErr:   false,
 		},
 		{
-			name: "good - no results", // check for specific error "not found"
+			name: "range search: good - no results", // check for specific error "not found"
 			args: args{
 				fieldName: "Key",
 				min:       nil,
@@ -482,7 +482,7 @@ func TestManager_Prefix(t *testing.T) {
 		wantErr   bool
 	}{
 		{
-			name: "good - with results",
+			name: "prefix search: good - with results",
 			args: args{
 				fieldName: "Value",
 				prefix:    "Co",
@@ -491,7 +491,7 @@ func TestManager_Prefix(t *testing.T) {
 			wantErr:   false,
 		},
 		{
-			name: "good - no results", // check for specific error "not found"
+			name: "prefix search: good - no results", // check for specific error "not found"
 			args: args{
 				fieldName: "Value",
 				prefix:    "Zzz",
