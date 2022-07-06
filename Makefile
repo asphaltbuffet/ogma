@@ -12,7 +12,7 @@ ci: clean vet fmt test mod-tidy diff
 clean: ## remove files created during build pipeline
 	$(call print-target)
 	rm -rf dist || true
-	rm -f coverage.* || true
+	rm -rf bin || true
 
 .PHONY: install
 install: ## go install tools
@@ -42,8 +42,9 @@ lint: ## golangci-lint
 .PHONY: test
 test: ## go test with race detector and code covarage
 	$(call print-target)
-	go test -race -covermode=atomic -coverprofile=coverage.out `go list ./... | grep -v mocks`
-	go tool cover -html=coverage.out -o coverage.html
+	mkdir -p bin
+	go test -race -covermode=atomic -coverprofile=bin/coverage.out `go list ./... | grep -v mocks`
+	go tool cover -html=bin/coverage.out -o bin/coverage.html
 
 .PHONY: mod-tidy
 mod-tidy: ## go mod tidy

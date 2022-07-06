@@ -34,19 +34,13 @@ jobs:
       - name: Archive code coverage results
         uses: actions/upload-artifact@v3
         with:
-          name: coverage
-          path: coverage.*
-
-      - name: Archive dist
-        uses: actions/upload-artifact@v3
-        with:
-          name: dist
-          path: dist
+          name: code-coverage-report
+          path: bin
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3.1.0
         with:
-          file: ./coverage.out
+          file: ./bin/coverage.out
           flags: ${{ runner.os }}
 
   sonarCloudTrigger:
@@ -62,8 +56,8 @@ jobs:
       - name: Download code coverage results
         uses: actions/download-artifact@v1
         with:
-          name: coverage
-          path: coverage
+          name: code-coverage-report
+          path: bin
 
       - name: Analyze with SonarCloud
         uses: sonarsource/sonarcloud-github-action@master
