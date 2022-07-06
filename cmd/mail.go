@@ -23,7 +23,6 @@ THE SOFTWARE.
 package cmd
 
 import (
-
 	//nolint:gosec // not using this for security purposes
 	"crypto/md5"
 	"errors"
