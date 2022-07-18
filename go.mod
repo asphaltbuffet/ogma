@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/asdine/storm/v3 v3.2.1
-	github.com/jedib0t/go-pretty/v6 v6.3.3
+	github.com/jedib0t/go-pretty/v6 v6.3.5
 	github.com/jonreiter/govader v0.0.0-20220408022859-68ffa1d6eff4
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/afero v1.8.2
