@@ -8,7 +8,7 @@ require (
 	github.com/jonreiter/govader v0.0.0-20220408022859-68ffa1d6eff4
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/afero v1.9.2
-	github.com/spf13/cobra v1.6.0
+	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.13.0
 	github.com/stretchr/testify v1.8.1
 )
