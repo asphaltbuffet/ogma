@@ -6,7 +6,7 @@ require (
 	github.com/asdine/storm/v3 v3.2.1
 	github.com/jedib0t/go-pretty/v6 v6.4.6
 	github.com/jonreiter/govader v0.0.0-20220408022859-68ffa1d6eff4
-	github.com/sirupsen/logrus v1.9.2
+	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/afero v1.9.5
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.15.0
