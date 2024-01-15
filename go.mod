@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/asdine/storm/v3 v3.2.1
-	github.com/jedib0t/go-pretty/v6 v6.4.6
+	github.com/jedib0t/go-pretty/v6 v6.5.3
 	github.com/jonreiter/govader v0.0.0-20220408022859-68ffa1d6eff4
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/afero v1.10.0
@@ -21,7 +21,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
-	github.com/mattn/go-runewidth v0.0.13 // indirect
+	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -33,7 +33,7 @@ require (
 	github.com/subosito/gotenv v1.4.2 // indirect
 	go.etcd.io/bbolt v1.3.4 // indirect
 	golang.org/x/exp v0.0.0-20200331195152-e8c3332aa8e5 // indirect
-	golang.org/x/sys v0.8.0 // indirect
+	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	gonum.org/v1/gonum v0.8.2 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
